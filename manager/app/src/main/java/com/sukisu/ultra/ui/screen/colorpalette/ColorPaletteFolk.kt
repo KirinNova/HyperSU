@@ -1,4 +1,4 @@
-﻿package com.sukisu.ultra.ui.screen.colorpalette
+package com.sukisu.ultra.ui.screen.colorpalette
 
 import android.annotation.SuppressLint
 import android.os.Build
@@ -50,6 +50,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,7 +65,7 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.navigation.useNavigationRail
-import com.sukisu.ultra.ui.component.folk.FolkChevron
+import com.sukisu.ultra.ui.component.folk.FolkChoicePreference
 import com.sukisu.ultra.ui.component.folk.FolkPreference
 import com.sukisu.ultra.ui.component.folk.FolkSettingsScaffold
 import com.sukisu.ultra.ui.component.folk.FolkSettingsSectionGroup
@@ -205,27 +206,24 @@ fun ColorPaletteScreenFolk(
         item {
             FolkSettingsSectionGroup(title = stringResource(R.string.settings_color_style)) {
                 item {
-                    FolkPreference(
+                    // The palettes and the spec versions are long lists: stepping to
+                    // the next entry on tap puts a target several taps away, so both
+                    // rows open the same chooser the other option rows use.
+                    val styles = PaletteStyle.entries
+                    FolkChoicePreference(
                         title = stringResource(R.string.settings_color_style),
-                        summary = colorStyle.name,
-                        trailing = { FolkChevron() },
-                        onClick = {
-                            val styles = PaletteStyle.entries
-                            val next = styles[(styles.indexOf(colorStyle) + 1) % styles.size]
-                            actions.onSetColorStyle(next.name)
-                        },
+                        options = remember(styles) { styles.map { it.name } },
+                        selectedIndex = styles.indexOf(colorStyle).coerceAtLeast(0),
+                        onSelect = { index -> actions.onSetColorStyle(styles[index].name) },
                     )
                 }
                 item {
-                    FolkPreference(
+                    val specs = ColorSpec.SpecVersion.entries
+                    FolkChoicePreference(
                         title = stringResource(R.string.settings_color_spec),
-                        summary = colorSpec.name,
-                        trailing = { FolkChevron() },
-                        onClick = {
-                            val specs = ColorSpec.SpecVersion.entries
-                            val next = specs[(specs.indexOf(colorSpec) + 1) % specs.size]
-                            actions.onSetColorSpec(next.name)
-                        },
+                        options = remember(specs) { specs.map { it.name } },
+                        selectedIndex = specs.indexOf(colorSpec).coerceAtLeast(0),
+                        onSelect = { index -> actions.onSetColorSpec(specs[index].name) },
                     )
                 }
             }
