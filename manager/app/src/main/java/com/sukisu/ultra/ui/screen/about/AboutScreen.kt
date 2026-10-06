@@ -1,4 +1,4 @@
-﻿package com.sukisu.ultra.ui.screen.about
+package com.sukisu.ultra.ui.screen.about
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalUriHandler
@@ -14,7 +14,9 @@ fun AboutScreen() {
     val uriHandler = LocalUriHandler.current
     val htmlString = stringResource(
         id = R.string.about_source_code,
-        "<b><a href=\"https://github.com/ShirkNeko/SukiSU-Ultra\">GitHub</a></b>",
+        // This fork is the source the user is running, so the About link has to be
+        // this repository - pointing it upstream offered a download of a different app.
+        "<b><a href=\"https://github.com/kafuzhi/HyperSU\">GitHub</a></b>",
         "<b><a href=\"https://t.me/SukiKSU\">Telegram</a></b>",
     )
     val state = AboutUiState(
