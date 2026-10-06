@@ -33,6 +33,7 @@
 
 .px-2 {
     padding-right: 8px!important;
+    padding-left: 8px!important;
 }
 
 .lh-condensed {
@@ -123,7 +124,7 @@
 
 .blob-code-addition {
     background-color: var(--diffLineAdditionBackground);
-    outline: 1px dotted transparent;
+    outline: 1px dashed transparent;
 }
 
 .blob-code-addition .x {
