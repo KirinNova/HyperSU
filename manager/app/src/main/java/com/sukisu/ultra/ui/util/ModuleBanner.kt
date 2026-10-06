@@ -76,7 +76,8 @@ object ModuleBanner {
         return null
     }
 
-    private suspend fun resolve(context: Context, moduleId: String): ByteArray? {        if (!BackgroundConfig.isBannerEnabled) return null
+    private suspend fun resolve(context: Context, moduleId: String): ByteArray? {
+        if (!BackgroundConfig.isBannerEnabled) return null
 
         // 1. API 模式：源为空或取图失败都继续往下走，而不是直接放弃整个横幅。
         if (BackgroundConfig.isBannerApiModeEnabled) {
