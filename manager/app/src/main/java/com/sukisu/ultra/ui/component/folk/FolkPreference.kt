@@ -15,12 +15,18 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -263,6 +269,75 @@ fun FolkValuePreference(
             }
         },
     )
+}
+
+/**
+ * A preference that shows the selected value and opens a menu to change it.
+ *
+ * A tap opens the menu rather than stepping to the next entry: the option lists
+ * here are long (the supported locales, the su compat modes) and cycling
+ * through them one tap at a time makes a target several taps away - and makes
+ * the row's value jump around while the user looks for it.
+ */
+@Composable
+fun FolkChoicePreference(
+    title: String,
+    options: List<String>,
+    selectedIndex: Int,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    summary: String? = null,
+    enabled: Boolean = true,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        FolkPreference(
+            title = title,
+            modifier = modifier,
+            icon = icon,
+            summary = summary,
+            enabled = enabled,
+            onClick = { expanded = true },
+            trailing = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    options.getOrNull(selectedIndex)?.let { value ->
+                        Text(
+                            text = value,
+                            style = folkPreferenceValueStyle(),
+                            color = if (enabled) {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                            },
+                        )
+                        Spacer(Modifier.width(6.dp))
+                    }
+                    FolkChevron(enabled)
+                }
+            },
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            options.forEachIndexed { index, option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        expanded = false
+                        onSelect(index)
+                    },
+                    trailingIcon = {
+                        if (index == selectedIndex) {
+                            Icon(Icons.Rounded.CheckCircle, contentDescription = null)
+                        }
+                    },
+                )
+            }
+        }
+    }
 }
 
 /** A preference that toggles a boolean value with a checkbox. */

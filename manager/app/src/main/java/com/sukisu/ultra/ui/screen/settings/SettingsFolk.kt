@@ -1,4 +1,4 @@
-﻿package com.sukisu.ultra.ui.screen.settings
+package com.sukisu.ultra.ui.screen.settings
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -39,13 +39,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.component.KsuIsValid
+import com.sukisu.ultra.ui.component.folk.FolkChoicePreference
 import com.sukisu.ultra.ui.component.folk.FolkNavigationPreference
 import com.sukisu.ultra.ui.component.folk.FolkScaffold
 import com.sukisu.ultra.ui.component.folk.FolkSendLogSheet
 import com.sukisu.ultra.ui.component.folk.FolkSettingsSectionGroup
 import com.sukisu.ultra.ui.component.folk.FolkSwitchPreference
 import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
-import com.sukisu.ultra.ui.component.folk.FolkValuePreference
 import com.sukisu.ultra.ui.component.uninstalldialog.UninstallDialog
 import com.sukisu.ultra.ui.util.LocaleHelper
 
@@ -125,19 +125,14 @@ fun SettingPagerFolk(
             item {
                 FolkSettingsSectionGroup(title = stringResource(R.string.settings_theme)) {
                     item {
-                        FolkValuePreference(
+                        FolkChoicePreference(
                             title = stringResource(R.string.settings_language),
                             summary = stringResource(R.string.settings_language_summary),
                             icon = Icons.Rounded.Language,
-                            value = languageNames.getOrNull(
-                                languageTags.indexOf(uiState.appLanguage).coerceAtLeast(0)
-                            ),
-                            onClick = {
-                                val current = languageTags.indexOf(uiState.appLanguage)
-                                    .coerceAtLeast(0)
-                                val next = (current + 1) % languageTags.size
-                                actions.onSetLanguage(languageTags[next])
-                            },
+                            options = languageNames,
+                            selectedIndex = languageTags.indexOf(uiState.appLanguage)
+                                .coerceAtLeast(0),
+                            onSelect = { index -> actions.onSetLanguage(languageTags[index]) },
                         )
                     }
                     item {
@@ -230,16 +225,14 @@ fun SettingPagerFolk(
                                 stringResource(R.string.settings_mode_disable_until_reboot),
                                 stringResource(R.string.settings_mode_disable_always),
                             )
-                            FolkValuePreference(
+                            FolkChoicePreference(
                                 title = stringResource(R.string.settings_sucompat),
                                 summary = suSummary,
                                 icon = Icons.Filled.AdminPanelSettings,
-                                value = suModes.getOrNull(uiState.suCompatMode),
+                                options = suModes,
+                                selectedIndex = uiState.suCompatMode,
                                 enabled = uiState.suCompatStatus == "supported",
-                                onClick = {
-                                    val next = (uiState.suCompatMode + 1) % suModes.size
-                                    actions.onSetSuCompatMode(next)
-                                },
+                                onSelect = actions.onSetSuCompatMode,
                             )
                         }
 

@@ -50,6 +50,7 @@ import com.sukisu.ultra.ui.component.ScrollToTopOnChange
 import com.sukisu.ultra.ui.component.SearchAppBar
 import com.sukisu.ultra.ui.component.folk.FolkAlertDialog
 import com.sukisu.ultra.ui.component.folk.FolkButtonDefaults
+import com.sukisu.ultra.ui.component.folk.FolkChoicePreference
 import com.sukisu.ultra.ui.component.folk.FolkPreference
 import com.sukisu.ultra.ui.component.folk.FolkScaffold
 import com.sukisu.ultra.ui.component.folk.FolkSettingsGroup
@@ -57,7 +58,6 @@ import com.sukisu.ultra.ui.component.folk.FolkSeverity
 import com.sukisu.ultra.ui.component.folk.FolkStateView
 import com.sukisu.ultra.ui.component.folk.FolkStatusBadge
 import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
-import com.sukisu.ultra.ui.component.folk.FolkValuePreference
 import com.sukisu.ultra.ui.component.statustag.StatusTag
 import com.sukisu.ultra.ui.theme.tokens.FolkShape
 import com.sukisu.ultra.ui.theme.tokens.FolkType
@@ -189,21 +189,13 @@ fun SulogScreenFolk(
                     item {
                         FolkSettingsGroup {
                             item {
-                                FolkValuePreference(
+                                FolkChoicePreference(
                                     title = stringResource(R.string.sulog_log_files),
-                                    value = fileSelector.items
-                                        .getOrNull(fileSelector.selectedIndex),
-                                    onClick = {
-                                        // Step to the next log file; the selector
-                                        // is a short list of rotated logs, so a
-                                        // single tap cycling through them is what
-                                        // the old dropdown effectively offered.
-                                        if (fileSelector.items.size > 1) {
-                                            val next = (fileSelector.selectedIndex + 1) %
-                                                fileSelector.items.size
-                                            state.files.getOrNull(next)?.let { file ->
-                                                actions.onSelectFile(file.path)
-                                            }
+                                    options = fileSelector.items,
+                                    selectedIndex = fileSelector.selectedIndex,
+                                    onSelect = { index ->
+                                        state.files.getOrNull(index)?.let { file ->
+                                            actions.onSelectFile(file.path)
                                         }
                                     },
                                 )

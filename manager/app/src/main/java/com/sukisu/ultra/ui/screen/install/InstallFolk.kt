@@ -38,12 +38,12 @@ import com.sukisu.ultra.getKernelVersion
 import com.sukisu.ultra.ui.component.dialog.rememberConfirmDialog
 import com.sukisu.ultra.ui.component.folk.FolkButtonDefaults
 import com.sukisu.ultra.ui.component.folk.FolkCheckboxPreference
+import com.sukisu.ultra.ui.component.folk.FolkChoicePreference
 import com.sukisu.ultra.ui.component.folk.FolkNavigationPreference
 import com.sukisu.ultra.ui.component.folk.FolkScaffold
 import com.sukisu.ultra.ui.component.folk.FolkSelectableRow
 import com.sukisu.ultra.ui.component.folk.FolkSettingsGroup
 import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
-import com.sukisu.ultra.ui.component.folk.FolkValuePreference
 import com.sukisu.ultra.ui.kernelFlash.KpmPatchOption
 import com.sukisu.ultra.ui.kernelFlash.KpmPatchSelectionDialog
 import com.sukisu.ultra.ui.kernelFlash.component.SlotSelectionDialog
@@ -122,19 +122,17 @@ internal fun InstallScreenFolk(
             FolkSettingsGroup {
                 if (partitionItems.isNotEmpty()) {
                     item {
-                        FolkValuePreference(
+                        FolkChoicePreference(
                             title = if (isDownload) {
                                 stringResource(R.string.install_select_partition)
                             } else {
                                 "${stringResource(R.string.install_select_partition)} (${uiState.slotSuffix})"
                             },
-                            value = partitionItems.getOrNull(partitionIndex.coerceIn(0, partitionItems.lastIndex)),
                             icon = Icons.Filled.Edit,
+                            options = partitionItems,
+                            selectedIndex = partitionIndex.coerceIn(0, partitionItems.lastIndex),
                             enabled = uiState.canSelectPartition,
-                            onClick = {
-                                val next = (partitionIndex + 1) % partitionItems.size
-                                actions.onSelectPartition(next)
-                            },
+                            onSelect = actions.onSelectPartition,
                         )
                     }
                 }
