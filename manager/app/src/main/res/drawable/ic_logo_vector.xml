@@ -19,7 +19,7 @@
             android:scaleX="0.68"
             android:scaleY="0.68">
             <group>
-                <clip-path android:pathData="M70,50 H450 V70 H70 L50,50 Z" />
+                <clip-path android:pathData="M50,50 H450 V70 H50 Z" />
                 <path
                     android:name="outline_a_horizontal"
                     android:fillColor="@android:color/transparent"
@@ -30,7 +30,7 @@
                     android:trimPathEnd="1" />
             </group>
             <group>
-                <clip-path android:pathData="M430,50 H450 V450 H430 L430,450 Z" />
+                <clip-path android:pathData="M430,50 H450 V450 H430 Z" />
                 <path
                     android:name="outline_a_vertical"
                     android:fillColor="@android:color/transparent"
@@ -41,7 +41,7 @@
                     android:trimPathEnd="1" />
             </group>
             <group>
-                <clip-path android:pathData="M50,430 H430 L450,450 H50 Z" />
+                <clip-path android:pathData="M50,430 H450 V450 H50 Z" />
                 <path
                     android:name="outline_b_horizontal"
                     android:fillColor="@android:color/transparent"
