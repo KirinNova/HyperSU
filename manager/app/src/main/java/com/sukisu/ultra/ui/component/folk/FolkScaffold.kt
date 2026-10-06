@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sukisu.ultra.ui.navigation.LocalBottomBarVisible
 import com.sukisu.ultra.ui.navigation.LocalIsFloatingNavMode
+import com.sukisu.ultra.ui.theme.glass.glassAmbient
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.Alignment
 
@@ -193,7 +194,11 @@ fun FolkScaffold(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = inner.calculateTopPadding()),
+                .padding(top = inner.calculateTopPadding())
+                // The wash the glass refracts. Drawn here rather than at the app root so it
+                // sits above the themed background but under every screen's content, and a
+                // wallpaper - which brings its own backdrop - is left alone.
+                .glassAmbient(),
             contentAlignment = Alignment.TopCenter,
         ) {
             // Cap the content column on large screens so rows do not stretch
