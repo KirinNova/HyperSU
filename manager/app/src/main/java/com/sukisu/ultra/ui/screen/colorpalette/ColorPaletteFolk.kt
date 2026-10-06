@@ -1,7 +1,8 @@
-﻿package com.sukisu.ultra.ui.screen.colorpalette
+package com.sukisu.ultra.ui.screen.colorpalette
 
 import android.annotation.SuppressLint
 import android.os.Build
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -41,15 +42,20 @@ import androidx.compose.material.icons.filled.Brightness3
 import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.Brightness7
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Pin
 import androidx.compose.material.icons.rounded.Swipe
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,7 +70,9 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.navigation.useNavigationRail
-import com.sukisu.ultra.ui.component.folk.FolkChevron
+import com.sukisu.ultra.ui.component.folk.FolkButtonDefaults
+import com.sukisu.ultra.ui.component.folk.FolkSettingsDimens
+import com.sukisu.ultra.ui.component.folk.FolkChoicePreference
 import com.sukisu.ultra.ui.component.folk.FolkPreference
 import com.sukisu.ultra.ui.component.folk.FolkSettingsScaffold
 import com.sukisu.ultra.ui.component.folk.FolkSettingsSectionGroup
@@ -205,27 +213,24 @@ fun ColorPaletteScreenFolk(
         item {
             FolkSettingsSectionGroup(title = stringResource(R.string.settings_color_style)) {
                 item {
-                    FolkPreference(
+                    // The palettes and the spec versions are long lists: stepping to
+                    // the next entry on tap puts a target several taps away, so both
+                    // rows open the same chooser the other option rows use.
+                    val styles = PaletteStyle.entries
+                    FolkChoicePreference(
                         title = stringResource(R.string.settings_color_style),
-                        summary = colorStyle.name,
-                        trailing = { FolkChevron() },
-                        onClick = {
-                            val styles = PaletteStyle.entries
-                            val next = styles[(styles.indexOf(colorStyle) + 1) % styles.size]
-                            actions.onSetColorStyle(next.name)
-                        },
+                        options = styles.map { stringResource(it.labelRes()) },
+                        selectedIndex = styles.indexOf(colorStyle).coerceAtLeast(0),
+                        onSelect = { index -> actions.onSetColorStyle(styles[index].name) },
                     )
                 }
                 item {
-                    FolkPreference(
+                    val specs = ColorSpec.SpecVersion.entries
+                    FolkChoicePreference(
                         title = stringResource(R.string.settings_color_spec),
-                        summary = colorSpec.name,
-                        trailing = { FolkChevron() },
-                        onClick = {
-                            val specs = ColorSpec.SpecVersion.entries
-                            val next = specs[(specs.indexOf(colorSpec) + 1) % specs.size]
-                            actions.onSetColorSpec(next.name)
-                        },
+                        options = remember(specs) { specs.map { it.name } },
+                        selectedIndex = specs.indexOf(colorSpec).coerceAtLeast(0),
+                        onSelect = { index -> actions.onSetColorSpec(specs[index].name) },
                     )
                 }
             }
@@ -257,6 +262,7 @@ fun ColorPaletteScreenFolk(
                     FolkSwitchPreference(
                         title = stringResource(R.string.settings_show_fullstatus),
                         summary = stringResource(R.string.settings_show_fullstatus_summary),
+                        icon = Icons.Outlined.Info,
                         checked = state.showFullStatus,
                         onCheckedChange = actions.onSetShowFullStatus,
                     )
@@ -276,15 +282,42 @@ fun ColorPaletteScreenFolk(
         item {
             FolkSettingsSectionGroup(title = stringResource(R.string.settings_page_scale)) {
                 item {
-                    FolkSliderPreference(
-                        title = stringResource(R.string.settings_page_scale),
-                        summary = stringResource(R.string.settings_page_scale_summary),
-                        value = uiState.pageScale,
-                        valueRange = 0.8f..1.1f,
-                        valueFormat = { "${(it * 100).toInt()}%" },
-                        onValueChangeFinished = { actions.onSetPageScale(uiState.pageScale) },
-                        onValueChange = { actions.onSetPageScale(it) },
-                    )
+                    // Scaling the page re-measures every screen, so dragging the
+                    // slider must not apply as it moves. The slider edits a pending
+                    // value and the apply button appears only once it differs from
+                    // what is in use - nothing changes until that button is pressed.
+                    var pendingScale by remember(uiState.pageScale) {
+                        mutableStateOf(uiState.pageScale)
+                    }
+                    Column {
+                        FolkSliderPreference(
+                            title = stringResource(R.string.settings_page_scale),
+                            summary = stringResource(R.string.settings_page_scale_summary),
+                            value = pendingScale,
+                            valueRange = 0.8f..1.1f,
+                            valueFormat = { "${(it * 100).toInt()}%" },
+                            onValueChange = { pendingScale = it },
+                        )
+                        AnimatedVisibility(visible = pendingScale != uiState.pageScale) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = FolkSettingsDimens.ItemHorizontalPadding,
+                                        end = FolkSettingsDimens.ItemEndPadding,
+                                        bottom = FolkSettingsDimens.ItemVerticalPadding,
+                                    ),
+                                horizontalArrangement = Arrangement.End,
+                            ) {
+                                Button(
+                                    onClick = { actions.onSetPageScale(pendingScale) },
+                                    colors = FolkButtonDefaults.filledColors(),
+                                ) {
+                                    Text(stringResource(R.string.settings_page_scale_apply))
+                                }
+                            }
+                        }
+                    }
                 }
                 item {
                     val unitLinesLabel = stringResource(R.string.unit_lines)
@@ -545,4 +578,24 @@ private fun ColorSwatch(
             }
         }
     }
+}
+
+/**
+ * The name a palette is shown under, in place of the enum constant.
+ *
+ * "TonalSpot" and "FruitSalad" are the upstream names of the schemes, not
+ * something to show in a list; the label here is the scheme's Material name so
+ * the row and the chooser read as options rather than as identifiers.
+ */
+@StringRes
+private fun PaletteStyle.labelRes(): Int = when (this) {
+    PaletteStyle.TonalSpot -> R.string.palette_style_tonal_spot
+    PaletteStyle.Neutral -> R.string.palette_style_neutral
+    PaletteStyle.Vibrant -> R.string.palette_style_vibrant
+    PaletteStyle.Expressive -> R.string.palette_style_expressive
+    PaletteStyle.Rainbow -> R.string.palette_style_rainbow
+    PaletteStyle.FruitSalad -> R.string.palette_style_fruit_salad
+    PaletteStyle.Monochrome -> R.string.palette_style_monochrome
+    PaletteStyle.Fidelity -> R.string.palette_style_fidelity
+    PaletteStyle.Content -> R.string.palette_style_content
 }

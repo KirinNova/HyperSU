@@ -122,7 +122,10 @@ fun FolkSettingsScaffold(
                 scrollBehavior = scrollBehavior,
             )
         },
-        containerColor = Color.Transparent,
+        // Opaque, so the entry below this screen (kept composed by the nav
+        // host for its card transition and swipe-back gesture) cannot show
+        // through the page.
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = {
             if (snackbarHostState != null) {
                 SnackbarHost(snackbarHostState)

@@ -1,4 +1,4 @@
-﻿package com.sukisu.ultra.ui.viewmodel
+package com.sukisu.ultra.ui.viewmodel
 
 import android.content.Context
 import android.system.OsConstants
@@ -19,6 +19,7 @@ import com.sukisu.ultra.data.repository.SettingsRepositoryImpl
 import com.sukisu.ultra.ksuApp
 import com.sukisu.ultra.ui.screen.settings.SettingsUiState
 import com.sukisu.ultra.ui.theme.ColorMode
+import com.sukisu.ultra.ui.util.LanguageSwitchState
 import com.sukisu.ultra.ui.util.findActivity
 
 class SettingsViewModel(
@@ -121,6 +122,10 @@ class SettingsViewModel(
 
     fun setLanguage(context: Context, tag: String) {
         if (repo.appLanguage == tag) return
+        // The switch recreates the activity; flagging it first lets both the
+        // outgoing and the incoming activity draw the switch page instead of a
+        // black frame while the new locale is applied.
+        LanguageSwitchState.begin(tag)
         repo.appLanguage = tag
         _uiState.update { it.copy(appLanguage = tag) }
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) {

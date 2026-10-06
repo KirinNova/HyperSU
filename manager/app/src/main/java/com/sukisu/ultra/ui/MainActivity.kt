@@ -97,6 +97,8 @@ import com.sukisu.ultra.ui.theme.LocalEnableFloatingBottomBar
 import com.sukisu.ultra.ui.theme.LocalEnableNavigationBadge
 import com.sukisu.ultra.ui.theme.LocalModuleDescriptionMaxLines
 import com.sukisu.ultra.ui.theme.SukiSUTheme
+import com.sukisu.ultra.ui.component.folk.FolkLanguageSwitch
+import com.sukisu.ultra.ui.util.LanguageSwitchState
 import com.sukisu.ultra.ui.util.getSuperuserCount
 import com.sukisu.ultra.ui.util.install
 import com.sukisu.ultra.ui.util.rememberContentReady
@@ -180,6 +182,16 @@ class MainActivity : ComponentActivity() {
                 LocalIsFloatingNavMode provides uiState.enableFloatingBottomBar,
             ) {
                 SukiSUTheme(appSettings = appSettings) {
+                    // Only the in-app switch path below Android 13 (or on a build with
+                    // no system language page) lands here: that switch recreates the
+                    // activity, and this page is what the recreation draws instead of
+                    // the app content it would throw away. The system path never gets
+                    // here - it switches while our task is in the background.
+                    val switchingTo = LanguageSwitchState.targetTag
+                    if (switchingTo != null) {
+                        FolkLanguageSwitch(tag = switchingTo)
+                        return@SukiSUTheme
+                    }
                     IntentDispatcher(intentChannel = intentChannel)
                     HandleZipFileIntent()
                     val swipeDismiss = if (uiState.enableSwipeDismiss) {

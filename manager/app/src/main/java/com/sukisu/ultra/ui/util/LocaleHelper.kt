@@ -3,10 +3,13 @@ package com.sukisu.ultra.ui.util
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import android.content.res.Configuration
 import android.content.res.Resources
+import android.net.Uri
 import android.os.Build
 import android.os.LocaleList
+import android.provider.Settings
 import androidx.core.content.edit
 import java.util.Locale
 
@@ -84,8 +87,43 @@ object LocaleHelper {
             .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
     }
 
-    fun wrap(base: Context): Context {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    /**
+     * Opens the system's per-app language page, where the language is chosen.
+     *
+     * Handing the choice to the system is what keeps the switch out of our own
+     * window: it is applied while our task sits in the background, so our activity
+     * is never recreated in front of the user and no starting window plays over
+     * our screens.
+     *
+     * Returns false on versions that have no such page, or on a build that does
+     * not ship it, so the caller can fall back to the in-app list.
+     */
+    fun launchSystemLanguageSettings(context: Context): Boolean {
+        if (!canLaunchSystemLanguageSettings(context)) return false
+
+        return try {
+            context.startActivity(systemLanguageSettingsIntent(context))
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /** Whether this device ships the system's per-app language page. */
+    fun canLaunchSystemLanguageSettings(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
+        return try {
+            systemLanguageSettingsIntent(context).resolveActivity(context.packageManager) != null
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun systemLanguageSettingsIntent(context: Context): Intent =
+        Intent(Settings.ACTION_APP_LOCALE_SETTINGS)
+            .setData(Uri.fromParts("package", context.packageName, null))
+
+    fun wrap(base: Context): Context {        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             syncPersistedLanguageWithSystem(base)
             Locale.setDefault(base.resources.configuration.locales[0])
             return base

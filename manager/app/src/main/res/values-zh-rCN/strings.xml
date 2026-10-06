@@ -197,6 +197,11 @@
     <string name="settings_theme_mode_system">跟随系统</string>
     <string name="settings_theme_mode_light">浅色</string>
     <string name="settings_theme_mode_dark">深色</string>
+    <string name="settings_theme_mode_amoled">深色（AMOLED）</string>
+    <string name="settings_language">语言</string>
+    <string name="settings_language_summary">选择应用显示语言</string>
+    <string name="settings_language_system">跟随系统</string>
+    <string name="switching_language">正在切换语言…</string>
     <string name="settings_monet">启用 Monet 颜色</string>
     <string name="settings_key_color">强调色</string>
     <string name="settings_key_color_default">默认</string>
@@ -209,6 +214,7 @@
     <string name="unit_lines">行</string>
     <string name="settings_color_spec">色彩标准</string>
     <string name="settings_color_style">色彩风格</string>
+    <string name="settings_page_scale_apply">应用</string>
     <string name="color_blue">蓝色</string>
     <string name="color_red">红色</string>
     <string name="color_green">绿色</string>
