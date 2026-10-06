@@ -46,7 +46,6 @@ import com.sukisu.ultra.ui.component.folk.FolkSendLogSheet
 import com.sukisu.ultra.ui.component.folk.FolkSettingsSectionGroup
 import com.sukisu.ultra.ui.component.folk.FolkSwitchPreference
 import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
-import com.sukisu.ultra.ui.component.folk.FolkValuePreference
 import com.sukisu.ultra.ui.component.uninstalldialog.UninstallDialog
 import com.sukisu.ultra.ui.util.LocaleHelper
 
@@ -226,16 +225,14 @@ fun SettingPagerFolk(
                                 stringResource(R.string.settings_mode_disable_until_reboot),
                                 stringResource(R.string.settings_mode_disable_always),
                             )
-                            FolkValuePreference(
+                            FolkChoicePreference(
                                 title = stringResource(R.string.settings_sucompat),
                                 summary = suSummary,
                                 icon = Icons.Filled.AdminPanelSettings,
-                                value = suModes.getOrNull(uiState.suCompatMode),
+                                options = suModes,
+                                selectedIndex = uiState.suCompatMode,
                                 enabled = uiState.suCompatStatus == "supported",
-                                onClick = {
-                                    val next = (uiState.suCompatMode + 1) % suModes.size
-                                    actions.onSetSuCompatMode(next)
-                                },
+                                onSelect = actions.onSetSuCompatMode,
                             )
                         }
 
