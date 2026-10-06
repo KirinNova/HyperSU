@@ -12,12 +12,13 @@
 #include <dirent.h>
 #include <cstdlib>
 
-#include <unistd.h>
 #include <climits>
 #include <sys/syscall.h>
+#include <sys/ioctl.h>
 #include <cerrno>
 #include "ksu.h"
 
+// -1: not yet tried, -2: tried and failed, >=0: valid fd.
 static int fd = -1;
 
 static inline int scan_driver_fd() {
@@ -65,9 +66,16 @@ static inline int scan_driver_fd() {
 
 template<typename... Args>
 static int ksuctl(unsigned long op, Args &&... args) {
-
-    if (fd < 0) {
+    if (fd == -1) {
         fd = scan_driver_fd();
+        if (fd < 0) {
+            // Remember the failure so we don't rescan /proc/self/fd on every call.
+            fd = -2;
+        }
+    }
+    if (fd < 0) {
+        errno = ENODEV;
+        return -1;
     }
 
     static_assert(sizeof...(Args) <= 1, "ioctl expects at most one extra argument");
@@ -80,8 +88,14 @@ static struct ksu_get_info_cmd g_version {};
 struct ksu_get_info_cmd get_info() {
     if (!g_version.version) {
         if (ksuctl(KSU_IOCTL_GET_INFO, &g_version) < 0) {
-            ksuctl(KSU_IOCTL_GET_INFO_LEGACY, &g_version);
-            g_version.uapi_version = 0;
+            // Reset before trying legacy, so a failed legacy call can't leave
+            // partially-populated fields behind.
+            g_version = {};
+            if (ksuctl(KSU_IOCTL_GET_INFO_LEGACY, &g_version) < 0) {
+                g_version = {};
+            } else {
+                g_version.uapi_version = 0;
+            }
         }
     }
     return g_version;
@@ -102,6 +116,9 @@ uint32_t get_version() {
 }
 
 bool get_allow_list(struct ksu_new_get_allow_list_cmd *cmd) {
+    if (cmd == nullptr) {
+        return false;
+    }
     return ksuctl(KSU_IOCTL_NEW_GET_ALLOW_LIST, cmd) == 0;
 }
 
@@ -157,12 +174,18 @@ bool uid_should_umount(int uid) {
 }
 
 bool set_app_profile(const app_profile *profile) {
+    if (profile == nullptr) {
+        return false;
+    }
     struct ksu_set_app_profile_cmd cmd = {};
     cmd.profile = *profile;
     return ksuctl(KSU_IOCTL_SET_APP_PROFILE, &cmd) == 0;
 }
 
 int get_app_profile(app_profile *profile) {
+    if (profile == nullptr) {
+        return -EINVAL;
+    }
     struct ksu_get_app_profile_cmd cmd = {.profile = *profile};
     int ret = ksuctl(KSU_IOCTL_GET_APP_PROFILE, &cmd);
     *profile = cmd.profile;
