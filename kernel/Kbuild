@@ -91,7 +91,9 @@ KSU_KERNEL_DIR := $(src)
 endif
 endif
 
-ccflags-y += -I$(KSU_KERNEL_DIR) -I$(KSU_KERNEL_DIR)/include
+# ======= 修改了下面这一行，增加了 -I$(KSU_KERNEL_DIR)/.. =======
+ccflags-y += -I$(KSU_KERNEL_DIR) -I$(KSU_KERNEL_DIR)/include -I$(KSU_KERNEL_DIR)/..
+# ==============================================================
 
 obj-$(CONFIG_KSU) += kernelsu.o
 
