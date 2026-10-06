@@ -1,18 +1,14 @@
 package com.sukisu.ultra.ui.component.folk
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.sukisu.ultra.ui.theme.tokens.FolkTheme
 
@@ -58,9 +54,11 @@ fun FolkFactsGroup(
 }
 
 /**
- * One label/value line. The value takes its colour from a [FolkSeverity] so a
- * state value (a version that is behind, a service that is off) can be tinted
- * without the caller picking a colour.
+ * One label/value fact. The value sits on its own line under the label, so a
+ * long value (a kernel string, a build fingerprint) cannot squeeze the label
+ * into a one-character-per-line column. The value takes its colour from a
+ * [FolkSeverity] so a state value (a version that is behind, a service that is
+ * off) can be tinted without the caller picking a colour.
  */
 @Composable
 fun FolkFactRow(
@@ -69,24 +67,23 @@ fun FolkFactRow(
     modifier: Modifier = Modifier,
     valueTone: FolkSeverity = FolkSeverity.Neutral,
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
             text = label,
             style = folkPreferenceSummaryStyle(),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(Modifier.width(12.dp))
         Text(
             text = value,
             style = folkPreferenceValueStyle(),
             color = folkSeverityColor(valueTone),
-            textAlign = TextAlign.End,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
