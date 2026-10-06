@@ -111,7 +111,7 @@
     --backgroundElevatedSecondary: rgba(191, 193, 201, 0.04);
     --backgroundElevatedTertiary: rgba(191, 193, 201, 0.08);
     --backgroundInset: var(--gray-900);
-    --link-hover: var(--gray-800);
+    --link-hover: var(--blue-200);
     --color-issue-open: var(--green-500);
     --color-issue-closed: var(--purple-500);
     --color-pr-open: var(--green-500);
@@ -120,7 +120,7 @@
     --color-pr-draft: var(--iconPrimary);
     --color-accent-fg: var(--blue-300);
     --color-attention-fg: var(--yellow-400);
-    --color-done-fg: #A371F7; /* Primer Dark Mode - Purple 4 */
+    --color-done-fg: var(--purple-400); /* Primer Dark Mode - Purple 4 */
     --color-success-fg: var(--green-500);
     --color-danger-fg: var(--red-500);
     --color-skip: var(--iconPrimary);
@@ -147,7 +147,7 @@
     --hr-background: var(--borderOpaque);
     --thead-background: var(--pre-background);
     --thead-border: var(--hr-background);
-    --tr-border: var(--gray-300);
+    --tr-border: var(--borderOpaque);
     --tr-alt-background: var(--pre-background);
     --kbd-background: var(--pre-background);
     --kbd-color: var(--gray-350);
@@ -164,7 +164,7 @@
     --email-toggle-color: var(--kbd-color);
     --email-toggle-background: var(--blockquote-border);
     --email-quoted-color: var(--blockquote-color);
-    --keyword-color: var(--gray-600);
+    --keyword-color: var(--gray-400);
     --code-font: ui-monospace, Menlo, monospace;
     --tlb-header-bg: var(--gray-900);
     --color-fg-muted: #7d8590;
