@@ -1,15 +1,14 @@
-# SukiSU Ultra
-<img align='right' src='SukiSU-mini.svg' width='220px' alt="sukisu logo">
+# HyperSU Ultra
+<img align='right' src='HyperSU-mini.svg' width='220px' alt="HyperSU logo">
 
 
 **English** | [简体中文](./zh/README.md) | [日本語](./ja/README.md) | [Türkçe](./tr/README.md) | [Русский](./ru/README.md)
 
-A kernel-based root solution for Android devices, forked from [`tiann/KernelSU`](https://github.com/tiann/KernelSU), and added some interesting changes.
+A kernel-based root solution for Android devices, forked from [`SukiSU-Ultra/SukiSU-Ultra`](https://github.com/SukiSU-Ultra/SukiSU-Ultra), which is forked from [`tiann/KernelSU`](https://github.com/tiann/KernelSU), and added some interesting changes.
 
-[![Latest release](https://img.shields.io/github/v/release/SukiSU-Ultra/SukiSU-Ultra?label=Release&logo=github)](https://github.com/tiann/KernelSU/releases/latest)
-[![Channel](https://img.shields.io/badge/Follow-Telegram-blue.svg?logo=telegram)](https://t.me/Sukiksu)
+[![Latest release](https://img.shields.io/github/v/release/KirinNova/HyperSU?label=Release&logo=github)](https://github.com/KirinNova/HyperSU/releases/latest)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-orange.svg?logo=gnu)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
-[![GitHub License](https://img.shields.io/github/license/tiann/KernelSU?logo=gnu)](/LICENSE)
+[![GitHub License](https://img.shields.io/github/license/KirinNova/HyperSU?logo=gnu)](/LICENSE)
 
 ## Features
 
@@ -39,7 +38,7 @@ See [`guide/how-to-integrate.md`](guide/how-to-integrate.md)
 
 ## Translation
 
-If you need to submit a translation for the manager, please go to [Crowdin](https://crowdin.com/project/SukiSU-Ultra).
+If you need to submit a translation for the manager, please open a pull request on GitHub.
 
 ## KPM Support
 
@@ -54,7 +53,7 @@ If you need to submit a translation for the manager, please go to [Crowdin](http
 >
 > 1. Requires `CONFIG_KPM=y`
 > 2. Non-GKI devices requires `CONFIG_KALLSYMS=y` and `CONFIG_KALLSYMS_ALL=y`
-> 3. For kernels below `4.19`, backporting from `set_memory.h` from `4.19` is required.
+> 3. For kernels below `4.19`, backporting from `set_memory.h` from `4.19` is required.
 
 ## Troubleshooting
 
@@ -63,7 +62,7 @@ If you need to submit a translation for the manager, please go to [Crowdin](http
 
 ## Sponsor
 
-- [ShirkNeko](https://afdian.com/a/shirkneko) (maintainer of SukiSU)
+- [ShirkNeko](https://afdian.com/a/shirkneko) (maintainer of HyperSU)
 - [weishu](https://github.com/sponsors/tiann) (author of KernelSU)
 
 ## ShirkNeko's sponsorship list
@@ -76,6 +75,14 @@ If you need to submit a translation for the manager, please go to [Crowdin](http
 - [Saksham Singla](https://github.com/TypeFlu) Provide and maintain the website
 - [OukaroMF](https://github.com/OukaroMF) Donation of website domain name
 
+## Acknowledgments
+
+HyperSU is built on the shoulders of excellent open-source projects. We would like to express our sincere gratitude to the upstream projects and their maintainers.
+
+In particular, we thank [SukiSU Ultra](https://github.com/SukiSU-Ultra/SukiSU-Ultra) and all of its contributors for serving as the direct upstream and fork base of HyperSU. We also deeply thank [KernelSU](https://github.com/tiann/KernelSU) and its author [tiann](https://github.com/tiann) for creating the original kernel-based root solution and laying the foundation for SukiSU and HyperSU.
+
+Thanks also go to all other upstream projects and contributors mentioned in the Credit section for their open-source work and continuous contributions.
+
 ## License
 
 - The file in the “kernel” directory is under [GPL-2.0-only](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html) license.
@@ -84,7 +91,8 @@ If you need to submit a translation for the manager, please go to [Crowdin](http
 
 ## Credit
 
-- [KernelSU](https://github.com/tiann/KernelSU): upstream
+- [SukiSU](https://github.com/SukiSU-Ultra/SukiSU-Ultra): direct upstream / fork base. Special thanks to the SukiSU team and all contributors.
+- [KernelSU](https://github.com/tiann/KernelSU): upstream of SukiSU. Special thanks to tiann and all KernelSU contributors.
 - [MKSU](https://github.com/5ec1cff/KernelSU): Magic Mount
 - [RKSU](https://github.com/rsuntk/KernelsU): support non-GKI
 - [susfs](https://gitlab.com/simonpunk/susfs4ksu): An addon root hiding kernel patches and userspace module for KernelSU.
