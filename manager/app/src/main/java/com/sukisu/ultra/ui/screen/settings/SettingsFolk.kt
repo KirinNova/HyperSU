@@ -1,4 +1,4 @@
-﻿package com.sukisu.ultra.ui.screen.settings
+package com.sukisu.ultra.ui.screen.settings
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.component.KsuIsValid
+import com.sukisu.ultra.ui.component.folk.FolkChoicePreference
 import com.sukisu.ultra.ui.component.folk.FolkNavigationPreference
 import com.sukisu.ultra.ui.component.folk.FolkScaffold
 import com.sukisu.ultra.ui.component.folk.FolkSendLogSheet
@@ -125,19 +126,14 @@ fun SettingPagerFolk(
             item {
                 FolkSettingsSectionGroup(title = stringResource(R.string.settings_theme)) {
                     item {
-                        FolkValuePreference(
+                        FolkChoicePreference(
                             title = stringResource(R.string.settings_language),
                             summary = stringResource(R.string.settings_language_summary),
                             icon = Icons.Rounded.Language,
-                            value = languageNames.getOrNull(
-                                languageTags.indexOf(uiState.appLanguage).coerceAtLeast(0)
-                            ),
-                            onClick = {
-                                val current = languageTags.indexOf(uiState.appLanguage)
-                                    .coerceAtLeast(0)
-                                val next = (current + 1) % languageTags.size
-                                actions.onSetLanguage(languageTags[next])
-                            },
+                            options = languageNames,
+                            selectedIndex = languageTags.indexOf(uiState.appLanguage)
+                                .coerceAtLeast(0),
+                            onSelect = { index -> actions.onSetLanguage(languageTags[index]) },
                         )
                     }
                     item {
