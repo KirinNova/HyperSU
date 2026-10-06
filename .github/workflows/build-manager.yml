@@ -244,7 +244,8 @@ jobs:
               echo KEYSTORE_FILE='key.jks'
             } >> gradle.properties
 
-            echo "${{ secrets.KEYSTORE }}" | base64 -d > key.jks
+            # 修改：添加 -i 参数忽略无效字符
+            echo "${{ secrets.KEYSTORE }}" | base64 -d -i > key.jks
           fi
 
 
@@ -257,7 +258,8 @@ jobs:
           PR_KEY_PASSWORD: ${{ needs.generate-key.outputs.key_password }}
 
         run: |
-          echo "$PR_KEYSTORE" | base64 -d > pr-key.jks
+          # 修改：添加 -i 参数忽略无效字符
+          echo "$PR_KEYSTORE" | base64 -d -i > pr-key.jks
 
           {
             echo KEYSTORE_PASSWORD="$PR_KEYSTORE_PASSWORD"
@@ -545,7 +547,8 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
 
-            echo "$PR_KEYSTORE" | base64 -d > pr-key.jks
+            # 修改：添加 -i 参数忽略无效字符
+            echo "$PR_KEYSTORE" | base64 -d -i > pr-key.jks
 
             echo "SIGN_KEYSTORE_FILE=pr-key.jks" >> "$GITHUB_ENV"
             echo "SIGN_KEY_ALIAS=pr-key" >> "$GITHUB_ENV"
@@ -556,7 +559,8 @@ jobs:
 
             test -n "$PROD_KEYSTORE"
 
-            echo "$PROD_KEYSTORE" | base64 -d > key.jks
+            # 修改：添加 -i 参数忽略无效字符
+            echo "$PROD_KEYSTORE" | base64 -d -i > key.jks
 
             echo "SIGN_KEYSTORE_FILE=key.jks" >> "$GITHUB_ENV"
             echo "SIGN_KEY_ALIAS=$PROD_KEY_ALIAS" >> "$GITHUB_ENV"
