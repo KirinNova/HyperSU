@@ -1,5 +1,5 @@
-# SukiSU Ultra
-<img align='right' src='SukiSU-mini.svg' width='250px' alt="sukisu logo">
+# HyperSU
+<img align='right' src='SukiSU-mini.svg' width='250px' alt="HyperSU logo">
 
 
 [English](../README.md) | [简体中文](../zh/README.md) | [日本語](../ja/README.md) | **Türkçe**
@@ -19,13 +19,13 @@
 Ana dalı kullanın (GKI olmayan cihazlar için desteklenmez)
 
 ```
-curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
+curl -LSs "https://raw.githubusercontent.com/KirinNova/HyperSU/main/kernel/setup.sh" | bash -s main
 ```
 
 GKI olmayan cihazları destekleyen dalı kullanın
 
 ```
-curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
+curl -LSs "https://raw.githubusercontent.com/KirinNova/HyperSU/main/kernel/setup.sh" | bash -s builtin
 ```
 
 ## susfs Nasıl Entegre Edilir
@@ -33,7 +33,7 @@ curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kern
 1. Doğrudan susfs-main veya susfs-\* dalını kullanın, susfs entegrasyonuna gerek yok
 
 ```
-curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-main
+curl -LSs "https://raw.githubusercontent.com/KirinNova/HyperSU/main/kernel/setup.sh" | bash -s susfs-main
 ```
 
 ## Kanca Yöntemleri
@@ -120,6 +120,14 @@ Lütfen **tümünü** https://kernelsu.org/zh_CN/guide/installation.html adresin
 5. Daha fazla özelleştirme özelliği
 6. KPM çekirdek modülleri için destek
 
+## Üst Kaynağa Teşekkür
+
+HyperSU, mükemmel açık kaynak projelerin omuzlarında yükselmektedir. Üst kaynak projelere ve bakımcılarına içtenlikle teşekkür ederiz.
+
+Özellikle, HyperSU\'nun doğrudan üst kaynağı ve çatal temeli olan [SukiSU Ultra](https://github.com/SukiSU-Ultra/SukiSU-Ultra) ve tüm katkıda bulunanlara teşekkür ederiz. Ayrıca, ilk çekirdek tabanlı root çözümünü yaratan ve SukiSU ile HyperSU\'nun temelini atan [KernelSU](https://github.com/tiann/KernelSU) ve yazarı [tiann](https://github.com/tiann)\'a derin şükranlarımızı sunarız.
+
+"Katkıda Bulunanlar" bölümünde belirtilen diğer tüm üst kaynak projelere ve katkıda bulunanlara da teşekkür ederiz.
+
 ## Lisans
 
 - `kernel` dizinindeki dosyalar [GPL-2.0-only](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html) lisansı altındadır.
@@ -140,7 +148,8 @@ Lütfen **tümünü** https://kernelsu.org/zh_CN/guide/installation.html adresin
 
 ## Katkıda Bulunanlar
 
-- [KernelSU](https://github.com/tiann/KernelSU): Orijinal proje
+- [SukiSU](https://github.com/SukiSU-Ultra/SukiSU-Ultra): Doğrudan üst kaynak / çatal temeli. SukiSU ekibine ve tüm katkıda bulunanlara özel teşekkürler.
+- [KernelSU](https://github.com/tiann/KernelSU): SukiSU\'nun üst kaynağı. tiann\'a ve tüm KernelSU katkıda bulunanlara özel teşekkürler.
 - [MKSU](https://github.com/5ec1cff/KernelSU): Kullanılan proje
 - [RKSU](https://github.com/rsuntk/KernelsU): GKI olmayan cihazlar için destek sağlayan proje
 - [susfs4ksu](https://gitlab.com/simonpunk/susfs4ksu): Kullanılan susfs dosya sistemi
