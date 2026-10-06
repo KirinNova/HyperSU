@@ -1,5 +1,5 @@
-# HyperSU 
-<img align='right' src='HyperSU-mini.svg' width='220px' alt="HyperSU logo">
+# HyperSU Ultra
+<img align='right' src='docs/SukiSU-mini.svg' width='220px' alt="HyperSU logo">
 
 
 **English** | [简体中文](./zh/README.md) | [日本語](./ja/README.md) | [Türkçe](./tr/README.md) | [Русский](./ru/README.md)
