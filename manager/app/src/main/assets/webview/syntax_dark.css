@@ -92,13 +92,13 @@
 }
 
 .pl-mc /* markup.changed, punctuation.definition.changed */ {
-  color: #b08800;
-  background-color: #fffdef;
+  color: #ffec8a;
+  background-color: #755f13;
 }
 
 .pl-mi2 /* markup.ignored, markup.untracked */ {
-  color: #2f363d;
-  background-color: #959da5;
+  color: #6a737d;
+  background-color: #2f363d;
 }
 
 .pl-mdr /* meta.diff.range */ {
