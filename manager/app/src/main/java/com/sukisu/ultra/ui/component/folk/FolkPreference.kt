@@ -213,6 +213,7 @@ fun FolkNavigationPreference(
     icon: ImageVector? = null,
     summary: String? = null,
     enabled: Boolean = true,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     FolkPreference(
         title = title,
@@ -221,7 +222,7 @@ fun FolkNavigationPreference(
         summary = summary,
         enabled = enabled,
         onClick = onClick,
-        trailing = { FolkChevron(enabled) },
+        trailing = trailing ?: { FolkChevron(enabled) },
     )
 }
 

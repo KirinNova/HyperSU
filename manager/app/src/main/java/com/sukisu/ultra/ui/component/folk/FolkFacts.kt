@@ -38,9 +38,10 @@ class FolkFactsScope {
 @Composable
 fun FolkFactsGroup(
     modifier: Modifier = Modifier,
-    content: FolkFactsScope.() -> Unit,
+    content: @Composable FolkFactsScope.() -> Unit,
 ) {
-    val scope = FolkFactsScope().apply(content)
+    val scope = FolkFactsScope()
+    scope.content()
     if (scope.items.isEmpty()) return
 
     Column(modifier = modifier.fillMaxWidth()) {

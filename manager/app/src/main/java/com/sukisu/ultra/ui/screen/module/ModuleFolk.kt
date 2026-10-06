@@ -18,6 +18,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -99,11 +100,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.ObserveAsEvents
 import com.sukisu.ultra.R
 import com.sukisu.ultra.data.model.Module
 import com.sukisu.ultra.data.model.ModuleUpdateInfo
 import com.sukisu.ultra.data.repository.isSoftRebootPreferred
+import com.sukisu.ultra.ui.component.ObserveAsEvents
 import com.sukisu.ultra.ui.component.SearchAppBar
 import com.sukisu.ultra.ui.component.ScrollToTopOnChange
 import com.sukisu.ultra.ui.component.dialog.rememberConfirmDialog
