@@ -1,4 +1,3 @@
-
 # For more information about using CMake with Android Studio, read the
 # documentation: https://d.android.com/studio/projects/add-native-code.html
 
@@ -9,6 +8,9 @@ project("kernelsu")
 
 find_package(cxx REQUIRED CONFIG)
 link_libraries(cxx::cxx)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../../..)
+
 
 add_library(kernelsu
         SHARED
