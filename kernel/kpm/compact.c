@@ -24,6 +24,11 @@
 #include <linux/version.h>
 #include <linux/export.h>
 #include <linux/slab.h>
+#include "infra/symbol_resolver.h"
+#include "kpm.h"
+#include "compact.h"
+#include "policy/allowlist.h"
+#include "manager/manager_identity.h"
 
 static int sukisu_is_su_allow_uid(uid_t uid)
 {
@@ -89,7 +94,7 @@ unsigned long sukisu_compact_find_symbol(const char *name)
             return (unsigned long)symbol->addr;
     }
 
-    addr = kallsyms_lookup_name(name);
+    addr = find_kernel_symbol_exact(name);
     if (addr)
         return addr;
 

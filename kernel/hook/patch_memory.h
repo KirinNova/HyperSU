@@ -11,18 +11,16 @@
 
 #ifdef __aarch64__
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
-#include "asm/text-patching.h"
+#include "asm/text-patching.h" // IWYU pragma: keep
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0)
 #include "asm/patching.h" // IWYU pragma: keep
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 0, 0)
+#else
 #include "asm/insn.h" // IWYU pragma: keep
 #endif
-#elif defined(__x86_64__)
+#elif __x86_64__
 #include <asm/ptrace.h>
 #else
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 0, 0)
-#include "asm/insn.h" // IWYU pragma: keep
-#endif
+#error "Unsupported arch"
 #endif
 
 #define KSU_PATCH_TEXT_FLUSH_DCACHE 1
