@@ -20,7 +20,7 @@ body {
   margin: 0;
   padding: 0;
   color: var(--textPrimary);
-  background-color: var(--background);
+  background-color: var(--appBackground);
 }
 
 a {
@@ -42,7 +42,7 @@ Web views hold on to their hover event if the app is backgrounded. We need to di
 class on body and overriding them in CSS when we apply this workaround. When the mouse enters the web view again, we
 can disable our override.
 */
-body.hover-override a:not([target]) {
+body.hover-override a:not([target]):hover {
   background-color: transparent;
   transform: scale(1);
 }
@@ -86,7 +86,7 @@ table, table *, pre {
 }
 
 .task-list-item-checkbox {
-  margin-left: -24px
+  margin-left: -24px;
 }
 
 pre, code, kbd {
@@ -286,7 +286,7 @@ input[type="checkbox"] {
 }
 
 .markdown-body li {
-  word-wrap: break-all;
+  word-wrap: break-word;
 }
 
 .markdown-body li > p {
@@ -334,7 +334,7 @@ input[type="checkbox"] {
 }
 
 .markdown-body table tr {
-  background-color: var(--background);
+  background-color: var(--appBackground);
   border-top: 1px solid var(--tr-border);
 }
 
@@ -353,7 +353,7 @@ input[type="checkbox"] {
 .markdown-body img {
   max-width: 100%;
   box-sizing: initial;
-  background-color: var(--background);
+  background-color: var(--appBackground);
 }
 
 .markdown-body img[align=right] {
@@ -537,7 +537,7 @@ input[type="checkbox"] {
 .markdown-body .csv-data .blob-num {
   padding: 10px 8px 9px;
   text-align: right;
-  background: var(--background);
+  background: var(--appBackground);
   border: 0;
 }
 
@@ -618,7 +618,6 @@ input[type="checkbox"] {
   fill: currentColor;
   width: 1em;
   height: 1em;
-  font: -apple-system-body;
 }
 
 .octicon-issue-opened {
@@ -752,10 +751,6 @@ input[type="checkbox"] {
 
 .color-fg-open {
     color: var(--color-pr-open);
-}
-
-.color-fg-done {
-    color: var(--color-pr-merged);
 }
 
 /* Flexbox */
