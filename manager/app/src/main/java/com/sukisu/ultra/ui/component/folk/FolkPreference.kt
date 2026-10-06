@@ -1,41 +1,58 @@
 package com.sukisu.ultra.ui.component.folk
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.sukisu.ultra.R
+import com.sukisu.ultra.ui.theme.tokens.FolkShape
+import com.sukisu.ultra.ui.theme.tokens.FolkType
 
 /**
  * The base settings row used across FolkPatch.
@@ -272,12 +289,18 @@ fun FolkValuePreference(
 }
 
 /**
- * A preference that shows the selected value and opens a menu to change it.
+ * A preference that shows the selected value and opens a dialog to change it.
  *
- * A tap opens the menu rather than stepping to the next entry: the option lists
- * here are long (the supported locales, the su compat modes) and cycling
- * through them one tap at a time makes a target several taps away - and makes
- * the row's value jump around while the user looks for it.
+ * A tap opens the list rather than stepping to the next entry: the option lists
+ * here are long (the supported locales, the log files) and cycling through them
+ * one tap at a time makes a target several taps away - and makes the row's
+ * value jump around while the user looks for it.
+ *
+ * The list opens as a dialog rather than an anchored dropdown so it is not tied
+ * to the row's position: these lists are often taller than the space left below
+ * the row, and a dropdown would then open upward or run off the screen. A
+ * dialog also gives the choice an explicit confirm, so a mis-tap is not applied
+ * before the user has seen which entry it landed on.
  */
 @Composable
 fun FolkChoicePreference(
@@ -290,53 +313,200 @@ fun FolkChoicePreference(
     summary: String? = null,
     enabled: Boolean = true,
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
-    Box {
-        FolkPreference(
-            title = title,
-            modifier = modifier,
-            icon = icon,
-            summary = summary,
-            enabled = enabled,
-            onClick = { expanded = true },
-            trailing = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    options.getOrNull(selectedIndex)?.let { value ->
-                        Text(
-                            text = value,
-                            style = folkPreferenceValueStyle(),
-                            color = if (enabled) {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-                            },
-                        )
-                        Spacer(Modifier.width(6.dp))
-                    }
-                    FolkChevron(enabled)
+    FolkPreference(
+        title = title,
+        modifier = modifier,
+        icon = icon,
+        summary = summary,
+        enabled = enabled,
+        onClick = { showDialog = true },
+        trailing = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                options.getOrNull(selectedIndex)?.let { value ->
+                    Text(
+                        text = value,
+                        style = folkPreferenceValueStyle(),
+                        color = if (enabled) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                        },
+                    )
+                    Spacer(Modifier.width(6.dp))
                 }
-            },
+                FolkChevron(enabled)
+            }
+        },
+    )
+
+    if (showDialog) {
+        FolkChoiceDialog(
+            title = title,
+            options = options,
+            selectedIndex = selectedIndex,
+            onSelect = onSelect,
+            onDismissRequest = { showDialog = false },
         )
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
+    }
+}
+
+/**
+ * The choice popup, ported from ReSukiSU's `SettingsChooseDialogFrame`.
+ *
+ * What makes it read as a chooser instead of a settings row that happens to sit
+ * inside a dialog:
+ *
+ * - the panel is wide (the screen minus a 32dp margin) and the title is centred,
+ *   so the dialog has its own axis instead of inheriting the left-aligned rhythm
+ *   of the list it opened from;
+ * - the options are radio rows inside a single group surface, the radio on the
+ *   leading side and the chosen row filled - the current value is found by
+ *   running an eye down the left edge rather than comparing trailing glyphs;
+ * - cancel and confirm are both plain text buttons, so neither reads as the one
+ *   "real" action of the screen.
+ *
+ * The colours and corners are ours ([FolkShape.Dialog], the group tone); the
+ * layout is the reference's.
+ */
+@Composable
+private fun FolkChoiceDialog(
+    title: String,
+    options: List<String>,
+    selectedIndex: Int,
+    onSelect: (Int) -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    // Pending until confirm: cancelling (or tapping outside) drops it and leaves
+    // the stored value alone, the same way the KMI chooser behaves.
+    var pendingIndex by remember(selectedIndex) {
+        mutableIntStateOf(selectedIndex.coerceIn(0, maxOf(0, options.lastIndex)))
+    }
+
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Surface(
+            modifier = Modifier
+                .sizeIn(minWidth = 280.dp, maxWidth = 560.dp)
+                .padding(horizontal = 32.dp),
+            shape = FolkShape.Dialog,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
-            options.forEachIndexed { index, option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        expanded = false
-                        onSelect(index)
-                    },
-                    trailingIcon = {
-                        if (index == selectedIndex) {
-                            Icon(Icons.Rounded.CheckCircle, contentDescription = null)
-                        }
-                    },
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text(
+                    text = title,
+                    style = FolkType.Title,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
                 )
+
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                        .heightIn(max = 400.dp),
+                    shape = FolkShape.Corner16,
+                    color = folkGroupColor(),
+                ) {
+                    LazyColumn(contentPadding = PaddingValues(OptionRowInset)) {
+                        itemsIndexed(options) { index, option ->
+                            FolkChoiceOptionRow(
+                                title = option,
+                                selected = pendingIndex == index,
+                                onClick = { pendingIndex = index },
+                            )
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TextButton(
+                        onClick = onDismissRequest,
+                        colors = FolkButtonDefaults.textColors(),
+                    ) {
+                        Text(stringResource(android.R.string.cancel))
+                    }
+
+                    TextButton(
+                        onClick = {
+                            onSelect(pendingIndex)
+                            onDismissRequest()
+                        },
+                        colors = FolkButtonDefaults.textColors(),
+                    ) {
+                        Text(stringResource(R.string.confirm))
+                    }
+                }
             }
         }
+    }
+}
+
+/**
+ * The gap between the option rows and the group they sit in.
+ *
+ * The chosen row is inset by this much on all four sides, and its corner is the
+ * group's own corner minus this gap, which is what makes the two arcs read as
+ * concentric. A row inset by a different amount horizontally than vertically -
+ * or a row carrying the group's radius itself - cannot line up with the group
+ * corner however tall the row is.
+ */
+private val OptionRowInset = 4.dp
+
+/** One option of [FolkChoiceDialog]: a radio on the leading side, filled when chosen. */
+@Composable
+private fun FolkChoiceOptionRow(
+    title: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val haptics = LocalHapticFeedback.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(FolkShape.Corner12)
+            .background(
+                if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+            )
+            .folkPressScale(interactionSource, true)
+            .selectable(
+                selected = selected,
+                interactionSource = interactionSource,
+                indication = null,
+                role = Role.RadioButton,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onClick()
+                },
+            )
+            .defaultMinSize(minHeight = 48.dp)
+            .padding(start = 8.dp, end = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = null)
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = title,
+            style = FolkType.Title,
+            color = if (selected) {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            },
+            modifier = Modifier.padding(vertical = 12.dp),
+        )
     }
 }
 
