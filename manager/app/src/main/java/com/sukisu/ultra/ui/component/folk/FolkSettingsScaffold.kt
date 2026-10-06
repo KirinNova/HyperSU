@@ -26,6 +26,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import com.sukisu.ultra.ui.theme.backgroundWallpaper
+import com.sukisu.ultra.ui.theme.glass.ProvideGlassBackdrop
+import com.sukisu.ultra.ui.theme.glass.glassAmbient
+import com.sukisu.ultra.ui.theme.glass.layerBackdropIf
+import com.sukisu.ultra.ui.theme.glass.rememberGlassBackdrop
 import com.sukisu.ultra.ui.theme.tokens.FolkTheme
 import com.sukisu.ultra.ui.util.NavigationBarsSpacer
 import androidx.compose.foundation.layout.widthIn
@@ -136,22 +141,47 @@ fun FolkSettingsScaffold(
         // first item: with a translucent bar in wallpaper mode, content that
         // scrolls underneath would show through the title.
         // Cap the list width on large screens so rows stay readable.
+        //
+        // Recorded exactly the way [FolkScaffold] records it: the wash lives on a
+        // layer of its own and the plates are siblings of it, never drawn into it -
+        // a plate sampling a layer it renders into would read back its own output
+        // rather than the page behind it. Without this the settings glass had no
+        // backdrop to bend and could only tint, which is the card this plate is
+        // trying not to be.
+        val backdrop = rememberGlassBackdrop()
         Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = innerPadding.calculateTopPadding()),
         ) {
-            LazyColumn(
+            Box(
                 modifier = Modifier
-                    .widthIn(max = FolkSettingsDimens.ContentMaxWidth)
                     .fillMaxSize()
-                    .padding(top = innerPadding.calculateTopPadding()),
-                contentPadding = PaddingValues(
-                    bottom = innerPadding.calculateBottomPadding() + FolkSettingsDimens.ScreenPadding,
-                ),
-            ) {
-                content()
-                item(key = "folk_bottom") {
-                    NavigationBarsSpacer()
+                    .layerBackdropIf(backdrop)
+                    // The picture first, the ambient wash over it - and glassAmbient stands
+                    // down on its own once the page background goes transparent, so this box
+                    // is either the wallpaper or the wash and never both.
+                    .backgroundWallpaper()
+                    .glassAmbient(),
+            )
+            ProvideGlassBackdrop(backdrop) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.TopCenter,
+                ) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .widthIn(max = FolkSettingsDimens.ContentMaxWidth)
+                            .fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            bottom = innerPadding.calculateBottomPadding() + FolkSettingsDimens.ScreenPadding,
+                        ),
+                    ) {
+                        content()
+                        item(key = "folk_bottom") {
+                            NavigationBarsSpacer()
+                        }
+                    }
                 }
             }
         }

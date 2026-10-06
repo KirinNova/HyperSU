@@ -88,27 +88,31 @@ data class GlassSpec(
             val rimMid: Color
             val rimBottom: Color
             if (dark) {
-                bodyTop = white(0.13f * k)
-                bodyBottom = white(0.075f * k)
+                bodyTop = white(0.11f * k)
+                bodyBottom = white(0.055f * k)
                 specTop = white(0.20f * k)
                 specMid = white(0.07f * k)
                 rimTop = white(0.48f * k)
                 rimMid = white(0.15f * k)
                 rimBottom = white(0.26f * k)
             } else {
-                bodyTop = white(0.62f * k)
-                bodyBottom = white(0.36f * k)
-                specTop = white(0.50f * k)
-                specMid = white(0.18f * k)
-                rimTop = white(0.95f * k)
-                rimMid = white(0.42f * k)
-                rimBottom = white(0.62f * k)
+                // Light mode stays genuinely transparent. An opaque white body is a card
+                // with a border on it, not glass: what makes the plate read as glass is the
+                // refraction behind a *nearly* clear body, held together by the rim and the
+                // specular catch. The body is a whisper; the rim and the specular do the work.
+                bodyTop = white(0.26f * k)
+                bodyBottom = white(0.13f * k)
+                specTop = white(0.42f * k)
+                specMid = white(0.11f * k)
+                rimTop = white(0.92f * k)
+                rimMid = white(0.30f * k)
+                rimBottom = white(0.52f * k)
             }
 
             // Under a real backdrop the plate no longer has to be the page; it only has to
             // hold text. Light mode loses most of its white, dark mode less of it, because a
             // small lift over black is already close to invisible once content shows through.
-            val blurAlpha = if (dark) 0.6f else 0.4f
+            val blurAlpha = if (dark) 0.7f else 0.6f
 
             return GlassSpec(
                 tint = listOf(bodyTop, bodyBottom),

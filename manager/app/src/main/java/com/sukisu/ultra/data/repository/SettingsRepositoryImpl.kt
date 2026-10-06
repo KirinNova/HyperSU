@@ -1,4 +1,4 @@
-﻿package com.sukisu.ultra.data.repository
+package com.sukisu.ultra.data.repository
 
 import android.content.ComponentName
 import android.content.Context
@@ -108,9 +108,12 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putInt("pager_interception_mode", value.coerceIn(0, 2)) }
 
     
+    // The capsule is the design, not a preference: the bar is inset from the screen edges
+    // and floats over the page, which is what the bottom navigation ships as. Only a device
+    // with a stored value from the old docked default goes back to the flat bar.
     override var enableFloatingBottomBar: Boolean
-        get() = prefs.getBoolean("enable_floating_bottom_bar", false)
-        set(value) = prefs.edit { putBoolean("enable_floating_bottom_bar", value) }
+        get() = prefs.getBoolean("enable_floating_bottom_bar", true)
+    set(value) = prefs.edit { putBoolean("enable_floating_bottom_bar", value) }
 
     
     override var enableNavigationBadge: Boolean

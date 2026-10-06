@@ -157,8 +157,15 @@ fun SukiSUTheme(
         colorSpec = appSettings.colorSpec,
     )
 
-    val colorScheme = remember(baseColorScheme, amoled) {
-        if (amoled) baseColorScheme.toAmoled() else baseColorScheme
+    // A wallpaper sits behind every screen, so the page has to stop painting its own
+    // background over it. Dropping the alpha here is the whole switch: the Scaffolds'
+    // container, FolkPalette's onCustomBackground, the transparent bar colours and the
+    // glass ambient that stands down for a custom background all key off this one value,
+    // so nothing else needs a branch to know the picture is there.
+    val wallpaperActive = BackgroundConfig.isActive
+    val colorScheme = remember(baseColorScheme, amoled, wallpaperActive) {
+        val scheme = if (amoled) baseColorScheme.toAmoled() else baseColorScheme
+        if (wallpaperActive) scheme.copy(background = scheme.background.copy(alpha = 0f)) else scheme
     }.animateAsState()
 
     val typography = remember { getTypography(FontFamily.Default) }

@@ -2,6 +2,8 @@ package com.sukisu.ultra.ui.component.folk
 
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import com.sukisu.ultra.ui.theme.glass.GlassStrength
+import com.sukisu.ultra.ui.theme.glass.liquidGlass
 import com.sukisu.ultra.ui.theme.tokens.FolkShape
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
@@ -9,6 +11,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
@@ -43,10 +46,20 @@ fun FolkAlertDialog(
         Surface(
             modifier = modifier
                 .width(width)
-                .wrapContentHeight(),
+                .wrapContentHeight()
+                // A sheet of glass rather than a painted card. The dialog owns its own
+                // window, so the plate cannot refract the page behind it - that is what
+                // blurBehind already does to the window - and it settles for the shared
+                // body, specular and rim. Prominent because a floating sheet has to read
+                // as above the page, not in it.
+                .liquidGlass(
+                    shape = shape,
+                    strength = GlassStrength.Prominent,
+                    refract = false,
+                ),
             shape = shape,
-            tonalElevation = AlertDialogDefaults.TonalElevation,
-            color = AlertDialogDefaults.containerColor,
+            tonalElevation = 0.dp,
+            color = Color.Transparent,
         ) {
             content()
 

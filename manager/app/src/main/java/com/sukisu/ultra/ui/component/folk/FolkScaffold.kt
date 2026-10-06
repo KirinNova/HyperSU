@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sukisu.ultra.ui.navigation.LocalBottomBarVisible
 import com.sukisu.ultra.ui.navigation.LocalIsFloatingNavMode
+import com.sukisu.ultra.ui.theme.backgroundWallpaper
 import com.sukisu.ultra.ui.theme.glass.ProvideGlassBackdrop
 import com.sukisu.ultra.ui.theme.glass.glassAmbient
 import com.sukisu.ultra.ui.theme.glass.layerBackdropIf
@@ -211,6 +212,10 @@ fun FolkScaffold(
                 modifier = Modifier
                     .fillMaxSize()
                     .layerBackdropIf(backdrop)
+                    // The picture first, the ambient wash over it - and glassAmbient stands
+                    // down on its own once the page background goes transparent, so this box
+                    // is either the wallpaper or the wash and never both.
+                    .backgroundWallpaper()
                     .glassAmbient(),
             )
             ProvideGlassBackdrop(backdrop) {

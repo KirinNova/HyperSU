@@ -66,14 +66,25 @@ fun Modifier.liquidGlass(
     rim: Boolean = true,
     specular: Boolean = true,
     sheen: Boolean = true,
+    /**
+     * Whether the plate may refract the captured page background.
+     *
+     * Chrome that draws outside the captured layer - a dialog in its own window, the
+     * bottom bar that floats over the nav host, a top bar laid out above the content -
+     * cannot sample it: the layer is recorded in another window's coordinates and reading
+     * it back would smear the page across a surface that is not over the page. Those
+     * callers pass false and get the tinted plate, which is the same glass without the
+     * part that requires the backdrop.
+     */
+    refract: Boolean = true,
 ): Modifier {
     val spec = rememberGlassSpec(strength)
     val backdrop = LocalGlassBackdrop.current
-    val blurred = backdrop != null
+    val blurred = refract && backdrop != null
 
     return this
         .then(
-            if (backdrop != null) {
+            if (blurred && backdrop != null) {
                 Modifier.textureBlur(
                     backdrop = backdrop,
                     shape = shape,

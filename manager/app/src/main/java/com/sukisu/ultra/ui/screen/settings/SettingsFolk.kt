@@ -1,5 +1,12 @@
 package com.sukisu.ultra.ui.screen.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.content.Intent
+import androidx.compose.material.icons.rounded.Wallpaper
+import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material.icons.rounded.BlurOn
+import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -45,10 +52,12 @@ import com.sukisu.ultra.ui.component.folk.FolkNavigationPreference
 import com.sukisu.ultra.ui.component.folk.FolkScaffold
 import com.sukisu.ultra.ui.component.folk.FolkSendLogSheet
 import com.sukisu.ultra.ui.component.folk.FolkSettingsSectionGroup
+import com.sukisu.ultra.ui.component.folk.FolkSliderPreference
 import com.sukisu.ultra.ui.component.folk.FolkSwitchPreference
 import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
 import com.sukisu.ultra.ui.component.folk.FolkValuePreference
 import com.sukisu.ultra.ui.component.uninstalldialog.UninstallDialog
+import com.sukisu.ultra.ui.theme.BackgroundConfig
 import com.sukisu.ultra.ui.util.LocaleHelper
 
 /**
@@ -165,6 +174,75 @@ fun SettingPagerFolk(
                             summary = stringResource(R.string.settings_theme_summary),
                             icon = Icons.Filled.Palette,
                             onClick = actions.onOpenTheme,
+                        )
+                    }
+
+                    // Custom background. Driven straight off BackgroundConfig rather than
+                    // through the view model: the value is already Compose state, and the
+                    // wallpaper on the screen behind this page reads the same object, so a
+                    // change here is visible before the row finishes its press animation.
+                    item {
+                        FolkSwitchPreference(
+                            title = stringResource(R.string.settings_background),
+                            summary = stringResource(R.string.settings_background_summary),
+                            icon = Icons.Rounded.Wallpaper,
+                            checked = BackgroundConfig.enabled,
+                            onCheckedChange = { BackgroundConfig.setEnabled(it) },
+                        )
+                    }
+                    item {
+                        val context = LocalContext.current
+                        val picker = rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.OpenDocument(),
+                        ) { uri ->
+                            if (uri != null) {
+                                // Persistable, so the picture outlives the process. An
+                                // unpersisted grant dies with it and the background quietly
+                                // falls back to flat the next time the app opens, which
+                                // reads as the setting having forgotten itself.
+                                runCatching {
+                                    context.contentResolver.takePersistableUriPermission(
+                                        uri,
+                                        Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                                    )
+                                }
+                                BackgroundConfig.setUri(uri.toString())
+                                BackgroundConfig.setEnabled(true)
+                            }
+                        }
+                        FolkValuePreference(
+                            title = stringResource(R.string.settings_background_pick),
+                            summary = if (BackgroundConfig.uri.isEmpty()) {
+                                stringResource(R.string.settings_background_no_image)
+                            } else {
+                                null
+                            },
+                            icon = Icons.Rounded.Image,
+                            onClick = { picker.launch(arrayOf("image/*")) },
+                        )
+                    }
+                    item {
+                        FolkSliderPreference(
+                            title = stringResource(R.string.settings_background_blur),
+                            icon = Icons.Rounded.BlurOn,
+                            value = BackgroundConfig.blur,
+                            onValueChange = { BackgroundConfig.setBlur(it) },
+                            valueRange = 0f..40f,
+                            steps = 39,
+                            valueFormat = { "${'$'}{it.toInt()} dp" },
+                            enabled = BackgroundConfig.isActive,
+                        )
+                    }
+                    item {
+                        FolkSliderPreference(
+                            title = stringResource(R.string.settings_background_dim),
+                            icon = Icons.Rounded.DarkMode,
+                            value = BackgroundConfig.dim,
+                            onValueChange = { BackgroundConfig.setDim(it) },
+                            valueRange = 0f..1f,
+                            steps = 19,
+                            valueFormat = { "${'$'}{(it * 100).toInt()}%" },
+                            enabled = BackgroundConfig.isActive,
                         )
                     }
                     item {

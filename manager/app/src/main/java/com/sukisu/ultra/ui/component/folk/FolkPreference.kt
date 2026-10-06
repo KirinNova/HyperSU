@@ -52,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.sukisu.ultra.R
+import com.sukisu.ultra.ui.theme.glass.GlassStrength
+import com.sukisu.ultra.ui.theme.glass.liquidGlass
 import com.sukisu.ultra.ui.theme.tokens.FolkShape
 import com.sukisu.ultra.ui.theme.tokens.FolkType
 
@@ -426,9 +428,18 @@ internal fun FolkChooserDialog(
         Surface(
             modifier = Modifier
                 .sizeIn(minWidth = 280.dp, maxWidth = 560.dp)
-                .padding(horizontal = 32.dp),
+                .padding(horizontal = 32.dp)
+                // Same frame as [FolkAlertDialog]: a floating panel is a pane of glass,
+                // not a painted card. It owns its own window, so it cannot refract the
+                // page and keeps only the body, specular and rim.
+                .liquidGlass(
+                    shape = FolkShape.Dialog,
+                    strength = GlassStrength.Prominent,
+                    refract = false,
+                ),
             shape = FolkShape.Dialog,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            tonalElevation = 0.dp,
+            color = Color.Transparent,
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Text(

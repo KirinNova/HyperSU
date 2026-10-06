@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -40,6 +41,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sukisu.ultra.ui.theme.glass.GlassStrength
+import com.sukisu.ultra.ui.theme.glass.liquidGlass
 import com.sukisu.ultra.ui.theme.tokens.ContinuousCornerShape
 import com.sukisu.ultra.ui.theme.tokens.FolkShape
 
@@ -102,11 +105,23 @@ fun FolkBottomBar(
                     Modifier
                 }
             )
-            .windowInsetsPadding(WindowInsets.navigationBars),
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            // The bar is chrome floating over whatever screen is showing, so it cannot
+            // refract the page - that layer is recorded in the content window, not here.
+            // It still has to read as glass: the tint, the specular and the hairline rim
+            // come from the shared plate, which is the same glass minus the refraction.
+            .liquidGlass(
+                shape = barShape,
+                strength = GlassStrength.Subtle,
+                refract = false,
+            ),
         shape = barShape,
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        color = Color.Transparent,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        tonalElevation = if (isFloating) 3.dp else 0.dp,
+        // Elevation is pointless over a transparent body - it only tints a fill that is
+        // no longer there - so the floating variant keeps its drop shadow and drops the
+        // tonal lift.
+        tonalElevation = 0.dp,
         shadowElevation = if (isFloating) 8.dp else 0.dp,
     ) {
         Row(
