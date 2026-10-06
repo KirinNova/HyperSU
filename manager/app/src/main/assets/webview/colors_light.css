@@ -111,7 +111,7 @@
     --backgroundElevatedSecondary: var(--gray-000);
     --backgroundElevatedTertiary: var(--gray-000);
     --backgroundInset: var(--gray-200);
-    --link-hover: var(--gray-200);
+    --link-hover: var(--blue-700);
     --color-issue-open: var(--green-500);
     --color-issue-closed: var(--purple-500);
     --color-pr-open: var(--green-500);
@@ -164,7 +164,7 @@
     --email-toggle-color: var(--kbd-color);
     --email-toggle-background: var(--blockquote-border);
     --email-quoted-color: var(--blockquote-color);
-    --keyword-color: var(--gray-400);
+    --keyword-color: var(--gray-600);
     --code-font: ui-monospace, Menlo, monospace;
     --tlb-header-bg: var(--gray-050);
     --color-fg-muted: #656d76;
