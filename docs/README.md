@@ -1,4 +1,4 @@
-# HyperSU Ultra
+# HyperSU 
 <img align='right' src='HyperSU-mini.svg' width='220px' alt="HyperSU logo">
 
 
