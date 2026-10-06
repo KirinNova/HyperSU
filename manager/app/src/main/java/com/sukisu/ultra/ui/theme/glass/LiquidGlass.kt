@@ -10,6 +10,9 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Shape
+import top.yukonga.miuix.kmp.blur.BlurDefaults
+import top.yukonga.miuix.kmp.blur.highlight.Highlight
+import top.yukonga.miuix.kmp.blur.textureBlur
 
 /** Resolved from the ambient scheme so glass tracks the theme the same way the palette does. */
 @Composable
@@ -19,16 +22,39 @@ fun rememberGlassSpec(strength: GlassStrength = GlassStrength.Regular): GlassSpe
 }
 
 /**
+ * The rim miuix paints from the refracted layer, matched to the plate's weight.
+ *
+ * miuix ships one stroke per size in a light and a dark flavour. Choosing by [strength] keeps
+ * the stroke proportional to the plate - a floating sheet gets the wide catch, a row inside a
+ * shelf gets the narrow one - and flipping on [GlassSpec.dark] keeps the highlight reading as
+ * light landing on the plate rather than a grey seam over black.
+ */
+private fun GlassSpec.highlight(): Highlight {
+    val light = !dark
+    return when (strength) {
+        GlassStrength.Subtle -> if (light) Highlight.GlassStrokeSmallLight else Highlight.GlassStrokeSmallDark
+        GlassStrength.Regular -> if (light) Highlight.GlassStrokeMiddleLight else Highlight.GlassStrokeMiddleDark
+        GlassStrength.Prominent -> if (light) Highlight.GlassStrokeBigLight else Highlight.GlassStrokeBigDark
+    }
+}
+
+/**
  * Turns a surface into a plate of iOS Liquid Glass.
  *
  * The stack is fixed and the order is the whole effect: body tint, diagonal sheen, specular
  * wash, then the content, and a hairline rim last so the edge always wins over whatever
- * scrolled under it. The plate is clipped to [shape], which is a continuous corner
- * everywhere this app applies it - a squircle is not decoration here, it is what makes the
- * rim curve follow the highlight instead of cutting across it.
+ * scrolled under it. The plate is clipped to [shape], which is a continuous corner everywhere
+ * this app applies it - a squircle is not decoration here, it is what makes the rim curve
+ * follow the highlight instead of cutting across it.
  *
- * Everything is drawn inside the shape and costs one draw pass; the ambient layer it sits on
- * is what gives it something to refract.
+ * Where the platform can run a runtime shader, miuix-blur sits in front of all of that and
+ * does the part a tint cannot fake: it samples the recorded page background and refracts it.
+ * The tint then drops to [GlassSpec.tintBlurred] so the refracted content stays visible, and
+ * the rim is handed to miuix's own stroke, which draws it from the blurred layer instead of
+ * from a gradient that knows nothing about what is behind it. Below API 33 the same modifier
+ * is a tinted plate, so the design still holds where blur does not exist.
+ *
+ * Everything is drawn inside the shape and costs one draw pass.
  *
  * @param shape must be the same shape the caller lays content out with, so the rim lands on
  *   the silhouette rather than a second, nearly identical one.
@@ -42,11 +68,27 @@ fun Modifier.liquidGlass(
     sheen: Boolean = true,
 ): Modifier {
     val spec = rememberGlassSpec(strength)
+    val backdrop = LocalGlassBackdrop.current
+    val blurred = backdrop != null
+
     return this
+        .then(
+            if (backdrop != null) {
+                Modifier.textureBlur(
+                    backdrop = backdrop,
+                    shape = shape,
+                    blurRadius = BlurDefaults.BlurRadius,
+                    noiseCoefficient = BlurDefaults.NoiseCoefficient,
+                    highlight = if (rim) spec.highlight() else null,
+                )
+            } else {
+                Modifier
+            }
+        )
         .clip(shape)
         .drawWithContent {
             // Body.
-            drawRect(Brush.verticalGradient(spec.tint))
+            drawRect(Brush.verticalGradient(if (blurred) spec.tintBlurred else spec.tint))
 
             if (sheen) {
                 // A diagonal that runs across the plate, brightest near the middle, so the
@@ -75,7 +117,10 @@ fun Modifier.liquidGlass(
             drawContent()
         }
         .then(
-            if (rim) {
+            // Only the unblurred plate draws its own rim; the refracted one already carries
+            // miuix's stroke, and two hairlines disagreeing about the silhouette read as a
+            // doubling of the edge rather than as a lit rim.
+            if (rim && !blurred) {
                 Modifier.border(
                     width = spec.rimWidth,
                     brush = Brush.verticalGradient(spec.rim),

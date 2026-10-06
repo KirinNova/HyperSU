@@ -34,7 +34,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sukisu.ultra.ui.navigation.LocalBottomBarVisible
 import com.sukisu.ultra.ui.navigation.LocalIsFloatingNavMode
+import com.sukisu.ultra.ui.theme.glass.ProvideGlassBackdrop
 import com.sukisu.ultra.ui.theme.glass.glassAmbient
+import com.sukisu.ultra.ui.theme.glass.layerBackdropIf
+import com.sukisu.ultra.ui.theme.glass.rememberGlassBackdrop
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.Alignment
 
@@ -191,31 +194,43 @@ fun FolkScaffold(
         // Keep the content viewport below the bar instead of only offsetting the
         // first item. With a translucent bar in wallpaper mode, content that
         // scrolls underneath would otherwise show through the title.
+        // Recorded on its own layer: a plate that sampled a layer it is drawn into would
+        // read back its own output rather than the page behind it. Null below API 33, where
+        // there is no runtime shader to sample with.
+        val backdrop = rememberGlassBackdrop()
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = inner.calculateTopPadding())
-                // The wash the glass refracts. Drawn here rather than at the app root so it
-                // sits above the themed background but under every screen's content, and a
-                // wallpaper - which brings its own backdrop - is left alone.
-                .glassAmbient(),
-            contentAlignment = Alignment.TopCenter,
+                .padding(top = inner.calculateTopPadding()),
         ) {
-            // Cap the content column on large screens so rows do not stretch
-            // across a tablet or desktop window; on a phone this is a no-op.
+            // The wash the glass refracts, and the layer miuix-blur samples. Drawn here
+            // rather than at the app root so it sits above the themed background but under
+            // every screen's content, and a wallpaper - which brings its own backdrop - is
+            // left alone.
             Box(
                 modifier = Modifier
-                    .widthIn(max = FolkSettingsDimens.ContentMaxWidth)
-                    .fillMaxSize(),
-            ) {
-                content(
-                    PaddingValues(
-                        start = inner.calculateStartPadding(layoutDirection),
-                        end = inner.calculateEndPadding(layoutDirection),
-                        top = 0.dp,
-                        bottom = inner.calculateBottomPadding() + clearance,
+                    .fillMaxSize()
+                    .layerBackdropIf(backdrop)
+                    .glassAmbient(),
+            )
+            ProvideGlassBackdrop(backdrop) {
+                // Cap the content column on large screens so rows do not stretch
+                // across a tablet or desktop window; on a phone this is a no-op.
+                Box(
+                    modifier = Modifier
+                        .widthIn(max = FolkSettingsDimens.ContentMaxWidth)
+                        .fillMaxSize()
+                        .align(Alignment.TopCenter),
+                ) {
+                    content(
+                        PaddingValues(
+                            start = inner.calculateStartPadding(layoutDirection),
+                            end = inner.calculateEndPadding(layoutDirection),
+                            top = 0.dp,
+                            bottom = inner.calculateBottomPadding() + clearance,
+                        )
                     )
-                )
+                }
             }
         }
     }

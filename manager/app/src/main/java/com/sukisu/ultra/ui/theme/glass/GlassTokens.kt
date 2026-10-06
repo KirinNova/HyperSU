@@ -54,6 +54,17 @@ data class GlassSpec(
     /** Rim thickness. One device-independent pixel: a rim that thickens stops being a rim. */
     val rimWidth: Dp,
     val strength: GlassStrength,
+    /** Which scheme this resolved from, so the rim set can follow light or dark. */
+    val dark: Boolean,
+    /**
+     * [tint] with its alpha pulled back, used when a real backdrop sits behind the plate.
+     *
+     * The opaque values above exist to carry the plate when nothing is being refracted.
+     * Once miuix-blur supplies what is behind it, that job belongs to the blur and the tint
+     * only has to keep text legible over it - holding the original alpha would hide the very
+     * content the glass is supposed to reveal.
+     */
+    val tintBlurred: List<Color>,
 ) {
     companion object {
 
@@ -94,6 +105,11 @@ data class GlassSpec(
                 rimBottom = white(0.62f * k)
             }
 
+            // Under a real backdrop the plate no longer has to be the page; it only has to
+            // hold text. Light mode loses most of its white, dark mode less of it, because a
+            // small lift over black is already close to invisible once content shows through.
+            val blurAlpha = if (dark) 0.6f else 0.4f
+
             return GlassSpec(
                 tint = listOf(bodyTop, bodyBottom),
                 specular = listOf(specTop, specMid, Color.Transparent),
@@ -102,6 +118,11 @@ data class GlassSpec(
                 rim = listOf(rimTop, rimMid, rimBottom),
                 rimWidth = 1.dp,
                 strength = strength,
+                dark = dark,
+                tintBlurred = listOf(
+                    bodyTop.copy(alpha = bodyTop.alpha * blurAlpha),
+                    bodyBottom.copy(alpha = bodyBottom.alpha * blurAlpha),
+                ),
             )
         }
 
