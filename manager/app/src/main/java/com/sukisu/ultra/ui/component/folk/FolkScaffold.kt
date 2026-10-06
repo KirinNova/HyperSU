@@ -27,7 +27,6 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
@@ -163,12 +162,15 @@ fun FolkScaffold(
                 }
             }
         },
-        containerColor = Color.Transparent,
-        // The container is transparent so the themed background shows through.
-        // Material would then derive the content colour from a transparent
-        // container and get Unspecified, which drops any text that does not set
-        // its own colour to black - unreadable in dark mode. Pin it to the
-        // background's content colour, which is what an opaque page would use.
+        // Paint the page background here rather than leaving the container
+        // transparent. The nav host keeps the previous entry composed for its
+        // card transition and swipe-back gesture, so a page that does not paint
+        // its own background lets the screen underneath show through.
+        containerColor = MaterialTheme.colorScheme.background,
+        // Deriving the content colour from a transparent container yields
+        // Unspecified, which drops any text that does not set its own colour to
+        // black - unreadable in dark mode. Pin it to the background's content
+        // colour.
         contentColor = MaterialTheme.colorScheme.onBackground,
         snackbarHost = {
             if (snackbarHostState != null) {
