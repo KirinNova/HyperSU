@@ -1,0 +1,63 @@
+﻿package com.sukisu.ultra.ui.screen.colorpalette
+
+import androidx.activity.compose.LocalActivity
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.dropUnlessResumed
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.materialkolor.PaletteStyle
+import com.materialkolor.dynamiccolor.ColorSpec
+import com.sukisu.ultra.KernelSUApplication
+import com.sukisu.ultra.ui.navigation3.LocalNavigator
+import com.sukisu.ultra.ui.theme.ColorMode
+import com.sukisu.ultra.ui.viewmodel.SettingsViewModel
+
+@Composable
+fun ColorPaletteScreen() {
+    val navigator = LocalNavigator.current
+    val context = LocalContext.current
+    val activity = LocalActivity.current
+    val viewModel = viewModel<SettingsViewModel>()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val currentPaletteStyle = try {
+        PaletteStyle.valueOf(uiState.colorStyle)
+    } catch (_: Exception) {
+        PaletteStyle.TonalSpot
+    }
+    val currentColorSpec = try {
+        ColorSpec.SpecVersion.valueOf(uiState.colorSpec)
+    } catch (_: Exception) {
+        ColorSpec.SpecVersion.SPEC_2025
+    }
+    val state = ColorPaletteUiState(
+        uiState = uiState,
+        currentColorMode = ColorMode.fromValue(uiState.themeMode),
+        currentPaletteStyle = currentPaletteStyle,
+        currentColorSpec = currentColorSpec,
+        showFullStatus = uiState.showFullStatus,
+    )
+    val actions = ColorPaletteScreenActions(
+        onBack = dropUnlessResumed { navigator.pop() },
+        onSetThemeMode = viewModel::setThemeMode,
+        onSetKeyColor = viewModel::setKeyColor,
+        onSetColorMode = viewModel::setColorMode,
+        onSetColorStyle = viewModel::setColorStyle,
+        onSetColorSpec = viewModel::setColorSpec,
+        onSetEnableFloatingBottomBar = viewModel::setEnableFloatingBottomBar,
+        onSetEnableNavigationBadge = viewModel::setEnableNavigationBadge,
+        onSetEnablePredictiveBack = {
+            viewModel.setEnablePredictiveBack(it)
+            KernelSUApplication.setEnableOnBackInvokedCallback(context.applicationInfo, it)
+            activity?.recreate()
+        },
+        onSetEnableSwipeDismiss = viewModel::setEnableSwipeDismiss,
+        onSetPagerInterceptionMode = viewModel::setPagerInterceptionMode,
+        onSetPageScale = viewModel::setPageScale,
+        onSetModuleDescriptionMaxLines = viewModel::setModuleDescriptionMaxLines,
+        onSetShowFullStatus = viewModel::setShowFullStatus,
+    )
+
+    ColorPaletteScreenFolk(state, actions)
+}
