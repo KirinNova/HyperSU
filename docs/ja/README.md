@@ -1,5 +1,5 @@
-# SukiSU Ultra
-<img align='right' src='SukiSU-mini.svg' width='220px' alt="sukisu logo">
+# HyperSU
+<img align='right' src='SukiSU-mini.svg' width='220px' alt="HyperSU logo">
 
 
 [English](../README.md) | [简体中文](../zh/README.md) | **日本語** | [Türkçe](../tr/README.md)
@@ -7,7 +7,7 @@
 [KernelSU](https://github.com/tiann/KernelSU) をベースとした Android デバイスの root ソリューション
 
 **試験中なビルドです！自己責任で使用してください！**<br>
-このソリューションは [KernelSU](https://github.com/tiann/KernelSU) に基づいていますが、試験中なビルドです。
+このソリューションは [SukiSU Ultra](https://github.com/SukiSU-Ultra/SukiSU-Ultra) に基づいていますが、試験中なビルドです。
 
 > これは非公式なフォークです。すべての権利は [@tiann](https://github.com/tiann) に帰属します。
 >
@@ -18,13 +18,13 @@
 メインブランチを使用 (非 GKI のデバイスのビルドは非対応) (susfs を手動で統合が必要)
 
 ```
-curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
+curl -LSs "https://raw.githubusercontent.com/KirinNova/HyperSU/main/kernel/setup.sh" | bash -s main
 ```
 
 非 GKI のデバイスに対応するブランチを使用 (susfs を手動で統合が必要)
 
 ```
-curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
+curl -LSs "https://raw.githubusercontent.com/KirinNova/HyperSU/main/kernel/setup.sh" | bash -s builtin
 ```
 
 ## 統合された susfs の使い方
@@ -32,7 +32,7 @@ curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kern
 1. susfs-main または他の susfs-\* ブランチを直接で使用、susfs の統合は不要 (非 GKI デバイスのビルドに対応)
 
 ```
-curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-main
+curl -LSs "https://raw.githubusercontent.com/KirinNova/HyperSU/main/kernel/setup.sh" | bash -s susfs-main
 ```
 
 ## フックの方式
@@ -83,7 +83,7 @@ KPM テンプレートのアドレス: https://github.com/udochina/KPM-Build-Any
 
 ## その他のリンク
 
-**マネージャーの翻訳を行う場合** https://crowdin.com/project/SukiSU-Ultra
+**マネージャーの翻訳を行う場合** [KirinNova/HyperSU](https://github.com/KirinNova/HyperSU) に Pull Request を送信してください。
 
 - [その他パッチ済み GKI](https://github.com/ShirkNeko/GKI_KernelSU_SUSFS) ZRAM パッチ、KPM、susfs が含まれています...
 - [パッチの少ない GKI](https://github.com/MiRinFork/GKI_SukiSU_SUSFS/releases) susfs のみ
@@ -124,6 +124,14 @@ KPM テンプレートのアドレス: https://github.com/udochina/KPM-Build-Any
 
 1. KernelSU Manager のアンインストールが停止してしまう → com.sony.playmemories.mobile のアプリをアンインストールしてください。
 
+## 上流への感謝
+
+HyperSU は優れたオープンソースプロジェクトの肩の上に成り立っています。上流プロジェクトとそのメンテナーの皆様に心より感謝いたします。
+
+特に、HyperSU の直接の上流およびフォーク元である [SukiSU Ultra](https://github.com/SukiSU-Ultra/SukiSU-Ultra) とそのすべての貢献者に感謝します。また、最初のカーネルベース root ソリューションを生み出し、SukiSU と HyperSU の基礎を築いた [KernelSU](https://github.com/tiann/KernelSU) と作者 [tiann](https://github.com/tiann) に深く感謝します。
+
+「貢献者」に記載されているその他の上流プロジェクトと貢献者の皆様にも感謝します。
+
 ## ライセンス
 
 - 「kernel」のディレクトリ内のファイルは [GPL-2.0-only](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html) のライセンスに基づいています。
@@ -142,11 +150,12 @@ KPM テンプレートのアドレス: https://github.com/udochina/KPM-Build-Any
 
 ## 貢献者
 
-- [KernelSU](https://github.com/tiann/KernelSU): オリジナルのプロジェクト
+- [SukiSU](https://github.com/SukiSU-Ultra/SukiSU-Ultra): 直接の上流 / フォーク元。SukiSU チームとすべての貢献者に特別な感謝を表します。
+- [KernelSU](https://github.com/tiann/KernelSU): SukiSU の上流。tiann とすべての KernelSU 貢献者に特別な感謝を表します。
 - [MKSU](https://github.com/5ec1cff/KernelSU): 使用しているプロジェクト
 - [RKSU](https://github.com/rsuntk/KernelsU): このプロジェクトのカーネルを使用した非 GKI デバイスのサポートの再導入
 - [susfs](https://gitlab.com/simonpunk/susfs4ksu): susfs ファイルシステムの使用
-- [KernelSU](https://git.zx2c4.com/kernel-assisted-superuser/about/): KernelSU の概念化
+- [Kernel-Assisted Superuser](https://git.zx2c4.com/kernel-assisted-superuser/about/): KernelSU の概念化
 - [Magisk](https://github.com/topjohnwu/Magisk): パワフルな root ユーティリティ
 - [genuine](https://github.com/brevent/genuine/): APK v2 署名認証
 - [Diamorphine](https://github.com/m0nad/Diamorphine): いくつかの root キットユーティリティ
