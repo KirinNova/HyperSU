@@ -70,7 +70,7 @@ inline std::pair<int, int> legacy_get_info() {
 // Callers must pass a buffer of at least `size` bytes; the getter writes at
 // most `size` bytes (including the NUL terminator) into it.
 #define DEFINE_CACHED_GETTER(name, ioctl, cmd_type, field, size)             \
-    inline bool get_##name(char *buff) {                                     \
+    bool get_##name(char *buff) {                                            \
         static char g_##name[size] = {0};                                    \
         if (g_##name[0] == '\0') {                                           \
             struct cmd_type cmd = {0};                                       \
