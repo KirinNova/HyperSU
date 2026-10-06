@@ -69,8 +69,14 @@ inline std::pair<int, int> legacy_get_info() {
 
 // Callers must pass a buffer of at least `size` bytes; the getter writes at
 // most `size` bytes (including the NUL terminator) into it.
+//
+// NOTE: this macro intentionally expands to a NON-inline function so that the
+// generated symbol is emitted into the defining translation unit (ksu.cc) and
+// can be linked against from jni.cc. Previously it used `inline`, which caused
+// `undefined symbol: get_full_version(char*)` / `get_hook_type(char*)` at link
+// time because ksu.cc never odr-used the generated functions.
 #define DEFINE_CACHED_GETTER(name, ioctl, cmd_type, field, size)             \
-    inline bool get_##name(char *buff) {                                     \
+    bool get_##name(char *buff) {                                            \
         static char g_##name[size] = {0};                                    \
         if (g_##name[0] == '\0') {                                           \
             struct cmd_type cmd = {0};                                       \
