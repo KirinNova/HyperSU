@@ -6,6 +6,7 @@
 #define KERNELSU_KSU_H
 
 #include <cstdint>
+#include <cstdio>
 #include <sys/ioctl.h>
 #include <sys/prctl.h>
 #include <utility>
@@ -55,7 +56,7 @@ bool is_selinux_hide_enabled();
 
 bool get_allow_list(struct ksu_new_get_allow_list_cmd *);
 
-bool get_full_version(char* buff);
+bool get_full_version(char *buff);
 bool get_hook_type(char *buff);
 
 inline std::pair<int, int> legacy_get_info() {
@@ -66,20 +67,22 @@ inline std::pair<int, int> legacy_get_info() {
     return {version, flags};
 }
 
-#define DEFINE_CACHED_GETTER(name, ioctl, cmd_type, field, size) \
-    static char g_##name[size] = {0}; \
-    bool get_##name(char *buff) { \
-        if (g_##name[0] == '\0') { \
-            struct cmd_type cmd = {0}; \
-            if (ksuctl(ioctl, &cmd) == 0) { \
-                snprintf(g_##name, sizeof(g_##name), "%s", cmd.field); \
-            } \
-        } \
-        if (g_##name[0] != '\0') { \
-            snprintf(buff, size, "%s", g_##name); \
-            return true; \
-        } \
-        return false; \
+// Callers must pass a buffer of at least `size` bytes; the getter writes at
+// most `size` bytes (including the NUL terminator) into it.
+#define DEFINE_CACHED_GETTER(name, ioctl, cmd_type, field, size)             \
+    inline bool get_##name(char *buff) {                                     \
+        static char g_##name[size] = {0};                                    \
+        if (g_##name[0] == '\0') {                                           \
+            struct cmd_type cmd = {0};                                       \
+            if (ksuctl(ioctl, &cmd) == 0) {                                  \
+                snprintf(g_##name, sizeof(g_##name), "%s", cmd.field);       \
+            }                                                                \
+        }                                                                    \
+        if (g_##name[0] != '\0' && buff != nullptr) {                        \
+            snprintf(buff, size, "%s", g_##name);                            \
+            return true;                                                     \
+        }                                                                    \
+        return false;                                                        \
     }
 
 #endif //KERNELSU_KSU_H
