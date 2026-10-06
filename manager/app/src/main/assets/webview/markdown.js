@@ -1,7 +1,9 @@
 window.onerror = (msg, url, line, column, error) => {
-  window.github._sendMessage('error', {
-    message: msg
-  })
+  if (window.github && typeof window.github._sendMessage === 'function') {
+    window.github._sendMessage('error', {
+      message: msg
+    })
+  }
 }
 
 /**
@@ -20,6 +22,9 @@ class GitHub {
    * Initialize
    */
   constructor () {
+    this._id = null
+    this._lastHeight = 0
+    this._resizeObserver = null
   }
 
   /**
@@ -29,11 +34,19 @@ class GitHub {
    * @param {object} message Message content
    */
   _sendMessage (name, message) {
-    const payload = message
+    if (!window.native || typeof window.native.sendMessage !== 'function') {
+      return
+    }
+
+    const payload = Object.assign({}, message || {})
     payload.messageName = name
     payload.id = this._id
 
-    window.native.sendMessage(JSON.stringify(payload))
+    try {
+      window.native.sendMessage(JSON.stringify(payload))
+    } catch (e) {
+      // Never let a serialization failure escape into the page.
+    }
   }
 
   /**
@@ -41,10 +54,14 @@ class GitHub {
    */
   _addHeightListener () {
     if (typeof ResizeObserver !== 'undefined') {
-      const resizeObserver = new ResizeObserver(entries => {
+      // Disconnect any previous observer so repeated loads don't accumulate.
+      if (this._resizeObserver) {
+        this._resizeObserver.disconnect()
+      }
+      this._resizeObserver = new ResizeObserver(() => {
         this._updateHeight()
       })
-      resizeObserver.observe(document.body)
+      this._resizeObserver.observe(document.body)
     } else {
       this._addElementHeightListener('details', 'toggle')
       this._addElementHeightListener('video', 'resize')
@@ -97,10 +114,23 @@ class GitHub {
       if (!image.src) {
         continue
       }
-      const imgSrc = new URL(image.src)
+
+      let imgSrc
+      try {
+        imgSrc = new URL(image.src)
+      } catch (e) {
+        // Relative or malformed src; leave it alone.
+        continue
+      }
+
       if (imgSrc.host === 'raw.githubusercontent.com') {
-        const pathWithQueryParams = decodeURIComponent(imgSrc.pathname)
-        const newPath = new URL(pathWithQueryParams, 'https://raw.githubusercontent.com')
+        let newPath
+        try {
+          const pathWithQueryParams = decodeURIComponent(imgSrc.pathname)
+          newPath = new URL(pathWithQueryParams, 'https://raw.githubusercontent.com')
+        } catch (e) {
+          continue
+        }
 
         // add back any query parameters from the original URL
         const searchParams = imgSrc.searchParams
@@ -114,22 +144,22 @@ class GitHub {
   }
 
   /**
-  * Workaround for https://github.com/github/mobile/issues/3093
-  */
+   * Workaround for https://github.com/github/mobile/issues/3093
+   */
   _applyImageLoadingWorkaround () {
-      document.querySelectorAll('source, img').forEach((node) => {
-        ['srcset', 'src'].forEach((attrName) => {
-          const attr = node.getAttribute(attrName)
-          if (
-            (attr !== null) &&
-            (attr.startsWith('https://github.com')) &&
-            (attr.indexOf('/blob/') !== -1)
-          ) {
-            node.setAttribute(attrName, attr.replace('/blob/', '/raw/'))
-          }
-        })
+    document.querySelectorAll('source, img').forEach((node) => {
+      ['srcset', 'src'].forEach((attrName) => {
+        const attr = node.getAttribute(attrName)
+        if (
+          (attr !== null) &&
+          (attr.startsWith('https://github.com')) &&
+          (attr.indexOf('/blob/') !== -1)
+        ) {
+          node.setAttribute(attrName, attr.replace('/blob/', '/raw/'))
+        }
       })
-    }
+    })
+  }
 
   /**
    * Post-process and setup listeners after changing the main content
@@ -162,12 +192,18 @@ class GitHub {
     this._id = id
     const content = document.getElementById('content')
 
-    if (content.innerHTML === html && content.getAttribute('overridePos') === overridePos) {
+    if (!content) {
+      return
+    }
+
+    const overridePosStr = overridePos == null ? '' : String(overridePos)
+
+    if (content.innerHTML === html && content.getAttribute('overridePos') === overridePosStr) {
       this._updateHeight()
       return
     }
 
-    content.setAttribute('overridePos', overridePos)
+    content.setAttribute('overridePos', overridePosStr)
 
     // Set the content
     content.innerHTML = html
@@ -198,20 +234,19 @@ class GitHub {
       }
     }
 
-    const checkBoxes = document.querySelectorAll(".task-list-item-checkbox, .tlb-checkbox, .tlb-issue-reference-number")
+    const checkBoxes = document.querySelectorAll(".task-list-item-checkbox, .tlb-checkbox")
     for (let i = 0; i < checkBoxes.length; i++) {
-        if(i == overridePos){
-            checkBoxes[i].checked = overrideVal === 'true'
-        }
-        if(isTaskListCompletionEnabled){
-            checkBoxes[i].disabled = false
-            checkBoxes[i].addEventListener('change', (event) => {
-                this._commitTaskItemChanged(i, event.target.checked)
-                });
-        }
-        else{
-            checkBoxes[i].disabled = true
-        }
+      if (i == overridePos) {
+        checkBoxes[i].checked = overrideVal === 'true'
+      }
+      if (isTaskListCompletionEnabled) {
+        checkBoxes[i].disabled = false
+        checkBoxes[i].addEventListener('change', (event) => {
+          this._commitTaskItemChanged(i, event.target.checked)
+        })
+      } else {
+        checkBoxes[i].disabled = true
+      }
     }
 
     this._didLoad()
@@ -226,35 +261,66 @@ class GitHub {
    * @param {previewHTML} the full suggested change HTML
    */
   _addSuggestedChangesButton (container, id, previewHTML) {
-    container.innerHTML =
-        "<div style=\"display: flex; justify-content: center;\">" +
-        "<button onclick=\"window.github._commitSuggestedChange('" + id + "', '" + escape(previewHTML) + "')\" " +
-        "style=\"" +
-        "padding: 10px 0px; " +
-        "margin: 10px; " +
-        "display: flex; " +
-        "align-items: center; " +
-        "justify-content: center; " +
-        "width: 100%; " +
-        "text-transform: uppercase; " +
-        "font-weight: 500; " +
-        "font-size: 14px; " +
-        "letter-spacing: 0.05em; " +
-        "background-color: var(--backgroundElevatedSecondary); " +
-        "color: var(--link); " +
-        "border-color: var(--border); " +
-        "border-radius: 6px; " +
-        "border-width: 1px; " +
-        "outline: none; " +
-        "\" onfocus=\"this.style.backgroundColor='var(--suggestedChangeCommitButtonBackgroundDisabled)';\" " +
-        "onblur=\"this.style.backgroundColor='var(--backgroundElevatedSecondary)';\">" +
-        "<svg style=\"fill: var(--link); margin: 4px; 0px; 0px; 0px;\" " +
-        "viewBox=\"0 0 16 16\" width=\"16\" height=\"16\"><path fill-rule=\"evenodd\" " +
-        "d=\"M10.5 7.75a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zm1.43.75a4.002 4.002 0 01-7.86 0H.75a.75.75 0 " +
-        "110-1.5h3.32a4.001 4.001 0 017.86 0h3.32a.75.75 0 110 1.5h-3.32z\"></path></svg>" +
-        "Commit" +
-        "</button>" +
-        "</div>";
+    container.innerHTML = ''
+
+    const wrapper = document.createElement('div')
+    wrapper.style.display = 'flex'
+    wrapper.style.justifyContent = 'center'
+
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.style.padding = '10px 0px'
+    button.style.margin = '10px'
+    button.style.display = 'flex'
+    button.style.alignItems = 'center'
+    button.style.justifyContent = 'center'
+    button.style.width = '100%'
+    button.style.textTransform = 'uppercase'
+    button.style.fontWeight = '500'
+    button.style.fontSize = '14px'
+    button.style.letterSpacing = '0.05em'
+    button.style.backgroundColor = 'var(--backgroundElevatedSecondary)'
+    button.style.color = 'var(--link)'
+    button.style.borderColor = 'var(--border)'
+    button.style.borderRadius = '6px'
+    button.style.borderWidth = '1px'
+    button.style.borderStyle = 'solid'
+    button.style.outline = 'none'
+
+    button.addEventListener('focus', () => {
+      button.style.backgroundColor = 'var(--suggestedChangeCommitButtonBackgroundDisabled)'
+    })
+    button.addEventListener('blur', () => {
+      button.style.backgroundColor = 'var(--backgroundElevatedSecondary)'
+    })
+
+    // Bind the payload via a closure instead of escaping it into an inline handler.
+    const suggestionId = id
+    const suggestionHTML = previewHTML
+    button.addEventListener('click', () => {
+      this._commitSuggestedChange(suggestionId, suggestionHTML)
+    })
+
+    const svgNS = 'http://www.w3.org/2000/svg'
+    const svg = document.createElementNS(svgNS, 'svg')
+    svg.setAttribute('viewBox', '0 0 16 16')
+    svg.setAttribute('width', '16')
+    svg.setAttribute('height', '16')
+    svg.style.fill = 'var(--link)'
+    svg.style.margin = '4px 0px 0px 0px'
+
+    const path = document.createElementNS(svgNS, 'path')
+    path.setAttribute('fill-rule', 'evenodd')
+    path.setAttribute(
+      'd',
+      'M10.5 7.75a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zm1.43.75a4.002 4.002 0 01-7.86 0H.75a.75.75 0 110-1.5h3.32a4.001 4.001 0 017.86 0h3.32a.75.75 0 110 1.5h-3.32z'
+    )
+    svg.appendChild(path)
+
+    button.appendChild(svg)
+    button.appendChild(document.createTextNode('Commit'))
+    wrapper.appendChild(button)
+    container.appendChild(wrapper)
   }
 
   /**
@@ -270,18 +336,18 @@ class GitHub {
     })
   }
 
-    /**
-     * change the task list checkbox value
-     *
-     * @param {position} the position of the checkbox in the task list
-     * @param {checked} checked value
-     */
-    _commitTaskItemChanged (position, checked) {
-      this._sendMessage('task_changed', {
-        taskPosition: position,
-        taskChecked: checked
-      })
-    }
+  /**
+   * change the task list checkbox value
+   *
+   * @param {position} the position of the checkbox in the task list
+   * @param {checked} checked value
+   */
+  _commitTaskItemChanged (position, checked) {
+    this._sendMessage('task_changed', {
+      taskPosition: position,
+      taskChecked: checked
+    })
+  }
 
   /**
    * Load content into the web view
@@ -289,10 +355,13 @@ class GitHub {
    * @param {anchor} anchor
    */
   getAnchorPosition (anchor) {
-    var position = this._positionOf(anchor)
+    const position = this._positionOf(anchor)
+    if (position === null || position === undefined) {
+      return
+    }
     this._sendMessage('scroll_to', {
-        posY: position,
-        anchor: anchor
+      posY: position,
+      anchor: anchor
     })
   }
 
@@ -303,6 +372,10 @@ class GitHub {
    * @returns {number} The element's top Y position
    */
   _positionOf (elementID) {
+    if (!elementID) {
+      return null
+    }
+
     let element = this._getElementById(elementID)
     if (element === null) {
       element = this._getElementByName(elementID)
@@ -327,7 +400,6 @@ class GitHub {
     return rect.y
   }
 
-
   /**
    * Get the DOM element by the given id in a case-insensitive way. We first try
    * to find an element which as the exact given id. If we cannot find any, we
@@ -337,7 +409,13 @@ class GitHub {
    * @returns {HTMLElement} element or `null` if not found.
    */
   _getElementById (id) {
-    const decodedID = decodeURIComponent(id)
+    let decodedID
+    try {
+      decodedID = decodeURIComponent(id)
+    } catch (e) {
+      decodedID = id
+    }
+
     const possibleElements = [
       decodedID,
       decodedID.toLowerCase(),
