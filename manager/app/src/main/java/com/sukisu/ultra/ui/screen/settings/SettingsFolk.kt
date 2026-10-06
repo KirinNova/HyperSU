@@ -219,13 +219,16 @@ fun SettingPagerFolk(
                 }
             }
 
-            if (isSusfsSupported && isKpmAvailable) {
+            // SuSFS config is its own section and reaches the kernel through ksud, so it
+            // must not inherit the KPM gate above it - a device without KPM was losing the
+            // SuSFS entry entirely.
+            if (isSusfsSupported) {
                 item {
                     FolkSettingsSectionGroup(title = stringResource(R.string.susfs_config_title)) {
                         item {
                             FolkNavigationPreference(
                                 title = stringResource(R.string.susfs_config_title),
-                                summary = stringResource(R.string.settings_kpm_summary),
+                                summary = stringResource(R.string.susfs_config_summary),
                                 icon = Icons.Filled.Fence,
                                 onClick = actions.onOpenSusfsConfig,
                             )

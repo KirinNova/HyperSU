@@ -40,8 +40,12 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      expected_size: ${{ steps.extract.outputs.expected_size }}
-      expected_hash: ${{ steps.extract.outputs.expected_hash }}
+      # PR runs sign with the throwaway pr-key, release runs sign with
+      # secrets.KEYSTORE - whichever actually signs the manager must feed the
+      # kernel's second signature slot, or the LKM built here rejects the very
+      # APK this workflow ships.
+      expected_size: ${{ steps.extract.outputs.expected_size || steps.extract_release.outputs.expected_size }}
+      expected_hash: ${{ steps.extract.outputs.expected_hash || steps.extract_release.outputs.expected_hash }}
       keystore: ${{ steps.gen.outputs.keystore }}
       keystore_password: ${{ steps.gen.outputs.keystore_password }}
       key_password: ${{ steps.gen.outputs.key_password }}
@@ -91,6 +95,42 @@ jobs:
 
           echo "Certificate size: $SIZE_HEX ($SIZE_DEC bytes)"
           echo "Certificate hash: $HASH"
+
+      - name: Extract certificate hash from release keystore
+        if: github.event_name != 'pull_request'
+        id: extract_release
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE }}
+          STORE_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          # On push/tag the manager is signed with secrets.KEYSTORE (see the
+          # Write key step below). Without its certificate here the kernel
+          # keeps only the hardcoded upstream slot and refuses our own APK.
+          if [ -z "$KEYSTORE_B64" ] || [ -z "$STORE_PASS" ] || [ -z "$KEY_ALIAS" ]; then
+            echo "::notice::Release keystore secret missing - LKM keeps only the default manager signature slot"
+            echo "expected_size=" >> "$GITHUB_OUTPUT"
+            echo "expected_hash=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "$KEYSTORE_B64" | base64 -d -i > release-key.jks
+
+          keytool -exportcert \
+            -alias "$KEY_ALIAS" \
+            -keystore release-key.jks \
+            -storepass "$STORE_PASS" \
+            -file release-cert.der
+
+          SIZE_DEC=$(stat -c%s release-cert.der)
+          SIZE_HEX=$(printf '0x%04x' "$SIZE_DEC")
+          echo "expected_size=$SIZE_HEX" >> "$GITHUB_OUTPUT"
+
+          HASH=$(sha256sum release-cert.der | awk '{print $1}')
+          echo "expected_hash=$HASH" >> "$GITHUB_OUTPUT"
+
+          echo "Release certificate size: $SIZE_HEX ($SIZE_DEC bytes)"
+          echo "Release certificate hash: $HASH"
 
 
   build-lkm:
