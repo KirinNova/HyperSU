@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
@@ -384,6 +385,40 @@ private fun FolkChoiceDialog(
         mutableIntStateOf(selectedIndex.coerceIn(0, maxOf(0, options.lastIndex)))
     }
 
+    FolkChooserDialog(
+        title = title,
+        onDismissRequest = onDismissRequest,
+        onConfirm = {
+            onSelect(pendingIndex)
+            onDismissRequest()
+        },
+    ) {
+        itemsIndexed(options) { index, option ->
+            FolkChoiceOptionRow(
+                title = option,
+                selected = pendingIndex == index,
+                onClick = { pendingIndex = index },
+            )
+        }
+    }
+}
+
+/**
+ * The frame every list chooser shares: a wide panel, a centred title, the rows
+ * in one group surface, and cancel/confirm as plain text buttons.
+ *
+ * Callers supply only their rows, so a chooser that needs its own row shape -
+ * the KMI picker marks the device's current value - still cannot drift away
+ * from the frame the others use.
+ */
+@Composable
+internal fun FolkChooserDialog(
+    title: String,
+    onDismissRequest: () -> Unit,
+    onConfirm: () -> Unit,
+    confirmEnabled: Boolean = true,
+    rows: LazyListScope.() -> Unit,
+) {
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -412,15 +447,10 @@ private fun FolkChoiceDialog(
                     shape = FolkShape.Corner16,
                     color = folkGroupColor(),
                 ) {
-                    LazyColumn(contentPadding = PaddingValues(OptionRowInset)) {
-                        itemsIndexed(options) { index, option ->
-                            FolkChoiceOptionRow(
-                                title = option,
-                                selected = pendingIndex == index,
-                                onClick = { pendingIndex = index },
-                            )
-                        }
-                    }
+                    LazyColumn(
+                        contentPadding = PaddingValues(OptionRowInset),
+                        content = rows,
+                    )
                 }
 
                 Row(
@@ -438,10 +468,8 @@ private fun FolkChoiceDialog(
                     }
 
                     TextButton(
-                        onClick = {
-                            onSelect(pendingIndex)
-                            onDismissRequest()
-                        },
+                        onClick = onConfirm,
+                        enabled = confirmEnabled,
                         colors = FolkButtonDefaults.textColors(),
                     ) {
                         Text(stringResource(R.string.confirm))
@@ -463,12 +491,13 @@ private fun FolkChoiceDialog(
  */
 private val OptionRowInset = 4.dp
 
-/** One option of [FolkChoiceDialog]: a radio on the leading side, filled when chosen. */
+/** One option of [FolkChooserDialog]: a radio on the leading side, filled when chosen. */
 @Composable
-private fun FolkChoiceOptionRow(
+internal fun FolkChoiceOptionRow(
     title: String,
     selected: Boolean,
     onClick: () -> Unit,
+    summary: String? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val haptics = LocalHapticFeedback.current
@@ -497,16 +526,28 @@ private fun FolkChoiceOptionRow(
     ) {
         RadioButton(selected = selected, onClick = null)
         Spacer(Modifier.width(8.dp))
-        Text(
-            text = title,
-            style = FolkType.Title,
-            color = if (selected) {
-                MaterialTheme.colorScheme.onPrimaryContainer
-            } else {
-                MaterialTheme.colorScheme.onSurface
-            },
-            modifier = Modifier.padding(vertical = 12.dp),
-        )
+        Column(modifier = Modifier.padding(vertical = 12.dp)) {
+            Text(
+                text = title,
+                style = FolkType.Title,
+                color = if (selected) {
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+            )
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    style = FolkType.Summary,
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+            }
+        }
     }
 }
 
