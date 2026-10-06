@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.LayersClear
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material.icons.rounded.Android
 import androidx.compose.material.icons.rounded.Language
@@ -97,19 +96,12 @@ fun SettingPagerFolk(
                 bottom = bottomInnerPadding + innerPadding.calculateBottomPadding() + 16.dp,
             ),
         ) {
-            // Update checks (KSU only).
+            // Update checks (KSU only). Only module updates are offered: the manager no longer
+            // compares itself against upstream releases, which used to prompt "new version,
+            // tap to upgrade" and push the upstream APK over this build.
             item {
                 KsuIsValid {
                     FolkSettingsSectionGroup(title = stringResource(R.string.settings_check_update)) {
-                        item {
-                            FolkSwitchPreference(
-                                title = stringResource(R.string.settings_check_update),
-                                summary = stringResource(R.string.settings_check_update_summary),
-                                icon = Icons.Filled.SystemUpdate,
-                                checked = uiState.checkUpdate,
-                                onCheckedChange = actions.onSetCheckUpdate,
-                            )
-                        }
                         item {
                             FolkSwitchPreference(
                                 title = stringResource(R.string.settings_module_check_update),
@@ -203,7 +195,7 @@ fun SettingPagerFolk(
                 }
             }
 
-            // KPM and SuSFS, when the kernel provides them.
+            // KPM, when the kernel provides it.
             if (isKpmAvailable) {
                 item {
                     FolkSettingsSectionGroup(title = stringResource(R.string.kpm_title)) {
@@ -219,13 +211,15 @@ fun SettingPagerFolk(
                 }
             }
 
-            if (isSusfsSupported && isKpmAvailable) {
+            // SuSFS is a ksud feature of its own: it never goes through KPM, so it must not be
+            // hidden when the kernel ships without KPM. Only SuSFS support gates this row.
+            if (isSusfsSupported) {
                 item {
                     FolkSettingsSectionGroup(title = stringResource(R.string.susfs_config_title)) {
                         item {
                             FolkNavigationPreference(
                                 title = stringResource(R.string.susfs_config_title),
-                                summary = stringResource(R.string.settings_kpm_summary),
+                                summary = stringResource(R.string.susfs_config_summary),
                                 icon = Icons.Filled.Fence,
                                 onClick = actions.onOpenSusfsConfig,
                             )

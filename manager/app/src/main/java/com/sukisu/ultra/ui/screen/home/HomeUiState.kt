@@ -2,7 +2,6 @@ package com.sukisu.ultra.ui.screen.home
 
 import androidx.compose.runtime.Immutable
 import com.sukisu.ultra.KernelVersion
-import com.sukisu.ultra.ui.util.module.LatestVersionInfo
 
 @Immutable
 data class HomeUiState(
@@ -20,8 +19,6 @@ data class HomeUiState(
     val isRootAvailable: Boolean,
     val isSafeMode: Boolean,
     val isLateLoadMode: Boolean,
-    val checkUpdateEnabled: Boolean,
-    val latestVersionInfo: LatestVersionInfo,
     val currentManagerVersionCode: Long,
     val systemInfo: SystemInfo,
     val showFullStatus: Boolean = true,
@@ -51,9 +48,6 @@ data class HomeUiState(
 
     val showKernelPrBuildWarning: Boolean
         get() = isManager && !isManagerPrBuild && isKernelPrBuild
-
-    val hasUpdate: Boolean
-        get() = latestVersionInfo.versionCode > currentManagerVersionCode
 }
 
 @Immutable

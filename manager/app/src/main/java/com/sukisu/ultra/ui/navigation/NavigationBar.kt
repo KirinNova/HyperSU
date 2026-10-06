@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -40,8 +41,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sukisu.ultra.ui.theme.SoundEffectConfig
 import com.sukisu.ultra.ui.theme.tokens.ContinuousCornerShape
 import com.sukisu.ultra.ui.theme.tokens.FolkShape
+import com.sukisu.ultra.ui.util.SoundEffectManager
 
 /** Height of the docked bar, excluding the system navigation-bar inset. */
 private val DockedBarHeight = 68.dp
@@ -85,6 +88,8 @@ fun FolkBottomBar(
     } else {
         ContinuousCornerShape(topStart = 24.dp, topEnd = 24.dp)
     }
+
+    val context = LocalContext.current
 
     Surface(
         modifier = modifier
@@ -163,7 +168,15 @@ fun FolkBottomBar(
                             interactionSource = interactionSource,
                             indication = null,
                             role = Role.Tab,
-                            onClick = { onSelectedIndexChange(index) },
+                            onClick = {
+                                onSelectedIndexChange(index)
+                                // A tab tap counts as the bottom bar, so "Bottom bar only" and
+                                // "Whole app" both play here - only the row hook differs.
+                                SoundEffectManager.playScoped(
+                                    context,
+                                    SoundEffectConfig.SCOPE_BOTTOM_BAR,
+                                )
+                            },
                         )
                         .padding(vertical = 6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,

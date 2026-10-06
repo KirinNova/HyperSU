@@ -1,4 +1,4 @@
-﻿package com.sukisu.ultra.data.repository
+package com.sukisu.ultra.data.repository
 
 import android.content.ComponentName
 import android.content.Context
@@ -30,6 +30,8 @@ const val HOME_LAYOUT_CIRCLE = "circle"
 const val HOME_LAYOUT_LIST = "default"
 const val HOME_LAYOUT_FOCUS = "focus"
 const val HOME_LAYOUT_DASHBOARD = "dashboard_ui"
+/** FolkPatch 的 GridUI：一张大状态卡 + 侧边小卡。 */
+const val HOME_LAYOUT_GRID = "grid"
 
 /** The layouts offered in the picker, in display order. */
 val HOME_LAYOUT_OPTIONS = listOf(
@@ -37,6 +39,7 @@ val HOME_LAYOUT_OPTIONS = listOf(
     HOME_LAYOUT_LIST,
     HOME_LAYOUT_FOCUS,
     HOME_LAYOUT_DASHBOARD,
+    HOME_LAYOUT_GRID,
 )
 
 /** Value used when the stored layout is missing or unrecognised. */
@@ -65,10 +68,6 @@ class SettingsRepositoryImpl : SettingsRepository {
     override var appLanguage: String
         get() = LocaleHelper.getCurrentLanguage(ksuApp)
         set(value) = LocaleHelper.setLanguage(ksuApp, value)
-
-    override var checkUpdate: Boolean
-        get() = prefs.getBoolean("check_update", true)
-        set(value) = prefs.edit { putBoolean("check_update", value) }
 
     override var checkModuleUpdate: Boolean
         get() = prefs.getBoolean("module_check_update", true)

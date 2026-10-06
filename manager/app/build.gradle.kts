@@ -24,7 +24,7 @@ val managerVersionName = rootProject.extra["managerVersionName"] as String
 
 val isPrBuild = project.findProperty("IS_PR_BUILD")?.toString()?.toBoolean() ?: false
 val defaultManagerPackageName = if (isPrBuild) "com.sukisu.ultra.pr" else "com.sukisu.ultra"
-val defaultManagerName = if (isPrBuild) "SukiSU PR" else "SukiSU"
+val defaultManagerName = if (isPrBuild) "HyperSU PR" else "HyperSU"
 val managerPackageName = project.findProperty("KSU_PACKAGE_NAME")?.toString() ?: defaultManagerPackageName
 val managerName = project.findProperty("KSU_NAME")?.toString() ?: defaultManagerName
 
@@ -241,6 +241,9 @@ dependencies {
     implementation(libs.androidx.graphics.shapes)
 
     implementation(libs.appiconloader)
+
+    // Custom background (wallpaper) image loading for ui/theme/BackgroundLayer.
+    implementation(libs.coil.compose)
 
     implementation(libs.commons.compress)
     implementation(libs.xz)

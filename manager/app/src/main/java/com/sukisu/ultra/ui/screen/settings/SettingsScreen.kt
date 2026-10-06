@@ -1,4 +1,4 @@
-﻿package com.sukisu.ultra.ui.screen.settings
+package com.sukisu.ultra.ui.screen.settings
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -14,8 +14,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sukisu.ultra.ui.navigation3.Navigator
 import com.sukisu.ultra.ui.navigation3.Route
-import com.sukisu.ultra.ui.util.getSuSFSStatus
 import com.sukisu.ultra.ui.util.rememberKpmAvailable
+import com.sukisu.ultra.ui.util.rememberSuSFSStatus
 import com.sukisu.ultra.ui.viewmodel.SettingsViewModel
 
 @Composable
@@ -28,7 +28,7 @@ fun SettingPager(
     val viewModel = viewModel<SettingsViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isKpmAvailable = rememberKpmAvailable()
-    val isSusfsSupported = getSuSFSStatus().equals("true", ignoreCase = true)
+    val isSusfsSupported = rememberSuSFSStatus()
     val latestIsCurrentPage by rememberUpdatedState(isCurrentPage)
     val initialResumeHandled = rememberSaveable { mutableStateOf(false) }
 
@@ -47,7 +47,6 @@ fun SettingPager(
     }
 
     val actions = SettingsScreenActions(
-        onSetCheckUpdate = viewModel::setCheckUpdate,
         onSetCheckModuleUpdate = viewModel::setCheckModuleUpdate,
         onOpenTheme = { navigator.push(Route.ColorPalette) },
         onOpenProfileTemplate = { navigator.push(Route.AppProfileTemplate) },

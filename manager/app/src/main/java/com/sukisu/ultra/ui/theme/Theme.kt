@@ -12,10 +12,12 @@ import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.RippleConfiguration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
@@ -113,6 +115,9 @@ fun ColorScheme.toAmoled(): ColorScheme = copy(
     surfaceBright = Color(0xFF1F1F1F),
 )
 
+// Custom-background adaptation moved to adaptColorScheme(): it also picks the neutral polarity
+// from the wallpaper's own brightness and guards the text contrast.
+
 // Default dark ripple alpha (~10% pressed) is nearly invisible on near-black
 // surfaceContainer backgrounds, so boost it for clear press feedback at night.
 // Ported verbatim from FolkPatch `ui/theme/Theme.kt`.
@@ -127,12 +132,12 @@ private val DarkRippleAlpha = RippleAlpha(
  * The single theme of the manager after the FolkPatch design port.
  *
  * FolkPatch structure (continuous-corner shapes, wrap-aware typography, standard motion
- * scheme, boosted dark ripple, AMOLED surfaces) driven by SukiSU's existing appearance
+ * scheme, boosted dark ripple, AMOLED surfaces) driven by HyperSU's own appearance
  * settings (theme mode / key color / palette style / color spec).
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun SukiSUTheme(
+fun HyperSUTheme(
     appSettings: AppSettings = ThemeController.getAppSettings(),
     content: @Composable () -> Unit,
 ) {
@@ -157,11 +162,66 @@ fun SukiSUTheme(
         colorSpec = appSettings.colorSpec,
     )
 
-    val colorScheme = remember(baseColorScheme, amoled) {
+    val amoledColorScheme = remember(baseColorScheme, amoled) {
         if (amoled) baseColorScheme.toAmoled() else baseColorScheme
-    }.animateAsState()
+    }
 
-    val typography = remember { getTypography(FontFamily.Default) }
+    // Same seed and palette style, opposite lightness. Wallpaper-adaptive content colours need a
+    // complete neutral set of the other polarity; the generator is @Composable, so it cannot be
+    // called from inside a remember that branches on runtime state - build both up front.
+    val oppositeColorScheme = rememberKernelSUColorScheme(
+        seedColor = seedColor,
+        isDark = !darkTheme,
+        isAmoled = false,
+        paletteStyle = appSettings.paletteStyle,
+        colorSpec = appSettings.colorSpec,
+    )
+
+    val useCustomBackground = BackgroundConfig.isCustomBackgroundEnabled
+    // One stable image drives the palette so the content colours do not flicker on page changes
+    // while multi-background mode is on.
+    val activeBackgroundUri = themeWallpaperUri()
+    val wallpaperDim = BackgroundConfig.getEffectiveBackgroundDim(darkTheme)
+    val wallpaperLuminance = BackgroundConfig.wallpaperLuminanceFor(activeBackgroundUri)
+
+    // Wallpaper mode: the page background becomes transparent so [BackgroundLayer] reads through
+    // it, the surfaces take the user's opacity, and the neutrals follow the wallpaper's own
+    // brightness. FolkPalette sees the alpha on `background` and switches the grouped-screen
+    // chrome over by itself.
+    val wallpaperTheme = remember(
+        amoledColorScheme,
+        oppositeColorScheme,
+        darkTheme,
+        useCustomBackground,
+        activeBackgroundUri,
+        BackgroundConfig.customBackgroundOpacity,
+        wallpaperDim,
+        wallpaperLuminance,
+    ) {
+        if (useCustomBackground) {
+            adaptColorScheme(amoledColorScheme, darkTheme, oppositeColorScheme, activeBackgroundUri)
+        } else {
+            WallpaperThemeResult(amoledColorScheme, null)
+        }
+    }
+
+    val colorScheme = wallpaperTheme.colorScheme.animateAsState()
+
+    // Wallpapers that never went through the save path (theme import, restored config) arrive
+    // without a luminance record; fill those gaps once per wallpaper.
+    val context = LocalContext.current
+    LaunchedEffect(useCustomBackground, activeBackgroundUri) {
+        if (useCustomBackground) {
+            BackgroundManager.refreshMissingWallpaperLuminances(context)
+        }
+    }
+
+    // The typeface is state kept in FontConfig, so changing it recomposes typography without a
+    // restart. The cache inside FontConfig keeps Typeface.createFromFile off the hot path.
+    val fontFamily = remember(FontConfig.fontMode, FontConfig.customFontFilename) {
+        FontConfig.getFontFamily(context)
+    }
+    val typography = remember(fontFamily) { getTypography(fontFamily) }
 
     MaterialTheme(
         colorScheme = colorScheme,
@@ -174,7 +234,12 @@ fun SukiSUTheme(
             } else {
                 LocalRippleConfiguration.current
             }
-            CompositionLocalProvider(LocalRippleConfiguration provides rippleConfiguration) {
+            CompositionLocalProvider(
+                LocalRippleConfiguration provides rippleConfiguration,
+                // The contrast guard may push the dim above what the user asked for; the
+                // preference itself is never rewritten.
+                LocalWallpaperDim provides wallpaperTheme.renderDim,
+            ) {
                 MonetColorsProvider.UpdateCss(colorScheme)
                 content()
             }

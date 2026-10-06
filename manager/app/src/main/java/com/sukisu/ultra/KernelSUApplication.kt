@@ -49,6 +49,18 @@ class KernelSUApplication : Application(), ViewModelStoreOwner {
             return
         }
 
+        // Wallpaper settings must be in memory before the first frame decides whether the
+        // page background is transparent, so read them once here rather than in composition.
+        com.sukisu.ultra.ui.theme.BackgroundConfig.load(this)
+        // Same for the typeface: the opening frame already needs the right font family.
+        com.sukisu.ultra.ui.theme.FontConfig.load(this)
+        // Background music: read its preferences first, then let the lifecycle callbacks own
+        // playback so no player starts before the config is in memory.
+        com.sukisu.ultra.ui.theme.MusicConfig.load(this)
+        com.sukisu.ultra.ui.util.MusicManager.init(this)
+        // Click / startup sounds are read by SoundEffectManager on demand.
+        com.sukisu.ultra.ui.theme.SoundEffectConfig.load(this)
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             val enable = SettingsRepositoryImpl().enablePredictiveBack
             HiddenApiBypass.addHiddenApiExemptions("Landroid/content/pm/ApplicationInfo;->setEnableOnBackInvokedCallback")
@@ -71,7 +83,7 @@ class KernelSUApplication : Application(), ViewModelStoreOwner {
                 .addInterceptor { block ->
                     block.proceed(
                         block.request().newBuilder()
-                            .header("User-Agent", "SukiSU/${BuildConfig.VERSION_CODE}")
+                            .header("User-Agent", "HyperSU/${BuildConfig.VERSION_CODE}")
                             .header("Accept-Language", Locale.getDefault().toLanguageTag()).build()
                     )
                 }.build()

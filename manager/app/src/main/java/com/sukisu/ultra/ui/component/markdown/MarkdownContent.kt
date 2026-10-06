@@ -6,8 +6,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,8 +23,12 @@ import com.sukisu.ultra.ui.component.folk.FolkLoadingIndicator
  * document inside the web view has loaded.
  *
  * The rendering itself is [GithubMarkdown]'s; this wrapper only owns the
- * sizing, the scroll box, the fade and the placeholder, all in the single Folk
- * design.
+ * sizing, the fade and the placeholder, all in the single Folk design.
+ *
+ * Deliberately **not** scrollable: every caller already wraps this in its own
+ * bounded `heightIn(max).verticalScroll`, and a second inner scroll would be
+ * measured by the outer one with an infinite maximum height - which is what
+ * crashed the module changelog dialog.
  */
 @Composable
 fun MarkdownContent(
@@ -53,7 +55,6 @@ fun MarkdownContent(
     ) {
         Box(
             modifier = Modifier
-                .verticalScroll(rememberScrollState())
                 .graphicsLayer { this.alpha = alpha },
         ) {
             GithubMarkdown(

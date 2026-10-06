@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -52,8 +53,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.sukisu.ultra.R
+import com.sukisu.ultra.ui.theme.SoundEffectConfig
 import com.sukisu.ultra.ui.theme.tokens.FolkShape
 import com.sukisu.ultra.ui.theme.tokens.FolkType
+import com.sukisu.ultra.ui.util.SoundEffectManager
 
 /**
  * The base settings row used across FolkPatch.
@@ -78,6 +81,7 @@ fun FolkPreference(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val haptics = LocalHapticFeedback.current
+    val context = LocalContext.current
     val clickModifier = if (onClick != null) {
         Modifier
             .folkPressScale(interactionSource, enabled)
@@ -87,6 +91,9 @@ fun FolkPreference(
                 indication = null,
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    // A row tap is only audible in "Whole app" mode; the tab bar is the
+                    // "Bottom bar only" scope and hooks itself.
+                    SoundEffectManager.playScoped(context, SoundEffectConfig.SCOPE_GLOBAL)
                     onClick()
                 },
                 onLongClick = onLongClick,
@@ -199,6 +206,7 @@ fun FolkSwitchPreference(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val haptics = LocalHapticFeedback.current
+    val context = LocalContext.current
     FolkPreferenceRow(
         title = title,
         modifier = modifier
@@ -211,6 +219,9 @@ fun FolkSwitchPreference(
                 indication = null,
                 onValueChange = {
                     haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    // Same scope as a row tap: without this a switch would be the only control
+                    // in "Whole app" mode that stays silent.
+                    SoundEffectManager.playScoped(context, SoundEffectConfig.SCOPE_GLOBAL)
                     onCheckedChange(it)
                 },
             ),

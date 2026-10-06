@@ -860,6 +860,37 @@ fun rememberKpmAvailable(): Boolean {
     return kpmVersion.isNotEmpty() && !kpmVersion.contains("Error", ignoreCase = true)
 }
 
+/**
+ * 内核是否支持 SuSFS（`ksud susfs status` 打印 true/false）。
+ *
+ * 与 [rememberKpmAvailable] 一样在 IO 线程执行并用 rememberSaveable 缓存：早前这里是在
+ * 组合期同步调 shell，每次重组都会阻塞主线程一次 root 命令。
+ */
+@Composable
+fun rememberSuSFSStatus(): Boolean {
+    var cached by rememberSaveable { mutableStateOf(false) }
+    val supported by produceState(initialValue = cached) {
+        val ok = withContext(Dispatchers.IO) {
+            var found: Boolean? = null
+            // ksud can be unreachable on the very first frame (root still coming up); an empty
+            // answer must not leave the entry hidden for the rest of the session, so retry a
+            // few times instead of settling on "unsupported".
+            for (attempt in 0 until 4) {
+                val out = runCatching { getSuSFSStatus().trim() }.getOrElse { "" }
+                if (out.isNotEmpty()) {
+                    found = out.equals("true", ignoreCase = true)
+                    break
+                }
+                if (attempt < 3) Thread.sleep(300L)
+            }
+            found ?: false
+        }
+        cached = ok
+        value = ok
+    }
+    return supported
+}
+
 data class BootConfig(
     val allowShell: Boolean = false,
     val spoofRelease: String = "",

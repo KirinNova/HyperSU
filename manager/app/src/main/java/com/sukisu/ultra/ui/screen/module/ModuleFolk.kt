@@ -13,6 +13,7 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import android.graphics.BitmapFactory
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
@@ -22,6 +23,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -29,6 +31,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -81,12 +84,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -115,9 +122,12 @@ import com.sukisu.ultra.ui.component.folk.FolkScaffold
 import com.sukisu.ultra.ui.component.folk.FolkStateView
 import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
 import com.sukisu.ultra.ui.component.statustag.StatusTag
+import com.sukisu.ultra.ui.theme.BackgroundConfig
 import com.sukisu.ultra.ui.theme.LocalModuleDescriptionMaxLines
+import com.sukisu.ultra.ui.theme.bannerFadeColor
 import com.sukisu.ultra.ui.theme.tokens.FolkShape
 import com.sukisu.ultra.ui.theme.tokens.FolkType
+import com.sukisu.ultra.ui.util.ModuleBanner
 import com.sukisu.ultra.ui.util.reboot
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -561,6 +571,8 @@ private fun ModuleItem(
         shape = FolkShape.Corner20,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
+        Box {
+            ModuleBannerLayer(module)
         Column(modifier = Modifier.padding(16.dp, 14.dp, 16.dp, 10.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -701,7 +713,65 @@ private fun ModuleItem(
                 )
             }
         }
+        }
     }
+}
+
+/**
+ * 模块卡片的横幅背景层，移植自 FolkPatch `APMModuleItem` 的横幅渲染。
+ *
+ * 画在卡片内容之下、卡片底色之上，用 `matchParentSize` 跟随卡片实际尺寸（卡片是
+ * wrap-content，`fillMaxSize` 会把它压成 0）。刻意**不动 Surface 颜色和任何文字颜色**：
+ * 横幅按 [BackgroundConfig.getEffectiveBannerOpacity] 只有 0.18 左右的不透明度，是装饰层，
+ * 加底部渐隐后完全压得住文字。
+ */
+@Composable
+private fun BoxScope.ModuleBannerLayer(module: Module) {
+    if (!BackgroundConfig.isBannerEnabled) return
+
+    val context = LocalContext.current
+    val opacity = BackgroundConfig.getEffectiveBannerOpacity(
+        isWallpaperMode = BackgroundConfig.isCustomBackgroundEnabled,
+        wallpaperOpacity = BackgroundConfig.customBackgroundOpacity,
+    )
+    // 任何一个影响解析顺序的配置变化都要重取，否则切了 API 源还会继续显示旧源的图。
+    val configKey = listOf(
+        BackgroundConfig.isBannerEnabled,
+        BackgroundConfig.isFolkBannerEnabled,
+        BackgroundConfig.isBannerApiModeEnabled,
+        BackgroundConfig.bannerApiSource,
+    )
+
+    val bytes by produceState(
+        initialValue = ModuleBanner.loadSync(context, module.id),
+        key1 = module.id,
+        key2 = configKey,
+    ) {
+        value = ModuleBanner.load(context, module.id, reload = true)
+    }
+
+    val bitmap = remember(bytes) {
+        bytes?.let { runCatching { BitmapFactory.decodeByteArray(it, 0, it.size) }.getOrNull() }
+    } ?: return
+
+    Image(
+        painter = BitmapPainter(bitmap),
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .matchParentSize()
+            .alpha(opacity),
+    )
+    // 底部渐隐到卡片底色，保证压在图上的文字仍读得清。
+    Box(
+        modifier = Modifier
+            .matchParentSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color.Transparent, bannerFadeColor()),
+                ),
+            ),
+    )
 }
 
 /**
