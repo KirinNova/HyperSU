@@ -54,14 +54,14 @@ import com.sukisu.ultra.data.repository.HOME_LAYOUT_OPTIONS
 import com.sukisu.ultra.data.repository.SettingsRepositoryImpl
 import com.sukisu.ultra.ui.component.dialog.rememberConfirmDialog
 import com.sukisu.ultra.ui.component.folk.FolkFactsGroup
-import FolkNavigationPreference
-import FolkPreference
+import com.sukisu.ultra.ui.component.folk.FolkNavigationPreference
+import com.sukisu.ultra.ui.component.folk.FolkPreference
 import com.sukisu.ultra.ui.component.folk.FolkScaffold
 import com.sukisu.ultra.ui.component.folk.FolkSettingsGroup
 import com.sukisu.ultra.ui.component.folk.FolkSeverity
 import com.sukisu.ultra.ui.component.folk.FolkStatusDot
 import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
-import folkSeverityColor
+import com.sukisu.ultra.ui.component.folk.folkSeverityColor
 import com.sukisu.ultra.ui.component.rebootlistpopup.RebootListPopup
 import com.sukisu.ultra.ui.component.statustag.StatusTag
 import com.sukisu.ultra.ui.theme.tokens.FolkShape

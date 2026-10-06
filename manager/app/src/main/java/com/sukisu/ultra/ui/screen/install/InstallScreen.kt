@@ -106,14 +106,15 @@ fun InstallScreen(
 
     val installMethodState = remember { mutableStateOf<InstallMethod?>(null) }
 
-    // AnyKernel3 鐘舵€?    val anyKernel3State = rememberAnyKernel3State(
+    // AnyKernel3 状态
+    val anyKernel3State = rememberAnyKernel3State(
         installMethodState = installMethodState,
         preselectedKernelUri = preselectedKernelUri?.toString(),
         horizonKernelSummary = horizonKernelSummary,
         isAbDevice = isAbDevice
     )
 
-    // 鍚屾 installMethod 鍜?anyKernel3State
+    // 同步 installMethod 和 anyKernel3State
     LaunchedEffect(installMethod) {
         installMethodState.value = installMethod
     }
@@ -339,7 +340,7 @@ fun InstallScreen(
         },
         onDownloadFile = { downloadDialogShown = true },
         onSelectBootImage = { method ->
-            // 鍦ㄦ墦寮€鏂囦欢閫夋嫨鍣ㄤ箣鍓嶏紝鍏堣缃?installMethod
+            // 在打开文件选择器之前，先设置 installMethod
             installMethod = method
             selectImageLauncher.launch(Intent(Intent.ACTION_GET_CONTENT).apply {
                 type = "application/*"

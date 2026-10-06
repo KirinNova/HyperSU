@@ -62,6 +62,7 @@ import com.sukisu.ultra.ui.component.statustag.StatusTag
 import com.sukisu.ultra.ui.theme.tokens.FolkShape
 import com.sukisu.ultra.ui.theme.tokens.FolkType
 import com.sukisu.ultra.ui.util.SulogEntry
+import com.sukisu.ultra.ui.util.SulogEventFilter
 
 /**
  * The su audit log, in the FolkPatch design.

@@ -287,15 +287,14 @@ fun ColorPaletteScreenFolk(
                     )
                 }
                 item {
+                    val unitLinesLabel = stringResource(R.string.unit_lines)
                     FolkSliderPreference(
                         title = stringResource(R.string.settings_module_description_max_lines),
                         summary = stringResource(R.string.settings_module_description_max_lines_summary),
                         value = uiState.moduleDescriptionMaxLines.toFloat(),
                         valueRange = 1f..5f,
                         steps = 3,
-                        valueFormat = {
-                            "${it.toInt()} " + stringResource(R.string.unit_lines)
-                        },
+                        valueFormat = { "${it.toInt()} $unitLinesLabel" },
                         onValueChange = {
                             actions.onSetModuleDescriptionMaxLines(it.toInt())
                         },
