@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -46,6 +47,7 @@ import com.sukisu.ultra.ui.component.folk.FolkSendLogSheet
 import com.sukisu.ultra.ui.component.folk.FolkSettingsSectionGroup
 import com.sukisu.ultra.ui.component.folk.FolkSwitchPreference
 import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
+import com.sukisu.ultra.ui.component.folk.FolkValuePreference
 import com.sukisu.ultra.ui.component.uninstalldialog.UninstallDialog
 import com.sukisu.ultra.ui.util.LocaleHelper
 
@@ -125,15 +127,37 @@ fun SettingPagerFolk(
             item {
                 FolkSettingsSectionGroup(title = stringResource(R.string.settings_theme)) {
                     item {
-                        FolkChoicePreference(
-                            title = stringResource(R.string.settings_language),
-                            summary = stringResource(R.string.settings_language_summary),
-                            icon = Icons.Rounded.Language,
-                            options = languageNames,
-                            selectedIndex = languageTags.indexOf(uiState.appLanguage)
-                                .coerceAtLeast(0),
-                            onSelect = { index -> actions.onSetLanguage(languageTags[index]) },
-                        )
+                        val context = LocalContext.current
+                        val languageIndex = languageTags.indexOf(uiState.appLanguage)
+                            .coerceAtLeast(0)
+                        // Where the system has a per-app language page, the row hands
+                        // the choice to it: the switch then happens while our task is
+                        // in the background, so our activity is not recreated in front
+                        // of the user. Only where that page is missing does the row
+                        // open the app's own list.
+                        val systemPicker = remember {
+                            LocaleHelper.canLaunchSystemLanguageSettings(context)
+                        }
+                        if (systemPicker) {
+                            FolkValuePreference(
+                                title = stringResource(R.string.settings_language),
+                                summary = stringResource(R.string.settings_language_summary),
+                                icon = Icons.Rounded.Language,
+                                value = languageNames[languageIndex],
+                                onClick = {
+                                    LocaleHelper.launchSystemLanguageSettings(context)
+                                },
+                            )
+                        } else {
+                            FolkChoicePreference(
+                                title = stringResource(R.string.settings_language),
+                                summary = stringResource(R.string.settings_language_summary),
+                                icon = Icons.Rounded.Language,
+                                options = languageNames,
+                                selectedIndex = languageIndex,
+                                onSelect = { index -> actions.onSetLanguage(languageTags[index]) },
+                            )
+                        }
                     }
                     item {
                         FolkNavigationPreference(
