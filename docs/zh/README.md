@@ -1,15 +1,14 @@
-# SukiSU Ultra
-<img align='right' src='SukiSU-mini.svg' width='220px' alt="sukisu logo">
+# HyperSU Ultra
+<img align='right' src='HyperSU-mini.svg' width='220px' alt="HyperSU logo">
 
 
-[English](../README.md) | **简体中文** | [日本語](../ja/README.md) | [Türkçe](../tr/README.md)
+[English](../README.md) | **简体中文** | [日本語](../ja/README.md) | [Türkçe](../tr/README.md) | [Русский](../ru/README.md)
 
-一个 Android 上基于内核的 root 方案，由 [`tiann/KernelSU`](https://github.com/tiann/KernelSU) 分叉而来，添加了一些有趣的变更。
+一个 Android 上基于内核的 root 方案，由 [`SukiSU-Ultra/SukiSU-Ultra`](https://github.com/SukiSU-Ultra/SukiSU-Ultra) 分叉而来，而 SukiSU Ultra 由 [`tiann/KernelSU`](https://github.com/tiann/KernelSU) 分叉而来，添加了一些有趣的变更。
 
-[![最新发行](https://img.shields.io/github/v/release/SukiSU-Ultra/SukiSU-Ultra?label=Release&logo=github)](https://github.com/tiann/KernelSU/releases/latest)
-[![频道](https://img.shields.io/badge/Follow-Telegram-blue.svg?logo=telegram)](https://t.me/Sukiksu)
+[![最新发行](https://img.shields.io/github/v/release/KirinNova/HyperSU?label=Release&logo=github)](https://github.com/KirinNova/HyperSU/releases/latest)
 [![协议: GPL v2](https://img.shields.io/badge/License-GPL%20v2-orange.svg?logo=gnu)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
-[![GitHub 协议](https://img.shields.io/github/license/tiann/KernelSU?logo=gnu)](/LICENSE)
+[![GitHub 协议](https://img.shields.io/github/license/KirinNova/HyperSU?logo=gnu)](/LICENSE)
 
 ## 特性
 
@@ -39,7 +38,7 @@
 
 ## 参与翻译
 
-要将 SukiSU 翻译成您的语言，或完善现有的翻译，请使用 [Crowdin](https://crowdin.com/project/SukiSU-Ultra).
+要将 HyperSU 翻译成您的语言，或完善现有的翻译，请向 [KirinNova/HyperSU](https://github.com/KirinNova/HyperSU) 提交 Pull Request。
 
 ## KPM 支持
 
@@ -61,6 +60,14 @@
 1. 卸载管理器后系统卡住？
    卸载 _com.sony.playmemories.mobile_
 
+## 感谢上游
+
+HyperSU 站在优秀开源项目的肩膀上。我们衷心感谢上游项目及其维护者。
+
+特别感谢 [SukiSU Ultra](https://github.com/SukiSU-Ultra/SukiSU-Ultra) 及其所有贡献者，作为 HyperSU 的直接上游与分叉基础。也深深感谢 [KernelSU](https://github.com/tiann/KernelSU) 及其作者 [tiann](https://github.com/tiann)，创造了最初基于内核的 root 方案，为 SukiSU 与 HyperSU 奠定基础。
+
+同时感谢“鸣谢”部分提到的所有其他上游项目与贡献者。
+
 ## 许可证
 
 - 目录 `kernel` 下所有文件为 [GPL-2.0-only](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)。
@@ -69,7 +76,7 @@
 
 ## 赞助
 
-- [ShirkNeko](https://afdian.com/a/shirkneko) (SukiSU 主要维护者)
+- [ShirkNeko](https://afdian.com/a/shirkneko) (HyperSU 主要维护者)
 - [weishu](https://github.com/sponsors/tiann) (KernelSU 作者)
 
 ## ShirkNeko 的赞助列表
@@ -84,7 +91,8 @@
 
 ## 鸣谢
 
-- [KernelSU](https://github.com/tiann/KernelSU): 上游
+- [SukiSU](https://github.com/SukiSU-Ultra/SukiSU-Ultra): 直接上游 / 分叉基础。特别感谢 SukiSU 团队及所有贡献者。
+- [KernelSU](https://github.com/tiann/KernelSU): SukiSU 的上游。特别感谢 tiann 及所有 KernelSU 贡献者。
 - [MKSU](https://github.com/5ec1cff/KernelSU): 魔法坐骑支持
 - [RKSU](https://github.com/rsuntk/KernelsU): non-GKI 支持
 - [susfs](https://gitlab.com/simonpunk/susfs4ksu): 隐藏内核补丁以及用户空间模组的 KernelSU 附件
