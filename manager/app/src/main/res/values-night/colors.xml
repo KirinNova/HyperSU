@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Dark counterpart of window_background. M3's baseline dark surface, so the
+        window during a recreation (the language switch) reads as the app's dark
+        background instead of the pure black the framework would use.
+    -->
+    <color name="window_background">#FF1C1B1F</color>
+</resources>

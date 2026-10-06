@@ -232,6 +232,20 @@
     <string name="unit_lines">Lines</string>
     <string name="settings_color_spec">Color Spec</string>
     <string name="settings_color_style">Color Style</string>
+    <!--
+        The palette names are the schemes' own names, kept untranslated: a translated
+        scheme name reads as something else entirely ("水果沙拉" for Fruit Salad).
+    -->
+    <string name="palette_style_tonal_spot" translatable="false">Tonal Spot</string>
+    <string name="palette_style_neutral" translatable="false">Neutral</string>
+    <string name="palette_style_vibrant" translatable="false">Vibrant</string>
+    <string name="palette_style_expressive" translatable="false">Expressive</string>
+    <string name="palette_style_rainbow" translatable="false">Rainbow</string>
+    <string name="palette_style_fruit_salad" translatable="false">Fruit Salad</string>
+    <string name="palette_style_monochrome" translatable="false">Monochrome</string>
+    <string name="palette_style_fidelity" translatable="false">Fidelity</string>
+    <string name="palette_style_content" translatable="false">Content</string>
+    <string name="settings_page_scale_apply">Apply</string>
     <string name="color_blue">Blue</string>
     <string name="color_red">Red</string>
     <string name="color_green">Green</string>
@@ -317,6 +331,7 @@
     <string name="settings_language">Language</string>
     <string name="settings_language_summary">Choose the app display language</string>
     <string name="settings_language_system">Follow system</string>
+    <string name="switching_language">Switching language…</string>
     <string name="kernel_spoof_release">Kernel Release</string>
     <string name="kernel_spoof_version">Kernel Version</string>
     <!-- Log Viewer -->

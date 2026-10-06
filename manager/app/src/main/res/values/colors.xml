@@ -3,4 +3,11 @@
     <color name="ic_launcher_background">#FFFFFFFF</color>
     <color name="ic_launcher_foreground">#FF1E110D</color>
     <color name="ic_splash_background">#FFF5F5F5</color>
+    <!--
+        The colour the window shows before the first Compose frame, and the colour
+        the system paints the starting window while an activity is recreated (the
+        language switch does this). Without it the framework falls back to
+        android:color/background_dark, which is pure black.
+    -->
+    <color name="window_background">#FFF7F7F7</color>
 </resources>
