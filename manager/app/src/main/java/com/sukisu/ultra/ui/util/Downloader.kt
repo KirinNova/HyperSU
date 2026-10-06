@@ -46,7 +46,10 @@ internal suspend fun isDownloadAvailable(uri: Uri): Boolean = withContext(Dispat
 
 fun checkNewVersion(): LatestVersionInfo {
     if (!isNetworkAvailable(ksuApp)) return LatestVersionInfo()
-    val url = "https://api.github.com/repos/SukiSU-Ultra/SukiSU-Ultra/releases/latest"
+    // This build ships from this fork, so the update banner has to compare against
+    // this fork's releases. Pointing it at upstream reported upstream's versionCode as
+    // newer than ours, and tapping that banner is what crashed the manager.
+    val url = "https://api.github.com/repos/kafuzhi/HyperSU/releases/latest"
     // default null value if failed
     val defaultValue = LatestVersionInfo()
     runCatching {
