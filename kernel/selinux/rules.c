@@ -197,9 +197,6 @@ void apply_kernelsu_rules(void)
     ksu_destroy_sepolicy(old_pol);
 
     reset_avc_cache();
-#ifdef CONFIG_KSU_SUSFS
-    susfs_set_batch_sid();
-#endif
 out_unlock:
     mutex_unlock(&selinux_state.policy_mutex);
 #else
@@ -254,6 +251,11 @@ do_stop_machine:
 out_flush:
     smp_mb();
     reset_avc_cache();
+#endif
+
+#ifdef CONFIG_KSU_SUSFS
+    /* Run for both modern and legacy SELinux policy update paths. */
+    susfs_set_batch_sid();
 #endif
 }
 
