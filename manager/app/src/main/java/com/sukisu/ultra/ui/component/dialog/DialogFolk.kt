@@ -88,10 +88,19 @@ fun ConfirmDialogFolk(
             if (!content.isNullOrBlank()) {
                 Spacer(Modifier.padding(top = 12.dp))
                 val scrollState = rememberScrollState()
+                // MarkdownContent scrolls its own body. Giving this box a second
+                // verticalScroll hands that inner scroller an infinite maxHeight, and a
+                // scrollable measured with unbounded height throws at first measure -
+                // which is exactly how the changelog dialog crashed the manager.
+                // The outer box keeps its 380dp cap so the buttons stay on screen, and
+                // only plain text, which owns no scroller, scrolls up here.
+                val scrollsHere = !visuals.isMarkdown && !visuals.isHtml
                 Box(
                     modifier = Modifier
                         .heightIn(max = 380.dp)
-                        .verticalScroll(scrollState),
+                        .then(
+                            if (scrollsHere) Modifier.verticalScroll(scrollState) else Modifier
+                        ),
                 ) {
                     when {
                         visuals.isMarkdown -> MarkdownContent(content = content, isMarkdown = true)

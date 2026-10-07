@@ -9,6 +9,8 @@
     <string name="home_lkm_custom">Custom</string>
     <string name="home_unsupported">Unsupported</string>
     <string name="home_unsupported_reason">No KernelSU driver detected on your kernel, wrong kernel?</string>
+    <string name="home_manager_unrecognized">Manager not recognized</string>
+    <string name="home_manager_unrecognized_reason">Root works, but the kernel does not recognize this manager: the manager signature built into the module differs from this APK. Rebuild and flash the kernel module with this manager signature.</string>
     <string name="home_device_model">Device model</string>
     <string name="home_kernel">Kernel version</string>
     <string name="home_manager_version">Manager version</string>
@@ -93,7 +95,7 @@
     <string name="home_support_title">Support Us</string>
     <string name="home_support_content">KernelSU is, and always will be, free, and open source. However, you can show us that you care by making a donation.</string>
     <string name="home_gki_warning">Starting from v3.0.0, the GKI work mode will be used only in testing environments. We do not recommend it for daily use, and image files will no longer be provided.</string>
-    <string name="about_source_code"><![CDATA[View source code at %1$s<br/><br/>The icons are licensed under a special arrangement: drawn by 怡子曰曰, the copyright is held by 明风 OuO, and the vectorized icons are provided by this project.]]></string>
+    <string name="about_source_code"><![CDATA[View source code at %1$s<br/>Join the <a href="%2$s">HyperSU QQ group</a><br/><br/>The icons are licensed under a special arrangement: drawn by 怡子曰曰, the copyright is held by 明风 OuO, and the vectorized icons are provided by this project.]]></string>
     <string name="profile" translatable="false">App Profile</string>
     <string name="profile_default">Default</string>
     <string name="profile_template">Template</string>
@@ -295,7 +297,23 @@
     <string name="settings_floating_bottom_bar">Floating bottom bar</string>
     <string name="settings_floating_bottom_bar_summary">Use Apple style floating bottom bar.</string>
     <string name="settings_enable_glass">Liquid glass</string>
-    <string name="settings_enable_glass_summary">Enable liquid glass effect for floating bottom bar.</string>
+    <string name="settings_enable_glass_summary">Turn the liquid glass plates on or off across the interface.</string>
+    <string name="settings_glass_intensity">Glass intensity</string>
+    <string name="settings_glass_blur">Glass refraction blur</string>
+    <string name="settings_glass_rim">Glass edge rim</string>
+    <string name="settings_glass_specular">Glass highlight</string>
+    <string name="settings_glass_sheen">Glass sheen</string>
+    <string name="settings_background">Custom background</string>
+    <string name="settings_background_summary">Use your own image behind every screen</string>
+    <string name="settings_background_pick">Choose image</string>
+    <string name="settings_background_no_image">No image chosen</string>
+    <string name="settings_background_blur">Background blur</string>
+    <string name="settings_background_dim">Dim overlay</string>
+    <string name="settings_background_cover">Picture fit</string>
+    <string name="settings_background_cover_fill">Fill screen (crop)</string>
+    <string name="settings_background_cover_fit">Show whole picture</string>
+    <string name="settings_background_cover_stretch">Stretch to screen</string>
+    <string name="settings_background_clear">Remove image</string>
     <string name="show_only_primary_user_apps">Show only primary user apps</string>
     <string name="settings_auto_jailbreak">Auto jailbreak</string>
     <string name="settings_auto_jailbreak_summary">Automatically use Magica to escalate privileges when Permissive SELinux is detected at boot. Requires granting autostart permission to this app.</string>
@@ -331,6 +349,13 @@
     <string name="nav_rail_collapse">Collapse navigation rail</string>
     <string name="settings_navigation_badge">Navigation badge</string>
     <string name="settings_navigation_badge_summary">Show granted app and enabled module counts on the navigation bar</string>
+    <string name="settings_navigation">Navigation bar</string>
+    <string name="background_crop_title">Crop background</string>
+    <string name="background_crop_apply">Apply</string>
+    <string name="background_crop_reset">Reset</string>
+    <string name="background_crop_loading">Loading image</string>
+    <string name="background_crop_rotation_angle">Rotation</string>
+    <string name="background_crop_failed">Failed to crop image</string>
     <!-- Customize -->
     <string name="hook_type">Hook Type</string>
     <string name="manual_hook">Manual Hook</string>

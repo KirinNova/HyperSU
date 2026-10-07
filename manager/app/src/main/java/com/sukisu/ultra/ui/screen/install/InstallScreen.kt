@@ -104,6 +104,11 @@ fun InstallScreen(
             if (rootAvailable && isGkiDevice) {
                 add(InstallMethod.DirectInstall)
                 if (isAbDevice) add(InstallMethod.DirectInstallToInactiveSlot)
+            }
+            // AnyKernel3 flashing runs anykernel.sh against the boot image and never
+            // looks at the kernel version, so root is the only real gate. Sharing the
+            // GKI branch hid this entry on every non-GKI device.
+            if (rootAvailable) {
                 add(InstallMethod.HorizonKernel(summary = horizonKernelSummary))
             }
         }

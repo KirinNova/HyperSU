@@ -9,6 +9,8 @@
     <string name="home_lkm_custom">自定义</string>
     <string name="home_unsupported">不支持</string>
     <string name="home_unsupported_reason">内核上未检测到 KernelSU 驱动程序，内核错误?</string>
+    <string name="home_manager_unrecognized">管理器未被内核识别</string>
+    <string name="home_manager_unrecognized_reason">Root 正常，但内核未把本应用识别为管理器（模块内置的管理器签名与本 APK 不一致）。请用本 APK 的签名重新构建并刷入内核模块。</string>
     <string name="home_device_model">设备型号</string>
     <string name="home_kernel">内核版本</string>
     <string name="home_manager_version">管理器版本</string>
@@ -80,7 +82,7 @@
     <string name="home_support_title">支持开发</string>
     <string name="home_support_content">KernelSU 将保持免费开源，向开发者捐赠以表示支持</string>
     <string name="home_gki_warning">自 v3.0.0 起 GKI 工作模式将仅用于测试环境，我们不建议用于日常使用，也不再提供镜像文件</string>
-    <string name="about_source_code"><![CDATA[在 %1$s 查看源码<br/><br/>图标以特别的形式授权，怡子曰曰绘制，版权明风OuO所有。矢量化图标由本项目提供。]]></string>
+    <string name="about_source_code"><![CDATA[在 %1$s 查看源码<br/>加入 <a href="%2$s">HyperSU QQ 群</a><br/><br/>图标以特别的形式授权，怡子曰曰绘制，版权明风OuO所有。矢量化图标由本项目提供。]]></string>
     <string name="profile_default">默认</string>
     <string name="profile_template">模板</string>
     <string name="profile_custom">自定义</string>
@@ -267,7 +269,23 @@
     <string name="settings_floating_bottom_bar">悬浮底栏</string>
     <string name="settings_floating_bottom_bar_summary">使用 Apple 风格的悬浮底栏</string>
     <string name="settings_enable_glass">液态玻璃</string>
-    <string name="settings_enable_glass_summary">启用悬浮底栏的液态玻璃效果</string>
+    <string name="settings_enable_glass_summary">为全界面启用液态玻璃面板</string>
+    <string name="settings_glass_intensity">玻璃强度</string>
+    <string name="settings_glass_blur">玻璃折射模糊</string>
+    <string name="settings_glass_rim">玻璃边缘描边</string>
+    <string name="settings_glass_specular">玻璃高光</string>
+    <string name="settings_glass_sheen">玻璃光泽</string>
+    <string name="settings_background">自定义背景</string>
+    <string name="settings_background_summary">用你自己的图片作为页面背景</string>
+    <string name="settings_background_pick">选择图片</string>
+    <string name="settings_background_no_image">尚未选择图片</string>
+    <string name="settings_background_blur">背景模糊</string>
+    <string name="settings_background_dim">遮罩浓度</string>
+    <string name="settings_background_cover">图片适配方式</string>
+    <string name="settings_background_cover_fill">铺满裁切</string>
+    <string name="settings_background_cover_fit">完整显示</string>
+    <string name="settings_background_cover_stretch">拉伸</string>
+    <string name="settings_background_clear">移除图片</string>
     <string name="show_only_primary_user_apps">只显示主用户应用</string>
     <string name="settings_auto_jailbreak">自动越狱</string>
     <string name="settings_auto_jailbreak_summary">开机检测到 Permissive SELinux 时自动使用 Magica 提权。需要授予本应用自启动权限！</string>
@@ -317,6 +335,13 @@
     <string name="nav_rail_collapse">收起导航栏</string>
     <string name="settings_navigation_badge">导航栏角标</string>
     <string name="settings_navigation_badge_summary">在导航栏显示已授权应用和已启用模块数量</string>
+    <string name="settings_navigation">导航栏</string>
+    <string name="background_crop_title">裁切背景</string>
+    <string name="background_crop_apply">应用</string>
+    <string name="background_crop_reset">重置</string>
+    <string name="background_crop_loading">正在载入图片</string>
+    <string name="background_crop_rotation_angle">旋转角度</string>
+    <string name="background_crop_failed">图片裁切失败</string>
     <!-- Customize -->
     <string name="hook_type">钩子类型</string>
     <string name="home_susfs_version">SuSFS 版本</string>

@@ -15,7 +15,9 @@ data class SettingsUiState(
     val colorSpec: String = ColorSpec.SpecVersion.SPEC_2025.name,
     val enablePredictiveBack: Boolean = false,
     val enableSwipeDismiss: Boolean = true,
-    val pagerInterceptionMode: Int = 1,
+    // Native, not CrossAxisInterceptor: the interceptor consumes horizontal drags in the
+    // Initial pass and starves every settings slider of its drag.
+    val pagerInterceptionMode: Int = 0,
     val enableFloatingBottomBar: Boolean = false,
     val enableNavigationBadge: Boolean = true,
     val pageScale: Float = 1.0f,

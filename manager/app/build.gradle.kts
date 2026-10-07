@@ -24,6 +24,8 @@ val managerVersionName = rootProject.extra["managerVersionName"] as String
 
 val isPrBuild = project.findProperty("IS_PR_BUILD")?.toString()?.toBoolean() ?: false
 val defaultManagerPackageName = if (isPrBuild) "com.sukisu.ultra.pr" else "com.sukisu.ultra"
+// The only place the product name is set: it feeds resValues (launcher label, home
+// title, About, recents), and the release file name below.
 val defaultManagerName = if (isPrBuild) "HyperSU PR" else "HyperSU"
 val managerPackageName = project.findProperty("KSU_PACKAGE_NAME")?.toString() ?: defaultManagerPackageName
 val managerName = project.findProperty("KSU_NAME")?.toString() ?: defaultManagerName
@@ -190,6 +192,7 @@ base {
 dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.appcompat)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.material.icons.extended)
@@ -242,11 +245,11 @@ dependencies {
 
     implementation(libs.appiconloader)
 
-    // Custom background (wallpaper) image loading for ui/theme/BackgroundLayer.
-    implementation(libs.coil.compose)
-
     implementation(libs.commons.compress)
     implementation(libs.xz)
+    // Wallpaper / banner image loading.
+    implementation(libs.coil.compose)
+    implementation(libs.ucrop)
     implementation(libs.protobuf.kotlin.lite)
 }
 

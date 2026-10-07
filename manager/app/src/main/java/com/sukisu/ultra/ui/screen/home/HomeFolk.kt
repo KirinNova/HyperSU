@@ -379,6 +379,14 @@ private fun HomeHeroCard(
 ) {
     when {
         state.ksuVersion != null -> HomeWorkingCard(state, actions, wallpaperUri)
+        // Root works, so a driver is loaded; the kernel just does not recognise this manager.
+        // Saying "no driver detected" here contradicted the superuser and module pages.
+        state.isRootAvailable -> HomeUnsupportedCard(
+            actions = actions,
+            wallpaperUri = wallpaperUri,
+            titleRes = R.string.home_manager_unrecognized,
+            reasonRes = R.string.home_manager_unrecognized_reason,
+        )
         state.kernelVersion.isGKI() -> HomeNotInstalledCard(state, actions, wallpaperUri)
         else -> HomeUnsupportedCard(actions, wallpaperUri)
     }
@@ -551,6 +559,8 @@ private fun HomeNotInstalledCard(
 private fun HomeUnsupportedCard(
     actions: HomeActions,
     wallpaperUri: String? = null,
+    titleRes: Int = R.string.home_unsupported,
+    reasonRes: Int = R.string.home_unsupported_reason,
 ) {
     val dark = isInDarkTheme()
     val palette = cardPalette(
@@ -590,13 +600,13 @@ private fun HomeUnsupportedCard(
                 Spacer(Modifier.size(16.dp))
                 Column {
                     Text(
-                        text = stringResource(R.string.home_unsupported),
+                        text = stringResource(titleRes),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = palette.content,
                     )
                     Text(
-                        text = stringResource(R.string.home_unsupported_reason),
+                        text = stringResource(reasonRes),
                         style = FolkType.Summary,
                         color = palette.muted,
                     )

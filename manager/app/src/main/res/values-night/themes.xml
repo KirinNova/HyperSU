@@ -3,6 +3,7 @@
 
     <style name="Theme.KernelSU" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:windowBackground">@color/window_background</item>
     </style>
 
     <style name="Theme.KernelSU.Starting" parent="Theme.SplashScreen">
