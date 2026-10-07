@@ -423,6 +423,11 @@
     <string name="horizon_kernel_summary">Flash AnyKernel3 format kernel zip</string>
     <string name="anykernel3_flash">Flash AnyKernel3</string>
     <string name="anykernel3_summary">Pick an AnyKernel3 zip from storage and flash it</string>
+    <string name="flash_confirm_title">Flash this archive?</string>
+    <string name="flash_confirm_file">File</string>
+    <string name="flash_confirm_slot">Slot</string>
+    <string name="flash_confirm_unknown">Unknown file name</string>
+    <string name="flash_confirm_action">Flash</string>
     <!-- KPM -->
     <string name="kpm_title">KPM</string>
     <string name="settings_kpm_summary">Manage kernel modules with KPM</string>

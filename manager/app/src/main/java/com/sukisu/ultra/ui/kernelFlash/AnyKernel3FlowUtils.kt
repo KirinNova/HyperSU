@@ -14,11 +14,21 @@ data class AnyKernel3State(
     val kpmPatchOption: KpmPatchOption,
     val showSlotSelectionDialog: Boolean,
     val showKpmPatchDialog: Boolean,
-    val onHorizonKernelSelected: (InstallMethod.HorizonKernel) -> Unit,
+    /**
+     * True while the user is being asked to confirm the archive they picked.
+     *
+     * Picking a file used to open the KPM dialog straight away, which asked a question the user
+     * had not raised. This confirmation takes that place: it reports what is about to be
+     * flashed and waits for an answer, and the KPM choice stays on its own row.
+     */
+    val showConfirmDialog: Boolean,
+    val onHorizonKernelSelected: (InstallMethod.KernelArchive) -> Unit,
     val onSlotSelected: (String) -> Unit,
     val onDismissSlotDialog: () -> Unit,
     val onOptionSelected: (KpmPatchOption) -> Unit,
     val onDismissPatchDialog: () -> Unit,
-    val onReopenSlotDialog: (InstallMethod.HorizonKernel) -> Unit,
-    val onReopenKpmDialog: (InstallMethod.HorizonKernel) -> Unit
+    val onConfirmFlash: () -> Unit,
+    val onDismissConfirmDialog: () -> Unit,
+    val onReopenSlotDialog: (InstallMethod.KernelArchive) -> Unit,
+    val onReopenKpmDialog: (InstallMethod.KernelArchive) -> Unit
 )

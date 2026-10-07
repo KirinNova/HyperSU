@@ -27,15 +27,19 @@ import com.sukisu.ultra.ui.component.folk.FolkAlertDialog
 import com.sukisu.ultra.ui.component.folk.FolkButtonDefaults
 import com.sukisu.ultra.ui.component.folk.FolkSelectableRow
 import com.sukisu.ultra.ui.screen.install.InstallMethod
+import com.sukisu.ultra.ui.screen.install.withSlot
 import com.sukisu.ultra.ui.theme.tokens.FolkType
 
 /**
  * The AnyKernel3 install flow, in the FolkPatch design.
  *
- * A chosen kernel goes through slot selection on an A/B device and then the KPM
- * patch choice; on a single-slot device it goes straight to the patch choice.
- * The state machine, the reopen callbacks and the preselected-URI effect are all
- * unchanged - only the two dialogs are Folk now.
+ * A chosen archive goes through slot selection on an A/B device, then a confirmation; on a
+ * single-slot device it goes straight to the confirmation. The KPM choice is not part of this
+ * sequence - it stays on its own row on the install screen.
+ *
+ * The archive keeps its concrete type throughout, so the row the user picked keeps its
+ * selection mark; the flow only needs the uri and the slot, which the KernelArchive interface
+ * provides for either type.
  */
 @Composable
 fun rememberAnyKernel3State(
@@ -47,50 +51,61 @@ fun rememberAnyKernel3State(
     var kpmPatchOption by remember { mutableStateOf(KpmPatchOption.FOLLOW_KERNEL) }
     var showSlotSelectionDialog by remember { mutableStateOf(false) }
     var showKpmPatchDialog by remember { mutableStateOf(false) }
+    var showConfirmDialog by remember { mutableStateOf(false) }
     var tempKernelUri by remember { mutableStateOf<Uri?>(null) }
 
-    val onHorizonKernelSelected: (InstallMethod.HorizonKernel) -> Unit = { method ->
+    /** The archive being decided on, kept so the slot step can rebuild the same type. */
+    var pendingArchive by remember { mutableStateOf<InstallMethod.KernelArchive?>(null) }
+
+    val onHorizonKernelSelected: (InstallMethod.KernelArchive) -> Unit = { method ->
         val uri = method.uri
         if (uri != null) {
             if (isAbDevice && method.slot == null) {
                 tempKernelUri = uri
+                pendingArchive = method
                 showSlotSelectionDialog = true
             } else {
                 installMethodState.value = method
-                showKpmPatchDialog = true
+                // The KPM question is not asked here any more. It used to open as soon as a
+                // file was picked, before the user had said they wanted to flash at all; the
+                // confirmation takes its place, and the KPM choice stays available from the
+                // row on the install screen.
+                showConfirmDialog = true
             }
         }
     }
 
-    val onReopenSlotDialog: (InstallMethod.HorizonKernel) -> Unit = { method ->
+    val onReopenSlotDialog: (InstallMethod.KernelArchive) -> Unit = { method ->
         val uri = method.uri
         if (uri != null && isAbDevice) {
             tempKernelUri = uri
+            pendingArchive = method
             showSlotSelectionDialog = true
         }
     }
 
-    val onReopenKpmDialog: (InstallMethod.HorizonKernel) -> Unit = { method ->
+    val onReopenKpmDialog: (InstallMethod.KernelArchive) -> Unit = { method ->
         installMethodState.value = method
         showKpmPatchDialog = true
     }
 
     val onSlotSelected: (String) -> Unit = { slot ->
-        val uri = tempKernelUri ?: (installMethodState.value as? InstallMethod.HorizonKernel)?.uri
-        if (uri != null) {
-            installMethodState.value = InstallMethod.HorizonKernel(
-                uri = uri,
-                slot = slot,
-                summary = horizonKernelSummary,
-            )
+        // Rebuild the archive the user actually picked, with the slot added, so the install
+        // list still matches it.
+        val archive = pendingArchive
+        if (archive != null && archive.uri != null) {
+            installMethodState.value = archive.withSlot(slot)
             tempKernelUri = null
+            pendingArchive = null
             showSlotSelectionDialog = false
-            showKpmPatchDialog = true
+            showConfirmDialog = true
         }
     }
 
     val onDismissSlotDialog = {
         showSlotSelectionDialog = false
+        tempKernelUri = null
+        pendingArchive = null
     }
 
     val onOptionSelected: (KpmPatchOption) -> Unit = { option ->
@@ -100,6 +115,17 @@ fun rememberAnyKernel3State(
 
     val onDismissPatchDialog = {
         showKpmPatchDialog = false
+    }
+
+    val onConfirmFlash = {
+        showConfirmDialog = false
+    }
+
+    val onDismissConfirmDialog = {
+        showConfirmDialog = false
+        // Dropping the selection keeps the install screen honest: with nothing selected the
+        // Next button is disabled and no row claims to be chosen.
+        installMethodState.value = null
     }
 
     LaunchedEffect(preselectedKernelUri, isAbDevice, horizonKernelSummary) {
@@ -113,10 +139,11 @@ fun rememberAnyKernel3State(
                     )
                     if (isAbDevice) {
                         tempKernelUri = preselectedUri
+                        pendingArchive = method
                         showSlotSelectionDialog = true
                     } else {
                         installMethodState.value = method
-                        showKpmPatchDialog = true
+                        showConfirmDialog = true
                     }
                 }
         }
@@ -126,11 +153,14 @@ fun rememberAnyKernel3State(
         kpmPatchOption = kpmPatchOption,
         showSlotSelectionDialog = showSlotSelectionDialog,
         showKpmPatchDialog = showKpmPatchDialog,
+        showConfirmDialog = showConfirmDialog,
         onHorizonKernelSelected = onHorizonKernelSelected,
         onSlotSelected = onSlotSelected,
         onDismissSlotDialog = onDismissSlotDialog,
         onOptionSelected = onOptionSelected,
         onDismissPatchDialog = onDismissPatchDialog,
+        onConfirmFlash = onConfirmFlash,
+        onDismissConfirmDialog = onDismissConfirmDialog,
         onReopenSlotDialog = onReopenSlotDialog,
         onReopenKpmDialog = onReopenKpmDialog,
     )

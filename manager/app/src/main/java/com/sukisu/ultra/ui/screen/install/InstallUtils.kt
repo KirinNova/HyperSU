@@ -11,6 +11,19 @@ import com.sukisu.ultra.R
 
 @Parcelize
 sealed class InstallMethod : Parcelable {
+    /**
+     * An AnyKernel3 archive, whatever its origin.
+     *
+     * [HorizonKernel] and [AnyKernel3] are the same flow over the same kind of file, and the
+     * slot and KPM steps have to accept either. They stay separate types so the install-method
+     * list can tell which row the user actually picked - collapsing one into the other made the
+     * chosen row lose its selection mark.
+     */
+    interface KernelArchive {
+        val uri: Uri?
+        val slot: String?
+    }
+
     data class SelectFile(
         val uri: Uri? = null,
         @get:StringRes override val label: Int = R.string.select_file,
@@ -35,11 +48,11 @@ sealed class InstallMethod : Parcelable {
     }
 
     data class HorizonKernel(
-        val uri: Uri? = null,
-        val slot: String? = null,
+        override val uri: Uri? = null,
+        override val slot: String? = null,
         @get:StringRes override val label: Int = R.string.horizon_kernel,
         override val summary: String? = null
-    ) : InstallMethod()
+    ) : InstallMethod(), KernelArchive
 
     /**
      * Flash an AnyKernel3 archive the user picked themselves.
@@ -49,16 +62,29 @@ sealed class InstallMethod : Parcelable {
      * It carries the same slot and KPM-patch steps.
      */
     data class AnyKernel3(
-        val uri: Uri? = null,
-        val slot: String? = null,
+        override val uri: Uri? = null,
+        override val slot: String? = null,
         @get:StringRes override val label: Int = R.string.anykernel3_flash,
         override val summary: String? = null
-    ) : InstallMethod()
+    ) : InstallMethod(), KernelArchive
 
     abstract val label: Int
 
     @IgnoredOnParcel
     open val summary: String? = null
+}
+
+/**
+ * The same archive with a slot recorded, keeping its own type.
+ *
+ * The slot dialog hands back only a slot string, so the archive has to be rebuilt. Rebuilding
+ * it as a fixed type is what made the install list lose its selection mark: the row the user
+ * picked was an AnyKernel3, and the rebuilt value was a HorizonKernel, so the two no longer
+ * matched. Copying keeps whichever type it was.
+ */
+fun InstallMethod.KernelArchive.withSlot(slot: String?): InstallMethod = when (this) {
+    is InstallMethod.HorizonKernel -> copy(slot = slot)
+    is InstallMethod.AnyKernel3 -> copy(slot = slot)
 }
 
 fun isKoFile(context: Context, uri: Uri): Boolean {

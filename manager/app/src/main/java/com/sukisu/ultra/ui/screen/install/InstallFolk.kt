@@ -45,8 +45,6 @@ import com.sukisu.ultra.ui.component.folk.FolkSelectableRow
 import com.sukisu.ultra.ui.component.folk.FolkSettingsGroup
 import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
 import com.sukisu.ultra.ui.kernelFlash.KpmPatchOption
-import com.sukisu.ultra.ui.kernelFlash.KpmPatchSelectionDialog
-import com.sukisu.ultra.ui.kernelFlash.component.SlotSelectionDialog
 import com.sukisu.ultra.ui.util.LkmSelection
 import com.sukisu.ultra.ui.util.isAbDevice
 
@@ -68,22 +66,8 @@ internal fun InstallScreenFolk(
     val isAb by produceState(initialValue = false) { value = isAbDevice() }
     val isGki by produceState(initialValue = false) { value = getKernelVersion().isGKI() }
 
-    if (uiState.showSlotSelectionDialog && isAb) {
-        SlotSelectionDialog(
-            show = true,
-            onDismiss = { uiState.anyKernel3State?.onDismissSlotDialog() },
-            onSlotSelected = { slot -> uiState.anyKernel3State?.onSlotSelected(slot) },
-        )
-    }
-
-    if (uiState.showKpmPatchDialog) {
-        KpmPatchSelectionDialog(
-            show = true,
-            currentOption = uiState.kpmPatchOption,
-            onDismiss = { uiState.anyKernel3State?.onDismissPatchDialog() },
-            onOptionSelected = { option -> uiState.anyKernel3State?.onOptionSelected(option) },
-        )
-    }
+    // The slot, KPM and confirmation dialogs are drawn by InstallScreen, which owns the state
+    // they act on. Drawing them here as well stacked two copies of each on top of one another.
 
     FolkScaffold(
         title = stringResource(R.string.install),
@@ -137,7 +121,7 @@ internal fun InstallScreenFolk(
                     }
                 }
 
-                if (uiState.canForceBackup && uiState.installMethod !is InstallMethod.HorizonKernel) {
+                if (uiState.canForceBackup && uiState.installMethod !is InstallMethod.KernelArchive) {
                     item {
                         FolkCheckboxPreference(
                             title = stringResource(R.string.install_force_backup),
@@ -148,7 +132,7 @@ internal fun InstallScreenFolk(
                     }
                 }
 
-                if (isGki && uiState.installMethod !is InstallMethod.HorizonKernel) {
+                if (isGki && uiState.installMethod !is InstallMethod.KernelArchive) {
                     item {
                         FolkNavigationPreference(
                             title = stringResource(R.string.install_upload_lkm_file),
@@ -240,8 +224,9 @@ internal fun InstallScreenFolk(
                 }
             }
 
-            // AnyKernel3 slot and KPM rows.
-            (uiState.installMethod as? InstallMethod.HorizonKernel)?.let { method ->
+            // AnyKernel3 slot and KPM rows. Either archive type qualifies, so this matches the
+            // KernelArchive interface rather than one concrete class.
+            (uiState.installMethod as? InstallMethod.KernelArchive)?.let { method ->
                 FolkSettingsGroup {
                     if (isAb && method.slot != null) {
                         item {

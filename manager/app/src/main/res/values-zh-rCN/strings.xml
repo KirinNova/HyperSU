@@ -401,6 +401,11 @@
     <string name="horizon_kernel_summary">刷入AnyKernel3格式的内核zip包</string>
     <string name="anykernel3_flash">刷写 AnyKernel3</string>
     <string name="anykernel3_summary">从存储中选择 AnyKernel3 压缩包并刷入</string>
+    <string name="flash_confirm_title">要刷入此压缩包吗？</string>
+    <string name="flash_confirm_file">文件</string>
+    <string name="flash_confirm_slot">分区槽位</string>
+    <string name="flash_confirm_unknown">未知文件名</string>
+    <string name="flash_confirm_action">刷入</string>
     <!-- KPM -->
     <string name="settings_kpm_summary">使用 KPM 管理内核模块</string>
     <string name="kpm_empty">当前没有安装内核模块</string>
