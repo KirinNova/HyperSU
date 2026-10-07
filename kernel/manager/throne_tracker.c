@@ -1,4 +1,4 @@
-﻿uid_t ksu_manager_appid = KSU_INVALID_APPID;
+uid_t ksu_manager_appid = KSU_INVALID_APPID;
 
 #define SYSTEM_PACKAGES_LIST_PATH "/data/system/packages.list"
 

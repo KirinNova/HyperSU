@@ -1,4 +1,4 @@
-﻿#include "kernel_includes.h"
+#include "kernel_includes.h"
 
 // uapi
 #include "include/uapi/app_profile.h"

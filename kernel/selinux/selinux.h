@@ -1,4 +1,4 @@
-﻿#ifndef __KSU_H_SELINUX
+#ifndef __KSU_H_SELINUX
 #define __KSU_H_SELINUX
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)) || defined(KSU_COMPAT_HAS_SELINUX_STATE)

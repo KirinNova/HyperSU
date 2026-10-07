@@ -1,4 +1,4 @@
-﻿#ifndef __KSU_H_SUPERCALL
+#ifndef __KSU_H_SUPERCALL
 #define __KSU_H_SUPERCALL
 
 #include <linux/fs.h>

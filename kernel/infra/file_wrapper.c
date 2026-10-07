@@ -1,4 +1,4 @@
-﻿struct ksu_file_wrapper {
+struct ksu_file_wrapper {
     struct file *orig;
     struct file_operations ops;
 };

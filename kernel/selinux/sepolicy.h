@@ -1,4 +1,4 @@
-﻿#ifndef __KSU_H_SEPOLICY
+#ifndef __KSU_H_SEPOLICY
 #define __KSU_H_SEPOLICY
 
 #include "ss/policydb.h"

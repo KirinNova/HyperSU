@@ -1,4 +1,4 @@
-﻿#define SU_PATH "/system/bin/su"
+#define SU_PATH "/system/bin/su"
 #define SH_PATH "/system/bin/sh"
 
 bool ksu_su_compat_enabled __read_mostly = true;

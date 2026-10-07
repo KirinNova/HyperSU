@@ -1,4 +1,4 @@
-﻿#ifndef __KSU_H_SULOG_EVENT
+#ifndef __KSU_H_SULOG_EVENT
 #define __KSU_H_SULOG_EVENT
 
 struct ksu_event_queue;

@@ -1,4 +1,4 @@
-﻿#ifndef __KSU_H_KERNEL_INCLUDES
+#ifndef __KSU_H_KERNEL_INCLUDES
 #define __KSU_H_KERNEL_INCLUDES
 
 // common

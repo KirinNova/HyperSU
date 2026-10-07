@@ -1,4 +1,4 @@
-﻿#ifndef __KSU_SU_MOUNT_NS_H
+#ifndef __KSU_SU_MOUNT_NS_H
 #define __KSU_SU_MOUNT_NS_H
 
 #define KSU_NS_INHERITED 0

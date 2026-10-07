@@ -1,4 +1,4 @@
-﻿bool ksu_module_mounted __read_mostly = false;
+bool ksu_module_mounted __read_mostly = false;
 bool ksu_boot_completed __read_mostly = false;
 
 static const char KERNEL_SU_RC[] =

@@ -1,4 +1,4 @@
-﻿#define KSU_DRIVER_PERMISSION_SU_SESSION (1UL << 0)
+#define KSU_DRIVER_PERMISSION_SU_SESSION (1UL << 0)
 
 struct ksu_driver_context {
     unsigned long permissions;

@@ -1,4 +1,4 @@
-﻿static int do_grant_root(void __user *arg)
+static int do_grant_root(void __user *arg)
 {
     int ret;
     __u32 audit_uid = current_uid().val;

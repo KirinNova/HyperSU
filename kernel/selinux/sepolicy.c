@@ -1,4 +1,4 @@
-﻿#define KSU_SUPPORT_ADD_TYPE
+#define KSU_SUPPORT_ADD_TYPE
 
 //////////////////////////////////////////////////////
 // Declaration

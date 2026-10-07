@@ -1,4 +1,4 @@
-﻿static DEFINE_MUTEX(ksu_sulog_fd_lock);
+static DEFINE_MUTEX(ksu_sulog_fd_lock);
 static bool ksu_sulog_fd_active;
 
 static ssize_t ksu_sulog_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)

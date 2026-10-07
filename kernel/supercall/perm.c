@@ -1,4 +1,4 @@
-﻿bool only_manager(void)
+bool only_manager(void)
 {
     return is_manager();
 }

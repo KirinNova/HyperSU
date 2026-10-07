@@ -1,4 +1,4 @@
-﻿#ifndef __KSU_UAPI_FEATURE_H
+#ifndef __KSU_UAPI_FEATURE_H
 #define __KSU_UAPI_FEATURE_H
 
 enum ksu_feature_id {

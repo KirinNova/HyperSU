@@ -1,4 +1,4 @@
-﻿#define FILE_MAGIC 0x7f4b5355 // ' KSU', u32
+#define FILE_MAGIC 0x7f4b5355 // ' KSU', u32
 #define FILE_FORMAT_VERSION 4 // u32
 
 #define KSU_APP_PROFILE_PRESERVE_UID 9999 // NOBODY_UID

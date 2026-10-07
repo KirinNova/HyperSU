@@ -1,4 +1,4 @@
-﻿#ifndef __KSU_H_ADB_ROOT
+#ifndef __KSU_H_ADB_ROOT
 #define __KSU_H_ADB_ROOT
 
 #ifdef CONFIG_KSU_FEATURE_ADBROOT

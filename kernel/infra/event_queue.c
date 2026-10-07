@@ -1,4 +1,4 @@
-﻿struct ksu_event_queue_node {
+struct ksu_event_queue_node {
     struct list_head list;
     struct ksu_event_record_hdr hdr;
     __u8 payload[];

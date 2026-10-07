@@ -1,4 +1,4 @@
-﻿#ifndef __KSU_H_ALLOWLIST
+#ifndef __KSU_H_ALLOWLIST
 #define __KSU_H_ALLOWLIST
 
 #define PER_USER_RANGE 100000

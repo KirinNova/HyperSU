@@ -1,4 +1,4 @@
-﻿#ifdef KSU_COMPAT_USE_STATIC_KEY
+#ifdef KSU_COMPAT_USE_STATIC_KEY
 DEFINE_STATIC_KEY_FALSE(ksu_adb_root);
 #else
 bool ksu_adb_root __read_mostly = false;

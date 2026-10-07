@@ -1,4 +1,4 @@
-﻿#ifndef __KSU_H_KERNEL_UMOUNT
+#ifndef __KSU_H_KERNEL_UMOUNT
 #define __KSU_H_KERNEL_UMOUNT
 
 void ksu_kernel_umount_init(void);

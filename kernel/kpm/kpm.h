@@ -1,4 +1,4 @@
-﻿#ifndef __SUKISU_KPM_H
+#ifndef __SUKISU_KPM_H
 #define __SUKISU_KPM_H
 
 int sukisu_handle_kpm(unsigned long control_code, unsigned long arg3,

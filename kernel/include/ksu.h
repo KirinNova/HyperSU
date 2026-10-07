@@ -1,4 +1,4 @@
-﻿#ifndef __KSU_H_KSU
+#ifndef __KSU_H_KSU
 #define __KSU_H_KSU
 
 #include <linux/types.h>

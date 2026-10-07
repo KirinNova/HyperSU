@@ -1,4 +1,4 @@
-﻿#ifndef __KSU_H_SUCOMPAT
+#ifndef __KSU_H_SUCOMPAT
 #define __KSU_H_SUCOMPAT
 #include <asm/ptrace.h>
 #include <linux/types.h>

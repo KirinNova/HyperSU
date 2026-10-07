@@ -1,4 +1,4 @@
-﻿.cache/
+.cache/
 .thinlto-cache/
 compile_commands.json
 *.ko
