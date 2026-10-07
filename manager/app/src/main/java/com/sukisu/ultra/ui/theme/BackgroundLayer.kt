@@ -142,9 +142,15 @@ fun rememberWallpaperBitmap(uri: String): State<ImageBitmap?> {
                     }
 
                     val screen = context.resources.displayMetrics
-                    val target = max(screen.widthPixels, screen.heightPixels) * 2
+                    // Bound the *longest* side and hard-cap it: a width-only check let a
+                    // tall photo keep its full height and land as a ~100 MB bitmap that the
+                    // GPU then refused to draw (Canvas "trying to draw too large"). The cap
+                    // keeps every dimension under the texture ceiling of stricter adapters
+                    // while staying twice the screen wherever the screen allows.
+                    val target = min(max(screen.widthPixels, screen.heightPixels) * 2, 4096)
+                    val longest = max(bounds.outWidth, bounds.outHeight)
                     var sample = 1
-                    while (bounds.outWidth > 0 && bounds.outWidth / (sample * 2) >= target) {
+                    while (longest > 0 && longest / sample > target) {
                         sample *= 2
                     }
 
