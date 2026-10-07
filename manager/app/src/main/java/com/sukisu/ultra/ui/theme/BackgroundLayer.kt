@@ -2,8 +2,8 @@ package com.sukisu.ultra.ui.theme
 
 import android.media.MediaPlayer
 import android.os.Build
+import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ViewGroup
 import android.widget.VideoView
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween

@@ -40,7 +40,7 @@ internal fun FolkSettingsGroupScope.CardWallpaperControls(
     onNightOpacityChange: (Float) -> Unit,
     onSaved: () -> Unit,
 ) {
-    item(key = "$keyPrefix_dual_dim") {
+    item(key = "${keyPrefix}_dual_dim") {
         FolkSwitchPreference(
             title = stringResource(R.string.card_dual_dim_title),
             summary = stringResource(R.string.card_dual_dim_desc),
@@ -54,7 +54,7 @@ internal fun FolkSettingsGroupScope.CardWallpaperControls(
     }
 
     if (dualDimEnabled) {
-        item(key = "$keyPrefix_day_dim") {
+        item(key = "${keyPrefix}_day_dim") {
             FolkSliderPreference(
                 title = stringResource(R.string.card_day_dim),
                 value = dayDim,
@@ -63,7 +63,7 @@ internal fun FolkSettingsGroupScope.CardWallpaperControls(
             )
         }
 
-        item(key = "$keyPrefix_night_dim") {
+        item(key = "${keyPrefix}_night_dim") {
             FolkSliderPreference(
                 title = stringResource(R.string.card_night_dim),
                 value = nightDim,
@@ -72,7 +72,7 @@ internal fun FolkSettingsGroupScope.CardWallpaperControls(
             )
         }
     } else {
-        item(key = "$keyPrefix_dim") {
+        item(key = "${keyPrefix}_dim") {
             FolkSliderPreference(
                 title = stringResource(R.string.card_dim),
                 value = dim,
@@ -82,7 +82,7 @@ internal fun FolkSettingsGroupScope.CardWallpaperControls(
         }
     }
 
-    item(key = "$keyPrefix_dual_opacity") {
+    item(key = "${keyPrefix}_dual_opacity") {
         FolkSwitchPreference(
             title = stringResource(R.string.card_dual_opacity_title),
             summary = stringResource(R.string.card_dual_opacity_desc),
@@ -96,7 +96,7 @@ internal fun FolkSettingsGroupScope.CardWallpaperControls(
     }
 
     if (dualOpacityEnabled) {
-        item(key = "$keyPrefix_day_opacity") {
+        item(key = "${keyPrefix}_day_opacity") {
             FolkSliderPreference(
                 title = stringResource(R.string.card_day_opacity),
                 value = dayOpacity,
@@ -105,7 +105,7 @@ internal fun FolkSettingsGroupScope.CardWallpaperControls(
             )
         }
 
-        item(key = "$keyPrefix_night_opacity") {
+        item(key = "${keyPrefix}_night_opacity") {
             FolkSliderPreference(
                 title = stringResource(R.string.card_night_opacity),
                 value = nightOpacity,
@@ -114,7 +114,7 @@ internal fun FolkSettingsGroupScope.CardWallpaperControls(
             )
         }
     } else {
-        item(key = "$keyPrefix_opacity") {
+        item(key = "${keyPrefix}_opacity") {
             FolkSliderPreference(
                 title = stringResource(R.string.card_opacity),
                 value = opacity,

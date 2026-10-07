@@ -31,7 +31,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -93,6 +92,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
@@ -750,8 +750,14 @@ private fun BoxScope.ModuleBannerLayer(module: Module) {
         value = ModuleBanner.load(context, module.id, reload = true)
     }
 
+    // BitmapPainter wants a Compose ImageBitmap; BitmapFactory hands back a platform Bitmap,
+    // so it has to be wrapped with asImageBitmap().
     val bitmap = remember(bytes) {
-        bytes?.let { runCatching { BitmapFactory.decodeByteArray(it, 0, it.size) }.getOrNull() }
+        bytes?.let {
+            runCatching { BitmapFactory.decodeByteArray(it, 0, it.size) }
+                .getOrNull()
+                ?.asImageBitmap()
+        }
     } ?: return
 
     Image(
