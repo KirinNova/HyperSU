@@ -1,4 +1,4 @@
-#ifndef KSU_EVENT_QUEUE_H
+﻿#ifndef KSU_EVENT_QUEUE_H
 #define KSU_EVENT_QUEUE_H
 
 #define KSU_EVENT_RECORD_FLAG_INTERNAL (1U << 0)

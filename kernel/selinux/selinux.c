@@ -1,17 +1,8 @@
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(4, 19, 0)
+﻿#if LINUX_VERSION_CODE <= KERNEL_VERSION(4, 19, 0)
 bool __maybe_unused is_ksu_transition(const struct task_security_struct *old_tsec,
                                       const struct task_security_struct *new_tsec)
 {
     return new_tsec->sid == old_tsec->sid;
-}
-#endif
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0) && !defined(KSU_COMPAT_HAS_CURRENT_SID)
-static inline u32 current_sid(void)
-{
-    const struct task_security_struct *tsec = selinux_cred(current_cred());
-
-    return tsec->sid;
 }
 #endif
 

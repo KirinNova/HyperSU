@@ -1,4 +1,4 @@
-#ifndef __KSU_H_MANAGER_OBSERVER
+﻿#ifndef __KSU_H_MANAGER_OBSERVER
 #define __KSU_H_MANAGER_OBSERVER
 
 int ksu_observer_init(void);

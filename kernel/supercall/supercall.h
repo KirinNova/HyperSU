@@ -1,4 +1,4 @@
-#ifndef __KSU_H_SUPERCALL
+﻿#ifndef __KSU_H_SUPERCALL
 #define __KSU_H_SUPERCALL
 
 #include <linux/fs.h>
@@ -20,7 +20,7 @@ struct ksu_ioctl_cmd_map {
 
 // Install KSU fd to current process
 int ksu_install_fd(void);
-// Install a KSU fd scoped to operations needed while starting a su session.
+// Install a KSU fd that authorizes operations required while starting su.
 int ksu_install_su_fd(void);
 bool ksu_is_su_session_fd(const struct file *filp);
 

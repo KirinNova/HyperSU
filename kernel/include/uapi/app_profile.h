@@ -1,10 +1,9 @@
-#ifndef __KSU_UAPI_APP_PROFILE_H
+﻿#ifndef __KSU_UAPI_APP_PROFILE_H
 #define __KSU_UAPI_APP_PROFILE_H
 
 #include <linux/types.h>
 
 #define KSU_APP_PROFILE_VER 4
-#define KSU_APP_PROFILE_SIZE_PRE_V4 776U
 #define KSU_MAX_PACKAGE_NAME 256
 /* NGROUPS_MAX for Linux is 65535 generally, but we only supports 32 groups. */
 #define KSU_MAX_GROUPS 32

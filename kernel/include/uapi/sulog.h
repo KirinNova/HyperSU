@@ -1,4 +1,4 @@
-#ifndef __KSU_UAPI_SULOG_H
+﻿#ifndef __KSU_UAPI_SULOG_H
 #define __KSU_UAPI_SULOG_H
 
 #include <linux/sched.h>

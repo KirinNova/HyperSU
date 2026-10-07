@@ -1,4 +1,4 @@
-// This header should not be used outside of pkg_observer.c!
+﻿// This header should not be used outside of pkg_observer.c!
 
 #include <linux/version.h>
 

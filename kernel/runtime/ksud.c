@@ -1,4 +1,4 @@
-bool ksu_module_mounted __read_mostly = false;
+﻿bool ksu_module_mounted __read_mostly = false;
 bool ksu_boot_completed __read_mostly = false;
 
 static const char KERNEL_SU_RC[] =
@@ -52,9 +52,6 @@ void on_post_fs_data(void)
 
     ksu_load_allow_list();
     ksu_observer_init();
-    /* packages.list may predate observer registration on older Android. */
-    if (unlikely(!ksu_is_manager_appid_valid()))
-        track_throne(false);
     // sanity check, this may influence the performance
     stop_input_hook();
     ksu_selinux_hide_handle_post_fs_data();
@@ -94,7 +91,9 @@ void on_boot_completed(void)
     ksu_boot_completed = true;
     pr_info("on_boot_completed!\n");
     track_throne(true);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
     ksu_selinux_hide_drop_backup_if_unused();
+#endif
 }
 
 #define MAX_ARG_STRINGS 0x7FFFFFFF

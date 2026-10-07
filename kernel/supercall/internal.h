@@ -1,4 +1,4 @@
-#ifndef __KSU_H_SUPERCALL_INTERNAL
+﻿#ifndef __KSU_H_SUPERCALL_INTERNAL
 #define __KSU_H_SUPERCALL_INTERNAL
 
 #include <linux/fs.h>

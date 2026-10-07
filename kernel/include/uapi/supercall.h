@@ -1,4 +1,4 @@
-#ifndef __KSU_UAPI_SUPERCALL_H
+﻿#ifndef __KSU_UAPI_SUPERCALL_H
 #define __KSU_UAPI_SUPERCALL_H
 
 #include <linux/ioctl.h>
@@ -12,10 +12,8 @@
 #define DECLARE(type, name, val) enum { name = val }
 #endif
 
-// 2: allowlist v4 root profile flags
-// 3: scoped su-session driver fd
-// 4: add KSU_GET_INFO_FLAG_BUNDLED
-DECLARE(__u32, KERNEL_SU_UAPI_VERSION, 4);
+// 2: allowlist v4 root profile flag
+DECLARE(__u32, KERNEL_SU_UAPI_VERSION, 2);
 
 /* Magic numbers for reboot hook to install fd */
 DECLARE(__u32, KSU_INSTALL_MAGIC1, 0xDEADBEEF);
@@ -34,7 +32,6 @@ DECLARE(__u32, KSU_GET_INFO_FLAG_LKM, (1U << 0));
 DECLARE(__u32, KSU_GET_INFO_FLAG_MANAGER, (1U << 1));
 DECLARE(__u32, KSU_GET_INFO_FLAG_LATE_LOAD, (1U << 2));
 DECLARE(__u32, KSU_GET_INFO_FLAG_PR_BUILD, (1U << 3));
-DECLARE(__u32, KSU_GET_INFO_FLAG_BUNDLED, (1U << 4));
 
 struct ksu_get_info_cmd {
     __u32 version; /* Output: KERNEL_SU_VERSION */

@@ -1,4 +1,4 @@
-static bool ksu_sulog_enabled __read_mostly = false;
+﻿static bool ksu_sulog_enabled __read_mostly = false;
 
 static int sulog_feature_get(u64 *value)
 {

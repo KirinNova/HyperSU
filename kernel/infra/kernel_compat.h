@@ -1,5 +1,61 @@
-#ifndef __KSU_H_KERNEL_COMPAT
+﻿#ifndef __KSU_H_KERNEL_COMPAT
 #define __KSU_H_KERNEL_COMPAT
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0)
+#if defined(__aarch64__)
+#define KSU_SYS_PREFIX(name) __arm64_sys_##name
+#elif defined(__x86_64__)
+#define KSU_SYS_PREFIX(name) __x64_sys_##name
+#elif defined(__arm__)
+#define KSU_SYS_PREFIX(name) sys_##name
+#else // wire up your arch here.
+static_assert(1 == 0, "Unsupported architecture!");
+#define KSU_SYS_PREFIX(name) sys_##name
+#endif
+
+/**
+ * ksyscall: call syscalls from kernelspace
+ * - tries to copy unistd's syscall()
+ *
+ * usage: ksyscall(close, fd);
+ */
+#define __ksyscall(name, a, b, c, d, e, f)                                                                             \
+    ({                                                                                                                 \
+        extern long KSU_SYS_PREFIX(name)(const struct pt_regs *);                                                      \
+        struct pt_regs __ksu_regs = { 0 };                                                                             \
+        PT_REGS_PARM1(&__ksu_regs) = (unsigned long)(a);                                                               \
+        PT_REGS_PARM2(&__ksu_regs) = (unsigned long)(b);                                                               \
+        PT_REGS_PARM3(&__ksu_regs) = (unsigned long)(c);                                                               \
+        PT_REGS_SYSCALL_PARM4(&__ksu_regs) = (unsigned long)(d);                                                       \
+        PT_REGS_PARM5(&__ksu_regs) = (unsigned long)(e);                                                               \
+        PT_REGS_PARM6(&__ksu_regs) = (unsigned long)(f);                                                               \
+        (long)KSU_SYS_PREFIX(name)(&__ksu_regs);                                                                       \
+    })
+
+// https://elixir.bootlin.com/musl/v1.2.6/source/src/internal/syscall.h#L45
+#define ksyscall_0(name) __ksyscall(name, 0, 0, 0, 0, 0, 0)
+#define ksyscall_1(name, a) __ksyscall(name, a, 0, 0, 0, 0, 0)
+#define ksyscall_2(name, a, b) __ksyscall(name, a, b, 0, 0, 0, 0)
+#define ksyscall_3(name, a, b, c) __ksyscall(name, a, b, c, 0, 0, 0)
+#define ksyscall_4(name, a, b, c, d) __ksyscall(name, a, b, c, d, 0, 0)
+#define ksyscall_5(name, a, b, c, d, e) __ksyscall(name, a, b, c, d, e, 0)
+#define ksyscall_6(name, a, b, c, d, e, f) __ksyscall(name, a, b, c, d, e, f)
+
+#define __ksyscall_arg_n(_1, _2, _3, _4, _5, _6, _7, N, ...) N
+#define __ksyscall_count_args(...) __ksyscall_arg_n(__VA_ARGS__, 6, 5, 4, 3, 2, 1, 0)
+#define __ksyscall_concat(a, b) a##b
+#define __ksyscall_exp(func, arg) __ksyscall_concat(func, arg)
+#define ksyscall(...) __ksyscall_exp(ksyscall_, __ksyscall_count_args(__VA_ARGS__))(__VA_ARGS__)
+
+#define ksu_close_fd(fd) ({ ksyscall(close, fd); })
+#define ksu_sys_setns(fd, flags) ({ ksyscall(setns, fd, flags); })
+#define ksu_sys_umount(mnt, flags) ({ ksyscall(umount, mnt, flags); })
+#else
+#define ksu_close_fd sys_close
+#define ksu_sys_setns sys_setns
+#define ksys_unshare sys_unshare
+#define ksu_sys_umount(mnt, flags) ({ sys_umount((char __user *)mnt, flags); })
+#endif
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 9, 0)) && (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0)) ||              \
     (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0)) && (LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0))
@@ -32,7 +88,7 @@ static int install_session_keyring(struct key *keyring)
     return commit_creds(new);
 }
 
-static inline struct file *ksu_filp_open_compat(const char *filename, int flags, umode_t mode)
+struct file *ksu_filp_open_compat(const char *filename, int flags, umode_t mode)
 {
     if (init_session_keyring != NULL && !current_cred()->session_keyring && (current->flags & PF_WQ_WORKER)) {
         pr_info("installing init session keyring for older kernel\n");
@@ -92,7 +148,7 @@ static inline long __strncpy_from_user_nofault(char *dst, const void __user *uns
 #endif
 }
 
-static inline long ksu_strncpy_from_user_nofault(char *dst, const void __user *unsafe_addr, long count)
+long ksu_strncpy_from_user_nofault(char *dst, const void __user *unsafe_addr, long count)
 {
     long ret = __strncpy_from_user_nofault(dst, unsafe_addr, count);
 
@@ -114,7 +170,7 @@ static inline long ksu_strncpy_from_user_nofault(char *dst, const void __user *u
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 14, 0)
 // https://elixir.bootlin.com/linux/v4.14.336/source/fs/read_write.c#L418
-static inline ssize_t ksu_kernel_read_compat(struct file *p, void *buf, size_t count, loff_t *pos)
+ssize_t ksu_kernel_read_compat(struct file *p, void *buf, size_t count, loff_t *pos)
 {
     mm_segment_t old_fs;
     old_fs = get_fs();
@@ -124,7 +180,7 @@ static inline ssize_t ksu_kernel_read_compat(struct file *p, void *buf, size_t c
     return result;
 }
 // https://elixir.bootlin.com/linux/v4.14.336/source/fs/read_write.c#L512
-static inline ssize_t ksu_kernel_write_compat(struct file *p, const void *buf, size_t count, loff_t *pos)
+ssize_t ksu_kernel_write_compat(struct file *p, const void *buf, size_t count, loff_t *pos)
 {
     mm_segment_t old_fs;
     old_fs = get_fs();
@@ -251,36 +307,32 @@ __weak void groups_sort(struct group_info *group_info)
 #define in_compat_syscall() is_compat_task()
 #endif
 
-#ifndef __nocfi
-#define __nocfi
-#endif
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0)
-#define ksu_get_uid_t(x) *(unsigned int *)&(x)
-#else
-#define ksu_get_uid_t(x) ((x).val)
-#endif
-
-// https://github.com/torvalds/linux/commit/294f69e662d1570703e9b56e95be37a9fd3afba5
-#ifndef __GCC4_has_attribute___fallthrough__
-#define __GCC4_has_attribute___fallthrough__ 0
-#endif
-
-#ifndef __has_attribute
-#define __has_attribute(x) __GCC4_has_attribute_##x
-#endif
-
-#if __has_attribute(__fallthrough__)
-#define fallthrough __attribute__((__fallthrough__))
-#else
-#define fallthrough                                                                                                    \
-    do {                                                                                                               \
-    } while (0) /* fallthrough */
-#endif
-
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 3, 0) || defined(KSU_HAS_MODERN_STATIC_KEY_INTERFACE)
 #define KSU_COMPAT_USE_STATIC_KEY
 
 #endif
+
+static inline struct file *ksu_filp_open_nonotify(const char *path, int flags)
+{
+    struct path p;
+    struct file *f;
+    int ret;
+    ret = kern_path(path, (flags & O_NOFOLLOW) ? 0 : LOOKUP_FOLLOW, &p);
+    if (ret) {
+        return ERR_PTR(ret);
+    }
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 14, 0)
+    f = dentry_open_nonotify(&p, flags, current_cred());
+    // https://github.com/torvalds/linux/commit/765927b2d508712d320c8934db963bbe14c3fcec
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0) || defined(KSU_COMPAT_HAS_MODERN_DENTRY_OPEN)
+    f = dentry_open(&p, flags | __FMODE_NONOTIFY, current_cred());
+#else
+    f = dentry_open(p.dentry, p.mnt, flags | __FMODE_NONOTIFY, current_cred());
+#endif
+
+    path_put(&p);
+    return f;
+}
 
 #endif

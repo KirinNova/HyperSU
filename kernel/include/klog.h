@@ -1,4 +1,4 @@
-#ifndef __KSU_H_KLOG
+﻿#ifndef __KSU_H_KLOG
 #define __KSU_H_KLOG
 
 #include <linux/printk.h>

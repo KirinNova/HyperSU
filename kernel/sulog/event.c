@@ -1,4 +1,4 @@
-#define KSU_SULOG_MAX_QUEUED 256U
+﻿#define KSU_SULOG_MAX_QUEUED 256U
 #define KSU_SULOG_MAX_PAYLOAD_LEN 2048U
 #define KSU_SULOG_MAX_ARG_STRINGS 0x7FFFFFFF
 #define KSU_SULOG_MAX_ARG_CHUNK 256U
@@ -141,8 +141,8 @@ static __u32 ksu_sulog_flatten_argv(struct user_arg_ptr *argv_user, char *dst, _
         if (IS_ERR(arg_user))
             return ksu_sulog_copy_empty_string(dst);
 
-        copied = ksu_strncpy_from_user_nofault(
-            arg, (const void __user *)untagged_addr((unsigned long)arg_user), sizeof(arg));
+        copied =
+            strncpy_from_user_nofault(arg, (const void __user *)untagged_addr((unsigned long)arg_user), sizeof(arg));
         if (copied <= 0)
             return ksu_sulog_copy_empty_string(dst);
 

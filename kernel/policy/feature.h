@@ -1,4 +1,4 @@
-#ifndef __KSU_H_FEATURE
+﻿#ifndef __KSU_H_FEATURE
 #define __KSU_H_FEATURE
 
 typedef int (*ksu_feature_get_t)(u64 *value);

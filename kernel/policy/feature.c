@@ -1,4 +1,4 @@
-static const struct ksu_feature_handler *feature_handlers[KSU_FEATURE_MAX];
+﻿static const struct ksu_feature_handler *feature_handlers[KSU_FEATURE_MAX];
 
 static DEFINE_MUTEX(feature_mutex);
 
