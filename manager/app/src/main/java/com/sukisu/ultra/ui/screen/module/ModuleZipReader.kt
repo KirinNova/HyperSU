@@ -30,9 +30,9 @@ data class ModuleZipInfo(
 /**
  * Reads `module.prop` out of a module archive.
  *
- * The entry may sit at the root or under a single wrapping directory, which is why both
- * `module.prop` and `*/module.prop` are accepted. The archive is streamed, so a large zip is
- * not held in memory; reading stops at the first match.
+ * The entry may sit at the root or under a single wrapping directory, so a name that merely
+ * ends in `module.prop` is accepted too. The archive is streamed, so a large zip is not held
+ * in memory; reading stops at the first match.
  */
 object ModuleZipReader {
 
