@@ -51,12 +51,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import top.yukonga.miuix.kmp.blur.LayerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import com.sukisu.ultra.ui.component.FloatingBottomBar
 import com.sukisu.ultra.ui.component.FloatingBottomBarItem
 import com.sukisu.ultra.ui.theme.glass.GlassConfig
-import com.sukisu.ultra.ui.theme.glass.GlassStrength
-import com.sukisu.ultra.ui.theme.glass.LocalGlassBackdrop
-import com.sukisu.ultra.ui.theme.glass.liquidGlass
 import com.sukisu.ultra.ui.theme.tokens.ContinuousCornerShape
 import com.sukisu.ultra.ui.theme.tokens.FolkShape
 
@@ -88,14 +87,18 @@ fun FolkBottomBar(
     onSelectedIndexChange: (Int) -> Unit,
     badge: NavigationBadgeState,
     isFloating: Boolean = false,
+    backdrop: LayerBackdrop? = null,
     modifier: Modifier = Modifier,
 ) {
     val destinations = BottomBarDestination.entries
 
     if (isFloating && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        // The pill samples the recorded page backdrop; the AGSL highlight on top of it
-        // needs a runtime shader, so the refraction-only fallback kicks in below 33.
-        val blurEnabled = LocalGlassBackdrop.current != null &&
+        // The pill samples the page behind it, exactly like ReSukiSU's bar: the caller records
+        // its pager through Modifier.layerBackdrop and hands the handle over. Without a handle
+        // there is nothing to refract, so the bar keeps its tinted fill instead of pretending.
+        // The lens itself is an AGSL shader, which only exists from API 33.
+        val effectiveBackdrop = backdrop ?: rememberLayerBackdrop()
+        val blurEnabled = backdrop != null &&
             GlassConfig.blurEnabled &&
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
         Box(
@@ -111,6 +114,7 @@ fun FolkBottomBar(
             contentAlignment = Alignment.Center,
         ) {
             FloatingBottomBar(
+                backdrop = effectiveBackdrop,
                 selectedIndex = selectedIndex,
                 onSelected = onSelectedIndexChange,
                 tabsCount = destinations.size,
@@ -214,16 +218,9 @@ fun FolkBottomBar(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                // The root recording runs under the bar too, so the surface refracts it
-                // like any other plate.
-                .liquidGlass(
-                    shape = barShape,
-                    strength = GlassStrength.Subtle,
-                    refract = true,
-                ),
+                .windowInsetsPadding(WindowInsets.navigationBars),
             shape = barShape,
-            color = Color.Transparent,
+            color = MaterialTheme.colorScheme.surfaceContainer,
             contentColor = MaterialTheme.colorScheme.onSurface,
             tonalElevation = 0.dp,
             shadowElevation = 0.dp,

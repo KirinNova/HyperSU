@@ -26,10 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
-import com.sukisu.ultra.ui.theme.glass.liquidGlass
 import kotlinx.coroutines.delay
 
 /**
@@ -100,20 +98,16 @@ internal fun FolkSettingsGroupItems(
 ) {
     if (items.none { it.visible }) return
 
+    val containerColor = folkGroupColor()
     val highlightColor = MaterialTheme.colorScheme.primary
 
     CompositionLocalProvider(LocalInsideFolkGroup provides true) {
-        // The shelf is a plate of glass, not a filled card: it no longer has a colour of its
-        // own, it lifts the page underneath it and carries the rim. The shape is passed to
-        // liquidGlass as well as to Surface so the rim and the clip are the same outline.
         Surface(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = FolkSettingsDimens.ScreenPadding)
-                .liquidGlass(shape),
+                .padding(horizontal = FolkSettingsDimens.ScreenPadding),
             shape = shape,
-            color = Color.Transparent,
-            contentColor = MaterialTheme.colorScheme.onSurface,
+            color = containerColor,
             tonalElevation = 0.dp,
         ) {
             Column(modifier = Modifier.padding(vertical = FolkSettingsDimens.GroupVerticalPadding)) {

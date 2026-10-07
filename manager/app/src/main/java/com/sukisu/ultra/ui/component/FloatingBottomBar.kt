@@ -80,7 +80,6 @@ import com.sukisu.ultra.ui.component.liquid.rememberCombinedBackdrop
 import com.sukisu.ultra.ui.component.liquid.vibrancy
 import com.sukisu.ultra.ui.component.miuix.animation.DampedDragAnimation
 import com.sukisu.ultra.ui.component.miuix.animation.InteractiveHighlight
-import com.sukisu.ultra.ui.theme.glass.LocalGlassBackdrop
 import com.sukisu.ultra.ui.theme.isInDarkTheme
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
@@ -208,6 +207,7 @@ fun RowScope.FloatingBottomBarItem(
 
 @Composable
 fun FloatingBottomBar(
+    backdrop: Backdrop,
     modifier: Modifier = Modifier,
     selectedIndex: Int,
     onSelected: (index: Int) -> Unit,
@@ -222,7 +222,6 @@ fun FloatingBottomBar(
     val surfaceContainer = MaterialTheme.colorScheme.surfaceContainer
     val containerColor = if (isBlurEnabled) surfaceContainer.copy(alpha = 0.4f) else surfaceContainer
 
-    val backdrop: Backdrop = LocalGlassBackdrop.current ?: rememberLayerBackdrop()
     val tabsBackdrop = rememberLayerBackdrop()
     val density = LocalDensity.current
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
