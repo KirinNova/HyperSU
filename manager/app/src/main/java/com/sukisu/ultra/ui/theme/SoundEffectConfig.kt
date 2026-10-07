@@ -125,17 +125,17 @@ object SoundEffectConfig {
 
     fun load(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        isSoundEffectEnabled = prefs.getBoolean(KEY_ENABLED, false)
-        soundEffectFilename = prefs.getString(KEY_FILENAME, null)
-        scope = prefs.getString(KEY_SCOPE, SCOPE_GLOBAL) ?: SCOPE_GLOBAL
-        sourceType = prefs.getString(KEY_SOURCE_TYPE, SOURCE_TYPE_LOCAL) ?: SOURCE_TYPE_LOCAL
-        presetName = prefs.getString(KEY_PRESET_NAME, PRESETS[0]) ?: PRESETS[0]
+        isSoundEffectEnabled = prefs.booleanPref(KEY_ENABLED, false)
+        soundEffectFilename = prefs.stringPref(KEY_FILENAME, null)
+        scope = prefs.stringPref(KEY_SCOPE, SCOPE_GLOBAL) ?: SCOPE_GLOBAL
+        sourceType = prefs.stringPref(KEY_SOURCE_TYPE, SOURCE_TYPE_LOCAL) ?: SOURCE_TYPE_LOCAL
+        presetName = prefs.stringPref(KEY_PRESET_NAME, PRESETS[0]) ?: PRESETS[0]
 
-        isStartupSoundEnabled = prefs.getBoolean(KEY_STARTUP_ENABLED, false)
-        startupSoundFilename = prefs.getString(KEY_STARTUP_FILENAME, null)
-        startupSourceType = prefs.getString(KEY_STARTUP_SOURCE_TYPE, SOURCE_TYPE_LOCAL)
+        isStartupSoundEnabled = prefs.booleanPref(KEY_STARTUP_ENABLED, false)
+        startupSoundFilename = prefs.stringPref(KEY_STARTUP_FILENAME, null)
+        startupSourceType = prefs.stringPref(KEY_STARTUP_SOURCE_TYPE, SOURCE_TYPE_LOCAL)
             ?: SOURCE_TYPE_LOCAL
-        startupPresetName = prefs.getString(KEY_STARTUP_PRESET_NAME, STARTUP_PRESETS[0])
+        startupPresetName = prefs.stringPref(KEY_STARTUP_PRESET_NAME, STARTUP_PRESETS[0])
             ?: STARTUP_PRESETS[0]
 
         // A config pointing at a file that is no longer there must not leave the toggle on.

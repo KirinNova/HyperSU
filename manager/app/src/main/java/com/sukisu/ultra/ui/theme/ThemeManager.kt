@@ -79,7 +79,7 @@ object ThemeManager {
 
     private fun prefsString(context: Context, file: String, key: String): String? =
         context.getSharedPreferences(file, Context.MODE_PRIVATE)
-            .getString(key, null)
+            .stringPref(key, null)
             ?.takeIf { it.isNotBlank() }
 
     /**
@@ -414,8 +414,8 @@ object ThemeManager {
         val music = context.getSharedPreferences(MUSIC_PREFS, Context.MODE_PRIVATE)
         val sound = context.getSharedPreferences(SOUND_PREFS, Context.MODE_PRIVATE)
 
-        val colorMode = ColorMode.fromValue(settings.getInt("color_mode", 0))
-        val colorSpec = settings.getString("color_spec", ColorSpec.SpecVersion.SPEC_2025.name)
+        val colorMode = ColorMode.fromValue(settings.intPref("color_mode", 0))
+        val colorSpec = settings.stringPref("color_spec", ColorSpec.SpecVersion.SPEC_2025.name)
             ?: ColorSpec.SpecVersion.SPEC_2025.name
 
         return JSONObject().apply {
@@ -427,36 +427,36 @@ object ThemeManager {
             put("meta_description", metadata.description)
 
             // ---- FolkPatch appearance keys ----
-            put("isBackgroundEnabled", background.getBoolean("custom_background_enabled", false))
-            put("backgroundOpacity", background.getFloat("custom_background_opacity", 0.5f).toDouble())
-            put("backgroundBlur", background.getFloat("custom_background_blur", 0.2f).toDouble())
-            put("backgroundDim", background.getFloat("custom_background_dim", 0.0f).toDouble())
-            put("isDualBackgroundDimEnabled", background.getBoolean("custom_background_dual_dim_enabled", true))
-            put("backgroundDayDim", background.getFloat("custom_background_day_dim", 0.0f).toDouble())
-            put("backgroundNightDim", background.getFloat("custom_background_night_dim", 0.5f).toDouble())
+            put("isBackgroundEnabled", background.booleanPref("custom_background_enabled", false))
+            put("backgroundOpacity", background.floatPref("custom_background_opacity", 0.5f).toDouble())
+            put("backgroundBlur", background.floatPref("custom_background_blur", 0.2f).toDouble())
+            put("backgroundDim", background.floatPref("custom_background_dim", 0.0f).toDouble())
+            put("isDualBackgroundDimEnabled", background.booleanPref("custom_background_dual_dim_enabled", true))
+            put("backgroundDayDim", background.floatPref("custom_background_day_dim", 0.0f).toDouble())
+            put("backgroundNightDim", background.floatPref("custom_background_night_dim", 0.5f).toDouble())
 
             put("nightModeEnabled", colorMode.isDark)
             put("nightModeFollowSys", colorMode.isSystem)
             put("useSystemDynamicColor", colorMode.isMonet)
             // FolkPatch has no AMOLED flag; a theme cannot express it, so it is not written.
-            put("customColor", settings.getInt("key_color", 0).toString())
-            put("colorStyle", settings.getString("color_style", PaletteStyle.TonalSpot.name))
+            put("customColor", settings.intPref("key_color", 0).toString())
+            put("colorStyle", settings.stringPref("color_style", PaletteStyle.TonalSpot.name))
             put("colorStandard", if (colorSpec == ColorSpec.SpecVersion.SPEC_2021.name) "MD3_2021" else "MD3_2025")
             put("colorGenerationMode", if (colorMode.isMonet) "custom" else "classic")
-            put("homeLayoutStyle", settings.getString("home_layout_style", "circle"))
+            put("homeLayoutStyle", settings.stringPref("home_layout_style", "circle"))
 
-            put("isFontEnabled", font.getBoolean("custom_font_enabled", false))
-            put("fontMode", FontMode.fromName(font.getString("font_mode", null))?.serializedName ?: "system")
+            put("isFontEnabled", font.booleanPref("custom_font_enabled", false))
+            put("fontMode", FontMode.fromName(font.stringPref("font_mode", null))?.serializedName ?: "system")
 
-            put("isMusicEnabled", music.getBoolean("music_enabled", false))
-            put("musicVolume", music.getFloat("volume", 1.0f).toDouble())
-            put("isAutoPlayEnabled", music.getBoolean("auto_play", false))
-            put("isLoopingEnabled", music.getBoolean("looping_enabled", false))
-            put("musicFilename", music.getString("music_filename", "") ?: "")
+            put("isMusicEnabled", music.booleanPref("music_enabled", false))
+            put("musicVolume", music.floatPref("volume", 1.0f).toDouble())
+            put("isAutoPlayEnabled", music.booleanPref("auto_play", false))
+            put("isLoopingEnabled", music.booleanPref("looping_enabled", false))
+            put("musicFilename", music.stringPref("music_filename", "") ?: "")
 
-            put("isSoundEffectEnabled", sound.getBoolean("sound_effect_enabled", false))
-            put("soundEffectFilename", sound.getString("sound_effect_filename", "") ?: "")
-            put("soundEffectScope", sound.getString("sound_effect_scope", SoundEffectConfig.SCOPE_GLOBAL))
+            put("isSoundEffectEnabled", sound.booleanPref("sound_effect_enabled", false))
+            put("soundEffectFilename", sound.stringPref("sound_effect_filename", "") ?: "")
+            put("soundEffectScope", sound.stringPref("sound_effect_scope", SoundEffectConfig.SCOPE_GLOBAL))
 
             // ---- HyperSU-native sections (exact restore) ----
             put("hsSettings", readKeys(settings, appearanceKeys))
@@ -638,22 +638,40 @@ object ThemeManager {
             }
         }
 
+    /**
+     * Writes a theme section back into preferences.
+     *
+     * Numbers are stored by the type the *key* uses, never by the type JSON happened to parse
+     * into. org.json has a single number type and re-serialises a whole-valued Double as a bare
+     * integer, so `0.5` stays a Double but `1.0` comes back as an Integer - and storing that with
+     * putInt made every later `getFloat` throw ClassCastException. Since these preferences are
+     * loaded from Application.onCreate, that turned one import into an app that could not start.
+     */
     private fun writeKeys(prefs: SharedPreferences, json: JSONObject) {
         val editor = prefs.edit()
         json.keys().forEach { key ->
             when (val value = json.opt(key)) {
                 null, JSONObject.NULL -> editor.remove(key)
                 is Boolean -> editor.putBoolean(key, value)
-                is Int -> editor.putInt(key, value)
-                is Long -> editor.putLong(key, value)
-                // JSON has no float type: every number round-trips through a double.
-                is Double -> editor.putFloat(key, value.toFloat())
                 is String -> editor.putString(key, value)
+                is Number -> if (key in INT_KEYS) {
+                    editor.putInt(key, value.toInt())
+                } else {
+                    editor.putFloat(key, value.toFloat())
+                }
                 else -> editor.putString(key, value.toString())
             }
         }
         editor.apply()
     }
+
+    /**
+     * The appearance keys that really are integers.
+     *
+     * Everything else that is numeric is a Float. Keeping this list explicit is the point: it is
+     * what stops a theme import from silently changing a key's storage type.
+     */
+    private val INT_KEYS = setOf("color_mode", "key_color")
 
     /**
      * Reads the theme JSON from either container.

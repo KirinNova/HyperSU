@@ -74,12 +74,12 @@ object FontConfig {
 
     fun load(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        customFontFilename = prefs.getString(KEY_CUSTOM_FONT_PATH, null)
+        customFontFilename = prefs.stringPref(KEY_CUSTOM_FONT_PATH, null)
 
         // Migrate the legacy boolean to the three-mode setting when font_mode was never written:
         // an enabled custom font becomes CUSTOM, everything else keeps the platform font.
-        val storedMode = FontMode.fromName(prefs.getString(KEY_FONT_MODE, null))
-        val legacyEnabled = prefs.getBoolean(KEY_CUSTOM_FONT_ENABLED, false)
+        val storedMode = FontMode.fromName(prefs.stringPref(KEY_FONT_MODE, null))
+        val legacyEnabled = prefs.booleanPref(KEY_CUSTOM_FONT_ENABLED, false)
         fontMode = storedMode ?: if (legacyEnabled) FontMode.CUSTOM else FontMode.SYSTEM_DEFAULT
         isCustomFontEnabled = fontMode == FontMode.CUSTOM
         var needsPersist = storedMode == null

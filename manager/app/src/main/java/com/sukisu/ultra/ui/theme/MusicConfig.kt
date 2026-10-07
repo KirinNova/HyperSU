@@ -72,11 +72,11 @@ object MusicConfig {
 
     fun load(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        isMusicEnabled = prefs.getBoolean(KEY_MUSIC_ENABLED, false)
-        musicFilename = prefs.getString(KEY_MUSIC_FILENAME, null)
-        isAutoPlayEnabled = prefs.getBoolean(KEY_AUTO_PLAY, false)
-        isLoopingEnabled = prefs.getBoolean(KEY_LOOPING_ENABLED, false)
-        volume = prefs.getFloat(KEY_VOLUME, 1.0f)
+        isMusicEnabled = prefs.booleanPref(KEY_MUSIC_ENABLED, false)
+        musicFilename = prefs.stringPref(KEY_MUSIC_FILENAME, null)
+        isAutoPlayEnabled = prefs.booleanPref(KEY_AUTO_PLAY, false)
+        isLoopingEnabled = prefs.booleanPref(KEY_LOOPING_ENABLED, false)
+        volume = prefs.floatPref(KEY_VOLUME, 1.0f)
 
         // A config pointing at a file that is no longer there must not leave the toggle on.
         if (isMusicEnabled && musicFilename != null) {

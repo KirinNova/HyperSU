@@ -12,6 +12,9 @@ import com.sukisu.ultra.Natives
 import com.sukisu.ultra.ksuApp
 import com.sukisu.ultra.magica.BootCompletedReceiver
 import com.sukisu.ultra.ui.screen.modulerepo.RepoSort
+import com.sukisu.ultra.ui.theme.booleanPref
+import com.sukisu.ultra.ui.theme.floatPref
+import com.sukisu.ultra.ui.theme.intPref
 import com.sukisu.ultra.ui.util.execKsud
 import com.sukisu.ultra.ui.util.getFeaturePersistValue
 import com.sukisu.ultra.ui.util.getFeatureStatus
@@ -51,7 +54,7 @@ const val KEY_HOME_LAYOUT = "home_layout_style"
 /** Prefer soft reboot: always in jailbreak mode, or when the setting is enabled. */
 fun isSoftRebootPreferred(): Boolean =
     Natives.isLateLoadMode || ksuApp.getSharedPreferences(SETTINGS_PREFS, Context.MODE_PRIVATE)
-        .getBoolean(KEY_USE_SOFT_REBOOT, false)
+        .booleanPref(KEY_USE_SOFT_REBOOT, false)
 
 class SettingsRepositoryImpl : SettingsRepository {
 
@@ -70,94 +73,94 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = LocaleHelper.setLanguage(ksuApp, value)
 
     override var checkModuleUpdate: Boolean
-        get() = prefs.getBoolean("module_check_update", true)
+        get() = prefs.booleanPref("module_check_update", true)
         set(value) = prefs.edit { putBoolean("module_check_update", value) }
 
     override var alternativeIcon : Boolean
-        get() = prefs.getBoolean("use_alt_icon", false)
+        get() = prefs.booleanPref("use_alt_icon", false)
         set(value) = prefs.edit { putBoolean("use_alt_icon", value)}
 
     override var themeMode: Int
-        get() = prefs.getInt("color_mode", 0)
+        get() = prefs.intPref("color_mode", 0)
         set(value) = prefs.edit { putInt("color_mode", value) }
 
     
     override var keyColor: Int
-        get() = prefs.getInt("key_color", 0)
+        get() = prefs.intPref("key_color", 0)
         set(value) = prefs.edit { putInt("key_color", value) }
 
     override var colorStyle: String
-        get() = prefs.getString("color_style", PaletteStyle.TonalSpot.name) ?: PaletteStyle.TonalSpot.name
+        get() = prefs.stringPref("color_style", PaletteStyle.TonalSpot.name) ?: PaletteStyle.TonalSpot.name
         set(value) = prefs.edit { putString("color_style", value) }
 
     override var colorSpec: String
-        get() = prefs.getString("color_spec", ColorSpec.SpecVersion.SPEC_2025.name) ?: ColorSpec.SpecVersion.SPEC_2025.name
+        get() = prefs.stringPref("color_spec", ColorSpec.SpecVersion.SPEC_2025.name) ?: ColorSpec.SpecVersion.SPEC_2025.name
         set(value) = prefs.edit { putString("color_spec", value) }
 
     override var enablePredictiveBack: Boolean
-        get() = prefs.getBoolean("enable_predictive_back", false)
+        get() = prefs.booleanPref("enable_predictive_back", false)
         set(value) = prefs.edit { putBoolean("enable_predictive_back", value) }
 
     override var enableSwipeDismiss: Boolean
-        get() = prefs.getBoolean("enable_swipe_dismiss", true)
+        get() = prefs.booleanPref("enable_swipe_dismiss", true)
         set(value) = prefs.edit { putBoolean("enable_swipe_dismiss", value) }
 
     override var pagerInterceptionMode: Int
-        get() = prefs.getInt("pager_interception_mode", 1)
+        get() = prefs.intPref("pager_interception_mode", 1)
         set(value) = prefs.edit { putInt("pager_interception_mode", value.coerceIn(0, 2)) }
 
     
     override var enableFloatingBottomBar: Boolean
-        get() = prefs.getBoolean("enable_floating_bottom_bar", false)
+        get() = prefs.booleanPref("enable_floating_bottom_bar", false)
         set(value) = prefs.edit { putBoolean("enable_floating_bottom_bar", value) }
 
     
     override var enableNavigationBadge: Boolean
-        get() = prefs.getBoolean("enable_navigation_badge", true)
+        get() = prefs.booleanPref("enable_navigation_badge", true)
         set(value) = prefs.edit { putBoolean("enable_navigation_badge", value) }
 
     override var navigationRailExpanded: Boolean
-        get() = prefs.getBoolean("nav_rail_expanded", false)
+        get() = prefs.booleanPref("nav_rail_expanded", false)
         set(value) = prefs.edit { putBoolean("nav_rail_expanded", value) }
 
     override var homeLayoutStyle: String
-        get() = prefs.getString(KEY_HOME_LAYOUT, HOME_LAYOUT_FALLBACK) ?: HOME_LAYOUT_FALLBACK
+        get() = prefs.stringPref(KEY_HOME_LAYOUT, HOME_LAYOUT_FALLBACK) ?: HOME_LAYOUT_FALLBACK
         set(value) = prefs.edit { putString(KEY_HOME_LAYOUT, value) }
 
     override var pageScale: Float
-        get() = prefs.getFloat("page_scale", 1.0f)
+        get() = prefs.floatPref("page_scale", 1.0f)
         set(value) = prefs.edit { putFloat("page_scale", value) }
 
     override var moduleDescriptionMaxLines: Int
-        get() = prefs.getInt("module_description_max_lines", 4)
+        get() = prefs.intPref("module_description_max_lines", 4)
         set(value) = prefs.edit { putInt("module_description_max_lines", value) }
 
     override var enableWebDebugging: Boolean
-        get() = prefs.getBoolean("enable_web_debugging", false)
+        get() = prefs.booleanPref("enable_web_debugging", false)
         set(value) = prefs.edit { putBoolean("enable_web_debugging", value) }
 
     override var moduleSortEnabledFirst: Boolean
-        get() = prefs.getBoolean("module_sort_enabled_first", false)
+        get() = prefs.booleanPref("module_sort_enabled_first", false)
         set(value) = prefs.edit { putBoolean("module_sort_enabled_first", value) }
 
     override var moduleSortActionFirst: Boolean
-        get() = prefs.getBoolean("module_sort_action_first", false)
+        get() = prefs.booleanPref("module_sort_action_first", false)
         set(value) = prefs.edit { putBoolean("module_sort_action_first", value) }
 
     override var moduleRepoSortOrder: Int
-        get() = prefs.getInt("module_repo_sort_order", RepoSort.UPDATED.ordinal)
+        get() = prefs.intPref("module_repo_sort_order", RepoSort.UPDATED.ordinal)
         set(value) = prefs.edit { putInt("module_repo_sort_order", value) }
 
     override var superuserShowSystemApps: Boolean
-        get() = prefs.getBoolean("show_system_apps", false)
+        get() = prefs.booleanPref("show_system_apps", false)
         set(value) = prefs.edit { putBoolean("show_system_apps", value) }
 
     override var superuserShowOnlyPrimaryUserApps: Boolean
-        get() = prefs.getBoolean("show_only_primary_user_apps", false)
+        get() = prefs.booleanPref("show_only_primary_user_apps", false)
         set(value) = prefs.edit { putBoolean("show_only_primary_user_apps", value) }
 
     override var superuserSortOption: Int
-        get() = prefs.getInt("superuser_sort_option", 0)
+        get() = prefs.intPref("superuser_sort_option", 0)
         set(value) = prefs.edit { putInt("superuser_sort_option", value) }
 
     override var suLogFilters: Set<String>?
@@ -165,11 +168,11 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(filters) = prefs.edit { putStringSet("sulog_filters", filters) }
 
     override var showFullStatus: Boolean
-        get() = prefs.getBoolean("show_fingerprint", true)
+        get() = prefs.booleanPref("show_fingerprint", true)
         set(value) = prefs.edit { putBoolean("show_fingerprint", value) }
 
     override var autoJailbreak: Boolean
-        get() = prefs.getBoolean("auto_jailbreak", false)
+        get() = prefs.booleanPref("auto_jailbreak", false)
         set(value) {
             runCatching {
                 ksuApp.packageManager.setComponentEnabledSetting(
@@ -186,12 +189,12 @@ class SettingsRepositoryImpl : SettingsRepository {
         }
 
     override var useSoftReboot: Boolean
-        get() = prefs.getBoolean(KEY_USE_SOFT_REBOOT, false)
+        get() = prefs.booleanPref(KEY_USE_SOFT_REBOOT, false)
         set(value) = prefs.edit { putBoolean(KEY_USE_SOFT_REBOOT, value) }
 
     override val intentToken: String
         get() {
-        val existing = prefs.getString(INTENT_TOKEN_KEY, null)
+        val existing = prefs.stringPref(INTENT_TOKEN_KEY, null)
         if (!existing.isNullOrBlank()) return existing
         val token = ByteArray(32).also(secureRandom::nextBytes)
             .joinToString(separator = "") { "%02x".format(it) }
@@ -209,7 +212,7 @@ class SettingsRepositoryImpl : SettingsRepository {
 
     override fun setSuCompatModePref(mode: Int) = prefs.edit { putInt("su_compat_mode", mode) }
 
-    override fun getSuCompatModePref(): Int = prefs.getInt("su_compat_mode", 0)
+    override fun getSuCompatModePref(): Int = prefs.intPref("su_compat_mode", 0)
 
     override suspend fun getKernelUmountStatus(): String = getFeatureStatus("kernel_umount")
 
