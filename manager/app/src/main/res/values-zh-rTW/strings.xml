@@ -159,6 +159,17 @@
     <string name="settings_theme_mode_light">淺色</string>
     <string name="settings_theme_mode_dark">深色</string>
     <string name="settings_theme_summary">選擇應用的主題模式。</string>
+    <string name="settings_enable_glass">液態玻璃</string>
+    <string name="settings_enable_glass_summary">為全介面啟用液態玻璃面板</string>
+    <string name="settings_glass_intensity">玻璃強度</string>
+    <string name="settings_glass_blur">玻璃折射模糊</string>
+    <string name="settings_glass_rim">玻璃邊緣描邊</string>
+    <string name="settings_glass_specular">玻璃高光</string>
+    <string name="settings_glass_sheen">玻璃光澤</string>
+    <string name="settings_background_cover">圖片適配方式</string>
+    <string name="settings_background_cover_fill">鋪滿裁切</string>
+    <string name="settings_background_cover_fit">完整顯示</string>
+    <string name="settings_background_cover_stretch">拉伸</string>
     <string name="settings_sucompat">傳統 su 命令支援</string>
     <string name="settings_sucompat_summary">允許透過 /system/bin/su 獲取 Root 權限，僅對新行程生效。</string>
     <string name="settings_kernel_umount">核心處理解除掛載模組</string>

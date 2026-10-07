@@ -27,10 +27,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.sukisu.ultra.ui.theme.backgroundWallpaper
-import com.sukisu.ultra.ui.theme.glass.ProvideGlassBackdrop
 import com.sukisu.ultra.ui.theme.glass.glassAmbient
-import com.sukisu.ultra.ui.theme.glass.layerBackdropIf
-import com.sukisu.ultra.ui.theme.glass.rememberGlassBackdrop
 import com.sukisu.ultra.ui.theme.tokens.FolkTheme
 import com.sukisu.ultra.ui.util.NavigationBarsSpacer
 import androidx.compose.foundation.layout.widthIn
@@ -99,7 +96,19 @@ fun FolkSettingsScaffold(
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
-    Scaffold(
+    Box(modifier = Modifier.fillMaxSize()) {
+        // The page background, full bleed: behind the bar (transparent over a picture,
+        // so the wallpaper reaches the status bar) and above the still-composed entry
+        // underneath that a clear container would otherwise show through. Outside
+        // wallpaper mode this wash is an opaque background of its own, so the
+        // container below can stay clear in both modes.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .backgroundWallpaper()
+                .glassAmbient(),
+        )
+        Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
@@ -127,10 +136,12 @@ fun FolkSettingsScaffold(
                 scrollBehavior = scrollBehavior,
             )
         },
-        // Opaque, so the entry below this screen (kept composed by the nav
-        // host for its card transition and swipe-back gesture) cannot show
-        // through the page.
-        containerColor = MaterialTheme.colorScheme.background,
+        // The full-bleed box above paints the page - wallpaper or wash - and also
+        // covers the still-composed entry underneath, so the container itself stays
+        // clear. contentColor is pinned because a transparent container derives
+        // Unspecified, which drops uncoloured text to black.
+        containerColor = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onBackground,
         snackbarHost = {
             if (snackbarHostState != null) {
                 SnackbarHost(snackbarHostState)
@@ -142,48 +153,33 @@ fun FolkSettingsScaffold(
         // scrolls underneath would show through the title.
         // Cap the list width on large screens so rows stay readable.
         //
-        // Recorded exactly the way [FolkScaffold] records it: the wash lives on a
-        // layer of its own and the plates are siblings of it, never drawn into it -
-        // a plate sampling a layer it renders into would read back its own output
-        // rather than the page behind it. Without this the settings glass had no
-        // backdrop to bend and could only tint, which is the card this plate is
-        // trying not to be.
-        val backdrop = rememberGlassBackdrop()
+        // The backdrop is recorded once at the app root: the plates here sample a
+        // layer they are not drawn into - the rule that stops a plate reading back
+        // its own output - without every screen paying to record the same picture.
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding()),
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .layerBackdropIf(backdrop)
-                    // The picture first, the ambient wash over it - and glassAmbient stands
-                    // down on its own once the page background goes transparent, so this box
-                    // is either the wallpaper or the wash and never both.
-                    .backgroundWallpaper()
-                    .glassAmbient(),
-            )
-            ProvideGlassBackdrop(backdrop) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.TopCenter,
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                LazyColumn(
+                    modifier = Modifier
+                        .widthIn(max = FolkSettingsDimens.ContentMaxWidth)
+                        .fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        bottom = innerPadding.calculateBottomPadding() + FolkSettingsDimens.ScreenPadding,
+                    ),
                 ) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .widthIn(max = FolkSettingsDimens.ContentMaxWidth)
-                            .fillMaxSize(),
-                        contentPadding = PaddingValues(
-                            bottom = innerPadding.calculateBottomPadding() + FolkSettingsDimens.ScreenPadding,
-                        ),
-                    ) {
-                        content()
-                        item(key = "folk_bottom") {
-                            NavigationBarsSpacer()
-                        }
+                    content()
+                    item(key = "folk_bottom") {
+                        NavigationBarsSpacer()
                     }
                 }
             }
         }
+    }
     }
 }

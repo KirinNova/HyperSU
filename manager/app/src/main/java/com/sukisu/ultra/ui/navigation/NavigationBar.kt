@@ -6,7 +6,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,12 +31,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -88,42 +94,105 @@ fun FolkBottomBar(
     } else {
         ContinuousCornerShape(topStart = 24.dp, topEnd = 24.dp)
     }
+    val haptics = LocalHapticFeedback.current
+    val currentSelected by rememberUpdatedState(selectedIndex)
+    val currentSelect by rememberUpdatedState(onSelectedIndexChange)
 
-    Surface(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .then(
-                if (isFloating) {
-                    Modifier.padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 8.dp,
-                        // The capsule sits above the system bar; the inset is added below.
-                        bottom = 8.dp,
-                    )
-                } else {
-                    Modifier
-                }
-            )
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            // The bar is chrome floating over whatever screen is showing, so it cannot
-            // refract the page - that layer is recorded in the content window, not here.
-            // It still has to read as glass: the tint, the specular and the hairline rim
-            // come from the shared plate, which is the same glass minus the refraction.
-            .liquidGlass(
-                shape = barShape,
-                strength = GlassStrength.Subtle,
-                refract = false,
-            ),
-        shape = barShape,
-        color = Color.Transparent,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        // Elevation is pointless over a transparent body - it only tints a fill that is
-        // no longer there - so the floating variant keeps its drop shadow and drops the
-        // tonal lift.
-        tonalElevation = 0.dp,
-        shadowElevation = if (isFloating) 8.dp else 0.dp,
+            // Walking the tabs sideways off the bar itself: one tab per 56dp of travel
+            // with a haptic on each step. The items keep their clicks because a tap never
+            // accumulates enough travel to cross a threshold, and up to the threshold the
+            // drag is swallowed rather than forwarded - a deliberate horizontal swipe on
+            // the bar changes pages instead of scrolling whatever sits behind it.
+            .pointerInput(destinations.size) {
+                var target = currentSelected
+                var travelled = 0f
+                val threshold = with(density) { 56.dp.toPx() }
+                detectDragGestures(
+                    onDragStart = {
+                        target = currentSelected
+                        travelled = 0f
+                    },
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        travelled += dragAmount.x
+                        if (travelled <= -threshold || travelled >= threshold) {
+                            val step = if (travelled < 0f) 1 else -1
+                            val next = (target + step).coerceIn(0, destinations.lastIndex)
+                            if (next != target) {
+                                target = next
+                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                currentSelect(target)
+                            }
+                            travelled = 0f
+                        }
+                    },
+                    onDragEnd = { travelled = 0f },
+                    onDragCancel = { travelled = 0f },
+                )
+            },
     ) {
+        if (isFloating) {
+            // The frosted slot the capsule floats in: edge to edge, flush with the bottom
+            // of the screen, rounded only on the top. It exists to be blur - rim,
+            // specular and sheen stay off so the capsule remains the only glass object.
+            // Refraction works here because the app root records the wallpaper and wash
+            // behind everything, this overlay included.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .height(
+                        FloatingBarHeight + 16.dp +
+                            WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+                    )
+                    .liquidGlass(
+                        shape = ContinuousCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                        strength = GlassStrength.Subtle,
+                        refract = true,
+                        rim = false,
+                        specular = false,
+                        sheen = false,
+                    ),
+            )
+        }
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .then(
+                    if (isFloating) {
+                        Modifier.padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            top = 8.dp,
+                            // The capsule sits above the system bar; the inset is added below.
+                            bottom = 8.dp,
+                        )
+                    } else {
+                        Modifier
+                    }
+                )
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                // The root recording runs under the bar too, so the capsule refracts it
+                // like any other plate - it used to read as tint only because the layer
+                // never reached down here.
+                .liquidGlass(
+                    shape = barShape,
+                    strength = GlassStrength.Subtle,
+                    refract = true,
+                ),
+            shape = barShape,
+            color = Color.Transparent,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            // Elevation is pointless over a transparent body - it only tints a fill that is
+            // no longer there - so the floating variant keeps its drop shadow and drops the
+            // tonal lift.
+            tonalElevation = 0.dp,
+            shadowElevation = if (isFloating) 8.dp else 0.dp,
+        ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -241,5 +310,6 @@ fun FolkBottomBar(
                 }
             }
         }
+    }
     }
 }

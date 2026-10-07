@@ -104,7 +104,10 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putBoolean("enable_swipe_dismiss", value) }
 
     override var pagerInterceptionMode: Int
-        get() = prefs.getInt("pager_interception_mode", 1)
+        // Native is the default: CrossAxisInterceptor eats horizontal drags in the Initial
+        // pass, which is what made every slider on the settings page tap-only. A device that
+        // already stored the other modes keeps its choice.
+        get() = prefs.getInt("pager_interception_mode", 0)
         set(value) = prefs.edit { putInt("pager_interception_mode", value.coerceIn(0, 2)) }
 
     

@@ -70,11 +70,11 @@ data class GlassSpec(
 
         fun from(scheme: ColorScheme, strength: GlassStrength): GlassSpec {
             val dark = scheme.background.luminance() < 0.5f
-            val k = when (strength) {
+            val k = (when (strength) {
                 GlassStrength.Subtle -> 0.55f
                 GlassStrength.Regular -> 1f
                 GlassStrength.Prominent -> 1.4f
-            }
+            }) * GlassConfig.intensity
 
             // The tint is white in both modes - glass has no colour of its own, it only
             // lifts or drops the page underneath. In light mode that lift is large and

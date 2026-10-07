@@ -6,7 +6,13 @@ import android.content.Intent
 import androidx.compose.material.icons.rounded.Wallpaper
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.BlurOn
+import androidx.compose.material.icons.rounded.Brush
+import androidx.compose.material.icons.rounded.Crop
 import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.Flare
+import androidx.compose.material.icons.rounded.Lightbulb
+import androidx.compose.material.icons.rounded.Tonality
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -58,6 +64,7 @@ import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
 import com.sukisu.ultra.ui.component.folk.FolkValuePreference
 import com.sukisu.ultra.ui.component.uninstalldialog.UninstallDialog
 import com.sukisu.ultra.ui.theme.BackgroundConfig
+import com.sukisu.ultra.ui.theme.glass.GlassConfig
 import com.sukisu.ultra.ui.util.LocaleHelper
 
 /**
@@ -229,7 +236,7 @@ fun SettingPagerFolk(
                             onValueChange = { BackgroundConfig.setBlur(it) },
                             valueRange = 0f..40f,
                             steps = 39,
-                            valueFormat = { "${'$'}{it.toInt()} dp" },
+                            valueFormat = { "${it.toInt()} dp" },
                             enabled = BackgroundConfig.isActive,
                         )
                     }
@@ -241,8 +248,82 @@ fun SettingPagerFolk(
                             onValueChange = { BackgroundConfig.setDim(it) },
                             valueRange = 0f..1f,
                             steps = 19,
-                            valueFormat = { "${'$'}{(it * 100).toInt()}%" },
+                            valueFormat = { "${(it * 100).toInt()}%" },
                             enabled = BackgroundConfig.isActive,
+                        )
+                    }
+                    item {
+                        FolkChoicePreference(
+                            title = stringResource(R.string.settings_background_cover),
+                            options = listOf(
+                                stringResource(R.string.settings_background_cover_fill),
+                                stringResource(R.string.settings_background_cover_fit),
+                                stringResource(R.string.settings_background_cover_stretch),
+                            ),
+                            selectedIndex = BackgroundConfig.cover,
+                            onSelect = { BackgroundConfig.setCover(it) },
+                            icon = Icons.Rounded.Crop,
+                            enabled = BackgroundConfig.isActive,
+                        )
+                    }
+                    item {
+                        FolkSwitchPreference(
+                            title = stringResource(R.string.settings_enable_glass),
+                            summary = stringResource(R.string.settings_enable_glass_summary),
+                            icon = Icons.Rounded.Tune,
+                            checked = GlassConfig.enabled,
+                            onCheckedChange = { GlassConfig.setEnabled(it) },
+                        )
+                    }
+                    item {
+                        FolkSliderPreference(
+                            title = stringResource(R.string.settings_glass_intensity),
+                            icon = Icons.Rounded.Tonality,
+                            value = GlassConfig.intensity,
+                            onValueChange = { GlassConfig.setIntensity(it) },
+                            valueRange = 0.4f..1.6f,
+                            steps = 24,
+                            valueFormat = { "x" + it },
+                            enabled = GlassConfig.enabled,
+                        )
+                    }
+                    item {
+                        FolkSliderPreference(
+                            title = stringResource(R.string.settings_glass_blur),
+                            icon = Icons.Rounded.BlurOn,
+                            value = GlassConfig.blur,
+                            onValueChange = { GlassConfig.setBlur(it) },
+                            valueRange = 0f..60f,
+                            steps = 60,
+                            valueFormat = { "${it.toInt()} dp" },
+                            enabled = GlassConfig.enabled,
+                        )
+                    }
+                    item {
+                        FolkSwitchPreference(
+                            title = stringResource(R.string.settings_glass_rim),
+                            icon = Icons.Rounded.Brush,
+                            checked = GlassConfig.rim,
+                            onCheckedChange = { GlassConfig.setRim(it) },
+                            enabled = GlassConfig.enabled,
+                        )
+                    }
+                    item {
+                        FolkSwitchPreference(
+                            title = stringResource(R.string.settings_glass_specular),
+                            icon = Icons.Rounded.Flare,
+                            checked = GlassConfig.specular,
+                            onCheckedChange = { GlassConfig.setSpecular(it) },
+                            enabled = GlassConfig.enabled,
+                        )
+                    }
+                    item {
+                        FolkSwitchPreference(
+                            title = stringResource(R.string.settings_glass_sheen),
+                            icon = Icons.Rounded.Lightbulb,
+                            checked = GlassConfig.sheen,
+                            onCheckedChange = { GlassConfig.setSheen(it) },
+                            enabled = GlassConfig.enabled,
                         )
                     }
                     item {

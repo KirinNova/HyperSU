@@ -27,6 +27,7 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
@@ -35,10 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.sukisu.ultra.ui.navigation.LocalBottomBarVisible
 import com.sukisu.ultra.ui.navigation.LocalIsFloatingNavMode
 import com.sukisu.ultra.ui.theme.backgroundWallpaper
-import com.sukisu.ultra.ui.theme.glass.ProvideGlassBackdrop
 import com.sukisu.ultra.ui.theme.glass.glassAmbient
-import com.sukisu.ultra.ui.theme.glass.layerBackdropIf
-import com.sukisu.ultra.ui.theme.glass.rememberGlassBackdrop
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.Alignment
 
@@ -97,7 +95,19 @@ fun FolkScaffold(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    Scaffold(
+    Box(modifier = Modifier.fillMaxSize()) {
+        // The page background, full bleed: behind the bar (transparent over a picture,
+        // so the wallpaper reaches the status bar) and above the still-composed entry
+        // underneath that a clear container would otherwise show through. Outside
+        // wallpaper mode this wash is an opaque background of its own, so the
+        // container below can stay clear in both modes.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .backgroundWallpaper()
+                .glassAmbient(),
+        )
+        Scaffold(
         // Only the collapsible built-in bar consumes scroll; the others need no
         // connection.
         modifier = if (topBar == null && (titleStyle == FolkTitleStyle.Large || titleStyle == FolkTitleStyle.Flexible)) {
@@ -167,11 +177,11 @@ fun FolkScaffold(
                 }
             }
         },
-        // Paint the page background here rather than leaving the container
-        // transparent. The nav host keeps the previous entry composed for its
-        // card transition and swipe-back gesture, so a page that does not paint
-        // its own background lets the screen underneath show through.
-        containerColor = MaterialTheme.colorScheme.background,
+        // The full-bleed box above paints the page - wallpaper or wash - and covers
+        // the still-composed entry underneath, so the container stays clear and lets
+        // that box show. contentColor stays pinned: a transparent container derives
+        // Unspecified, which would drop uncoloured text to black in dark mode.
+        containerColor = Color.Transparent,
         // Deriving the content colour from a transparent container yields
         // Unspecified, which drops any text that does not set its own colour to
         // black - unreadable in dark mode. Pin it to the background's content
@@ -195,49 +205,33 @@ fun FolkScaffold(
         // Keep the content viewport below the bar instead of only offsetting the
         // first item. With a translucent bar in wallpaper mode, content that
         // scrolls underneath would otherwise show through the title.
-        // Recorded on its own layer: a plate that sampled a layer it is drawn into would
-        // read back its own output rather than the page behind it. Null below API 33, where
-        // there is no runtime shader to sample with.
-        val backdrop = rememberGlassBackdrop()
+        // The backdrop is recorded once at the app root, so plates here sample a
+        // layer they are not drawn into - the rule that stops a plate reading back
+        // its own output - without every screen recording the same picture again.
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = inner.calculateTopPadding()),
         ) {
-            // The wash the glass refracts, and the layer miuix-blur samples. Drawn here
-            // rather than at the app root so it sits above the themed background but under
-            // every screen's content, and a wallpaper - which brings its own backdrop - is
-            // left alone.
+            // Cap the content column on large screens so rows do not stretch
+            // across a tablet or desktop window; on a phone this is a no-op.
             Box(
                 modifier = Modifier
+                    .widthIn(max = FolkSettingsDimens.ContentMaxWidth)
                     .fillMaxSize()
-                    .layerBackdropIf(backdrop)
-                    // The picture first, the ambient wash over it - and glassAmbient stands
-                    // down on its own once the page background goes transparent, so this box
-                    // is either the wallpaper or the wash and never both.
-                    .backgroundWallpaper()
-                    .glassAmbient(),
-            )
-            ProvideGlassBackdrop(backdrop) {
-                // Cap the content column on large screens so rows do not stretch
-                // across a tablet or desktop window; on a phone this is a no-op.
-                Box(
-                    modifier = Modifier
-                        .widthIn(max = FolkSettingsDimens.ContentMaxWidth)
-                        .fillMaxSize()
-                        .align(Alignment.TopCenter),
-                ) {
-                    content(
-                        PaddingValues(
-                            start = inner.calculateStartPadding(layoutDirection),
-                            end = inner.calculateEndPadding(layoutDirection),
-                            top = 0.dp,
-                            bottom = inner.calculateBottomPadding() + clearance,
-                        )
+                    .align(Alignment.TopCenter),
+            ) {
+                content(
+                    PaddingValues(
+                        start = inner.calculateStartPadding(layoutDirection),
+                        end = inner.calculateEndPadding(layoutDirection),
+                        top = 0.dp,
+                        bottom = inner.calculateBottomPadding() + clearance,
                     )
-                }
+                )
             }
         }
+    }
     }
 }
 

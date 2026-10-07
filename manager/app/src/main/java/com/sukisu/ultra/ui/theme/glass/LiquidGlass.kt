@@ -18,7 +18,10 @@ import top.yukonga.miuix.kmp.blur.textureBlur
 @Composable
 fun rememberGlassSpec(strength: GlassStrength = GlassStrength.Regular): GlassSpec {
     val scheme = MaterialTheme.colorScheme
-    return remember(scheme, strength) { GlassSpec.from(scheme, strength) }
+    // The revision key is what makes a knob move the plates: without it a remembered spec
+    // would keep serving the alphas it resolved at the first composition.
+    val revision = GlassConfig.revision
+    return remember(scheme, strength, revision) { GlassSpec.from(scheme, strength) }
 }
 
 /**
@@ -78,9 +81,17 @@ fun Modifier.liquidGlass(
      */
     refract: Boolean = true,
 ): Modifier {
+    // Resolved before the early return so the remember slot order is identical whether or
+    // not glass is on - a conditional remember would desync the slot table on toggle.
     val spec = rememberGlassSpec(strength)
     val backdrop = LocalGlassBackdrop.current
-    val blurred = refract && backdrop != null
+    if (!GlassConfig.enabled) return this.clip(shape)
+
+    val doRim = rim && GlassConfig.rim
+    val doSpecular = specular && GlassConfig.specular
+    val doSheen = sheen && GlassConfig.sheen
+    val blurRadius = GlassConfig.blur
+    val blurred = refract && backdrop != null && blurRadius > 0f
 
     return this
         .then(
@@ -88,7 +99,7 @@ fun Modifier.liquidGlass(
                 Modifier.textureBlur(
                     backdrop = backdrop,
                     shape = shape,
-                    blurRadius = BlurDefaults.BlurRadius,
+                    blurRadius = blurRadius,
                     noiseCoefficient = BlurDefaults.NoiseCoefficient,
                     highlight = if (rim) spec.highlight() else null,
                 )
@@ -101,7 +112,7 @@ fun Modifier.liquidGlass(
             // Body.
             drawRect(Brush.verticalGradient(if (blurred) spec.tintBlurred else spec.tint))
 
-            if (sheen) {
+            if (doSheen) {
                 // A diagonal that runs across the plate, brightest near the middle, so the
                 // fill never reads as an even wash.
                 drawRect(
@@ -113,7 +124,7 @@ fun Modifier.liquidGlass(
                 )
             }
 
-            if (specular) {
+            if (doSpecular) {
                 // Clamped to the top of the plate: a highlight that runs to the bottom edge
                 // is a glow, not a reflection.
                 drawRect(
@@ -131,7 +142,7 @@ fun Modifier.liquidGlass(
             // Only the unblurred plate draws its own rim; the refracted one already carries
             // miuix's stroke, and two hairlines disagreeing about the silhouette read as a
             // doubling of the edge rather than as a lit rim.
-            if (rim && !blurred) {
+            if (doRim && !blurred) {
                 Modifier.border(
                     width = spec.rimWidth,
                     brush = Brush.verticalGradient(spec.rim),

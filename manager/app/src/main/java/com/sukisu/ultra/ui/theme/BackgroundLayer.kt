@@ -8,9 +8,11 @@ import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -22,9 +24,21 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+
+/**
+ * The decoded wallpaper, decoded once at the app root and handed down.
+ *
+ * The root box and every screen box draw the same picture - the root so glass behind the
+ * status bar has something to sample, each screen so a still-composed entry underneath cannot
+ * show through a transparent page. Decoding per box would mean three live copies of a camera
+ * photo; null means either no picture or a host that never provided one, in which case
+ * [backgroundWallpaper] falls back to its own decode.
+ */
+val LocalWallpaperBitmap = staticCompositionLocalOf<androidx.compose.ui.graphics.ImageBitmap?> { null }
 
 /**
  * Draws the chosen picture behind a screen.
@@ -49,10 +63,11 @@ fun Modifier.backgroundWallpaper(): Modifier {
         if (BackgroundConfig.isActive) BackgroundConfig.uri else "",
     )
 
-    val image = bitmap ?: return this
+    val image = LocalWallpaperBitmap.current ?: bitmap ?: return this
 
     val blurDp = BackgroundConfig.blur
     val dim = BackgroundConfig.dim
+    val cover = BackgroundConfig.cover
     val blurSupported = blurDp > 0f && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
     return this
@@ -71,12 +86,27 @@ fun Modifier.backgroundWallpaper(): Modifier {
             val bleed = if (blurSupported) blurDp.dp.toPx() * 3f else 0f
             val target = Size(size.width + bleed * 2f, size.height + bleed * 2f)
 
-            val ratio = max(
-                target.width / image.width,
-                target.height / image.height,
-            )
-            val drawnWidth = image.width * ratio
-            val drawnHeight = image.height * ratio
+            if (cover == BackgroundConfig.COVER_FIT) {
+                // The letterbox is part of the fit, so it is painted under the picture rather
+                // than left to whatever sits behind this layer - in wallpaper mode that would
+                // be the still-composed entry underneath showing through the gap.
+                drawRect(color = Color.Black, topLeft = Offset(-bleed, -bleed), size = target)
+            }
+
+            val drawnWidth: Float
+            val drawnHeight: Float
+            if (cover == BackgroundConfig.COVER_STRETCH) {
+                drawnWidth = target.width
+                drawnHeight = target.height
+            } else {
+                val ratio = if (cover == BackgroundConfig.COVER_FIT) {
+                    min(target.width / image.width, target.height / image.height)
+                } else {
+                    max(target.width / image.width, target.height / image.height)
+                }
+                drawnWidth = image.width * ratio
+                drawnHeight = image.height * ratio
+            }
             val left = (target.width - drawnWidth) / 2f - bleed
             val top = (target.height - drawnHeight) / 2f - bleed
 

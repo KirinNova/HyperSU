@@ -27,6 +27,7 @@ object BackgroundConfig {
     private const val KEY_URI = "background_uri"
     private const val KEY_BLUR = "background_blur"
     private const val KEY_DIM = "background_dim"
+    private const val KEY_COVER = "background_cover"
 
     /**
      * Dimming that ships as the default.
@@ -35,6 +36,15 @@ object BackgroundConfig {
      * user's picture for them; anything weaker leaves dark text on dark corners.
      */
     const val DEFAULT_DIM = 0.35f
+
+    /** Crop the picture until it fills the screen - the default, and what ships everywhere. */
+    const val COVER_FILL = 0
+
+    /** Fit the whole picture, letterboxing whatever the aspect ratio leaves over. */
+    const val COVER_FIT = 1
+
+    /** Stretch the picture to the screen, aspect ratio discarded. */
+    const val COVER_STRETCH = 2
 
     private val prefs: SharedPreferences
         get() = ksuApp.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -45,6 +55,7 @@ object BackgroundConfig {
     private val uriState = mutableStateOf("")
     private val blurState = mutableStateOf(0f)
     private val dimState = mutableStateOf(DEFAULT_DIM)
+    private val coverState = mutableStateOf(COVER_FILL)
 
     private fun ensureLoaded() {
         if (loaded) return
@@ -53,6 +64,7 @@ object BackgroundConfig {
         uriState.value = prefs.getString(KEY_URI, null).orEmpty()
         blurState.value = prefs.getFloat(KEY_BLUR, 0f)
         dimState.value = prefs.getFloat(KEY_DIM, DEFAULT_DIM)
+        coverState.value = prefs.getInt(KEY_COVER, COVER_FILL)
     }
 
     /** Whether the background is switched on at all. */
@@ -81,6 +93,13 @@ object BackgroundConfig {
         get() {
             ensureLoaded()
             return dimState.value
+        }
+
+    /** How the picture meets the screen: [COVER_FILL], [COVER_FIT] or [COVER_STRETCH]. */
+    val cover: Int
+        get() {
+            ensureLoaded()
+            return coverState.value
         }
 
     /**
@@ -116,6 +135,13 @@ object BackgroundConfig {
         val clamped = value.coerceIn(0f, 1f)
         dimState.value = clamped
         prefs.edit { putFloat(KEY_DIM, clamped) }
+    }
+
+    fun setCover(value: Int) {
+        ensureLoaded()
+        val clamped = value.coerceIn(COVER_FILL, COVER_STRETCH)
+        coverState.value = clamped
+        prefs.edit { putInt(KEY_COVER, clamped) }
     }
 
     /** Drop the picture but keep the switches, so the user can come back to the same setup. */

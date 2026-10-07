@@ -12,6 +12,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -96,7 +97,15 @@ import com.sukisu.ultra.ui.theme.LocalColorMode
 import com.sukisu.ultra.ui.theme.LocalEnableFloatingBottomBar
 import com.sukisu.ultra.ui.theme.LocalEnableNavigationBadge
 import com.sukisu.ultra.ui.theme.LocalModuleDescriptionMaxLines
+import com.sukisu.ultra.ui.theme.BackgroundConfig
+import com.sukisu.ultra.ui.theme.LocalWallpaperBitmap
 import com.sukisu.ultra.ui.theme.SukiSUTheme
+import com.sukisu.ultra.ui.theme.backgroundWallpaper
+import com.sukisu.ultra.ui.theme.rememberWallpaperBitmap
+import com.sukisu.ultra.ui.theme.glass.ProvideGlassBackdrop
+import com.sukisu.ultra.ui.theme.glass.glassAmbient
+import com.sukisu.ultra.ui.theme.glass.layerBackdropIf
+import com.sukisu.ultra.ui.theme.glass.rememberGlassBackdrop
 import com.sukisu.ultra.ui.component.folk.FolkLanguageSwitch
 import com.sukisu.ultra.ui.util.LanguageSwitchState
 import com.sukisu.ultra.ui.util.getSuperuserCount
@@ -211,6 +220,30 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
+                    // One recording for the whole app: the wallpaper and the ambient wash
+                    // behind everything, sampled by every glass plate - the screens, which
+                    // no longer record a layer of their own, and the bottom bar, which sits
+                    // outside every screen and could never record one. The bitmap is decoded
+                    // here once and handed down, so the root box and each screen draw the
+                    // same picture instead of paying for three copies of it.
+                    val wallpaperBitmap by rememberWallpaperBitmap(
+                        if (BackgroundConfig.isActive) BackgroundConfig.uri else "",
+                    )
+                    val backdrop = rememberGlassBackdrop()
+                    CompositionLocalProvider(LocalWallpaperBitmap provides wallpaperBitmap) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            // Drawn at (0,0) so a plate anywhere reads the pixel that is
+                            // actually behind it - the bottom bar samples this layer too,
+                            // which is what makes the dock outside the capsule a blur
+                            // instead of a tint.
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .layerBackdropIf(backdrop)
+                                    .backgroundWallpaper()
+                                    .glassAmbient(),
+                            )
+                            ProvideGlassBackdrop(backdrop) {
                     NavDisplay(
                         backStack = navigator.backStack,
                         effects = NavDisplayEffects(cornerClipRadius = rememberNavSystemCornerRadius()),
@@ -261,6 +294,9 @@ class MainActivity : ComponentActivity() {
                         entry<Route.Tool>(swipeDismiss = swipeDismiss) { ToolsScreen() }
                         entry<Route.UmountManager>(swipeDismiss = swipeDismiss) { UmountManagerScreen() }
                     }
+                            }
+                        }
+                    }
                     SideEffect { contentReady = true }
                 }
             }
@@ -278,7 +314,12 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(
     initialPage: Int = 0,
-    pagerInterceptionMode: Int = PagerInterceptionMode.CrossAxisInterceptor.ordinal,
+    // Native, not CrossAxisInterceptor: miuix's interceptor listens on the Initial pass
+    // and consumes horizontal movement before any child gets the event in Main, which is
+    // exactly how a settings slider loses its drag and degrades to tap-to-set. The native
+    // pager arbitrates through the normal nested-scroll path instead, where the slider
+    // claims the gesture first as the deeper node.
+    pagerInterceptionMode: Int = PagerInterceptionMode.Native.ordinal,
     onPageChanged: (Int) -> Unit = {},
 ) {
     val navController = LocalNavigator.current
