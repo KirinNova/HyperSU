@@ -133,6 +133,16 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
+ * Whether the module repository entry point is offered.
+ *
+ * Off for now: the repository it opens is backed by modules.kernelsu.org, which is offline and
+ * answers 404 for both the list and the per-module detail pages, so the screen could only show a
+ * fetch error. The route, view model and screens are all still in place, so this is the only
+ * switch to flip once a working index exists.
+ */
+private val SHOW_MODULE_REPO = false
+
+/**
  * The Module tab in the FolkPatch design.
  *
  * Each module is one surface: name, version and author, an expanding
@@ -153,6 +163,22 @@ internal fun ModulePagerFolk(
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val resource = LocalResources.current
+
+    // Null when the repository entry is hidden, so SearchAppBar draws no leading icon. Held in a
+    // typed local rather than inlined: the ternary would otherwise have to infer a composable
+    // lambda type against null.
+    val repoEntryAction: (@Composable () -> Unit)? = if (SHOW_MODULE_REPO) {
+        {
+            IconButton(onClick = actions.onOpenRepo) {
+                Icon(
+                    imageVector = Icons.Outlined.Cloud,
+                    contentDescription = stringResource(R.string.module_repos),
+                )
+            }
+        }
+    } else {
+        null
+    }
 
     val pullToRefreshState = rememberPullToRefreshState()
     val listState = rememberLazyListState()
@@ -272,14 +298,7 @@ internal fun ModulePagerFolk(
                 searchText = uiState.searchStatus.searchText,
                 onSearchTextChange = actions.onSearchTextChange,
                 onClearClick = actions.onClearSearch,
-                leadingActions = {
-                    IconButton(onClick = actions.onOpenRepo) {
-                        Icon(
-                            imageVector = Icons.Outlined.Cloud,
-                            contentDescription = stringResource(R.string.module_repos),
-                        )
-                    }
-                },
+                leadingActions = repoEntryAction,
                 dropdownContent = {
                     ModuleSortMenu(uiState, actions, haptic)
                 },

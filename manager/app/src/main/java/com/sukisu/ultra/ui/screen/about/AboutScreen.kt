@@ -1,4 +1,4 @@
-﻿package com.sukisu.ultra.ui.screen.about
+package com.sukisu.ultra.ui.screen.about
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalUriHandler
@@ -12,10 +12,11 @@ import com.sukisu.ultra.ui.navigation3.LocalNavigator
 fun AboutScreen() {
     val navigator = LocalNavigator.current
     val uriHandler = LocalUriHandler.current
+    // Only the source link is offered; the Telegram channel the upstream string mentions
+    // is not part of this project.
     val htmlString = stringResource(
         id = R.string.about_source_code,
-        "<b><a href=\"https://github.com/ShirkNeko/SukiSU-Ultra\">GitHub</a></b>",
-        "<b><a href=\"https://t.me/SukiKSU\">Telegram</a></b>",
+        "<b><a href=\"https://github.com/KirinNova/HyperSU\">GitHub</a></b>",
     )
     val state = AboutUiState(
         title = stringResource(R.string.about),
