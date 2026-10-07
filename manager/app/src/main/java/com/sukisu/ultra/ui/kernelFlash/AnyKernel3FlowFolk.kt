@@ -37,7 +37,7 @@ import com.sukisu.ultra.ui.theme.tokens.FolkType
  *
  * A chosen archive goes through slot selection on an A/B device, then a confirmation; on a
  * single-slot device it goes straight to the confirmation. The KPM choice is not part of this
- * sequence - it stays on its own row on the install screen.
+ * sequence.
  *
  * The archive keeps its concrete type throughout, so the row the user picked keeps its
  * selection mark; the flow only needs the uri and the slot, which the archiveUri and
@@ -50,9 +50,7 @@ fun rememberAnyKernel3State(
     horizonKernelSummary: String,
     isAbDevice: Boolean,
 ): AnyKernel3State {
-    var kpmPatchOption by remember { mutableStateOf(KpmPatchOption.FOLLOW_KERNEL) }
     var showSlotSelectionDialog by remember { mutableStateOf(false) }
-    var showKpmPatchDialog by remember { mutableStateOf(false) }
     var showConfirmDialog by remember { mutableStateOf(false) }
 
     /** The archive being decided on, kept so the slot step can rebuild the same type. */
@@ -66,10 +64,6 @@ fun rememberAnyKernel3State(
                 showSlotSelectionDialog = true
             } else {
                 installMethodState.value = method
-                // The KPM question is not asked here any more. It used to open as soon as a
-                // file was picked, before the user had said they wanted to flash at all; the
-                // confirmation takes its place, and the KPM choice stays available from the
-                // row on the install screen.
                 showConfirmDialog = true
             }
         }
@@ -81,11 +75,6 @@ fun rememberAnyKernel3State(
             pendingArchive = method
             showSlotSelectionDialog = true
         }
-    }
-
-    val onReopenKpmDialog: (InstallMethod) -> Unit = { method ->
-        installMethodState.value = method
-        showKpmPatchDialog = true
     }
 
     val onSlotSelected: (String) -> Unit = { slot ->
@@ -103,15 +92,6 @@ fun rememberAnyKernel3State(
     val onDismissSlotDialog = {
         showSlotSelectionDialog = false
         pendingArchive = null
-    }
-
-    val onOptionSelected: (KpmPatchOption) -> Unit = { option ->
-        kpmPatchOption = option
-        showKpmPatchDialog = false
-    }
-
-    val onDismissPatchDialog = {
-        showKpmPatchDialog = false
     }
 
     val onConfirmFlash = {
@@ -146,90 +126,14 @@ fun rememberAnyKernel3State(
     }
 
     return AnyKernel3State(
-        kpmPatchOption = kpmPatchOption,
         showSlotSelectionDialog = showSlotSelectionDialog,
-        showKpmPatchDialog = showKpmPatchDialog,
         showConfirmDialog = showConfirmDialog,
         onHorizonKernelSelected = onHorizonKernelSelected,
         onSlotSelected = onSlotSelected,
         onDismissSlotDialog = onDismissSlotDialog,
-        onOptionSelected = onOptionSelected,
-        onDismissPatchDialog = onDismissPatchDialog,
         onConfirmFlash = onConfirmFlash,
         onDismissConfirmDialog = onDismissConfirmDialog,
         onReopenSlotDialog = onReopenSlotDialog,
-        onReopenKpmDialog = onReopenKpmDialog,
     )
 }
 
-@Composable
-fun KpmPatchSelectionDialog(
-    show: Boolean,
-    currentOption: KpmPatchOption,
-    onDismiss: () -> Unit,
-    onOptionSelected: (KpmPatchOption) -> Unit,
-) {
-    if (!show) return
-
-    var selectedOption by remember(currentOption) { mutableStateOf(currentOption) }
-
-    FolkAlertDialog(
-        onDismissRequest = onDismiss,
-        width = 340.dp,
-    ) {
-        Column(modifier = Modifier.padding(24.dp)) {
-            Text(
-                text = stringResource(R.string.kpm_patch_options),
-                style = FolkType.Title,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
-            Text(
-                text = stringResource(R.string.kpm_patch_description),
-                style = FolkType.Summary,
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 12.dp),
-            )
-
-            val options = listOf(
-                KpmPatchOption.FOLLOW_KERNEL to stringResource(R.string.kpm_follow_kernel_file),
-                KpmPatchOption.PATCH_KPM to stringResource(R.string.enable_kpm_patch),
-                KpmPatchOption.UNDO_PATCH_KPM to stringResource(R.string.enable_kpm_undo_patch),
-            )
-
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                options.forEach { (option, title) ->
-                    FolkSelectableRow(
-                        title = title,
-                        selected = selectedOption == option,
-                        onClick = { selectedOption = option },
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                TextButton(
-                    onClick = onDismiss,
-                    colors = FolkButtonDefaults.textColors(),
-                ) {
-                    Text(stringResource(android.R.string.cancel))
-                }
-                Button(
-                    onClick = {
-                        onOptionSelected(selectedOption)
-                        onDismiss()
-                    },
-                    colors = FolkButtonDefaults.filledColors(),
-                    modifier = Modifier.padding(start = 8.dp),
-                ) {
-                    Text(stringResource(android.R.string.ok))
-                }
-            }
-        }
-    }
-}

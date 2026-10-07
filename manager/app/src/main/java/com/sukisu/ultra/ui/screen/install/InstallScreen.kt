@@ -23,8 +23,6 @@ import com.sukisu.ultra.R
 import com.sukisu.ultra.getKernelVersion
 import com.sukisu.ultra.ui.component.choosekmidialog.ChooseKmiDialog
 import com.sukisu.ultra.ui.kernelFlash.FlashConfirmDialog
-import com.sukisu.ultra.ui.kernelFlash.KpmPatchOption
-import com.sukisu.ultra.ui.kernelFlash.KpmPatchSelectionDialog
 import com.sukisu.ultra.ui.kernelFlash.component.SlotSelectionDialog
 import com.sukisu.ultra.ui.component.dialog.rememberLoadingDialog
 import com.sukisu.ultra.ui.kernelFlash.rememberAnyKernel3State
@@ -140,9 +138,7 @@ fun InstallScreen(
         }
     }
 
-    val kpmPatchOption = anyKernel3State.kpmPatchOption
     val showSlotSelectionDialog = anyKernel3State.showSlotSelectionDialog && isAbDevice
-    val showKpmPatchDialog = anyKernel3State.showKpmPatchDialog
 
     // Slot selection dialog.
     if (showSlotSelectionDialog) {
@@ -151,18 +147,6 @@ fun InstallScreen(
             onDismiss = { anyKernel3State.onDismissSlotDialog() },
             onSlotSelected = { slot ->
                 anyKernel3State.onSlotSelected(slot)
-            }
-        )
-    }
-
-    // KPM patch selection dialog.
-    if (showKpmPatchDialog) {
-        KpmPatchSelectionDialog(
-            show = true,
-            currentOption = kpmPatchOption,
-            onDismiss = { anyKernel3State.onDismissPatchDialog() },
-            onOptionSelected = { option ->
-                anyKernel3State.onOptionSelected(option)
             }
         )
     }
@@ -206,8 +190,8 @@ fun InstallScreen(
                             Route.KernelFlash(
                                 kernelUri = uri,
                                 selectedSlot = method.archiveSlot,
-                                kpmPatchEnabled = kpmPatchOption == KpmPatchOption.PATCH_KPM,
-                                kpmUndoPatch = kpmPatchOption == KpmPatchOption.UNDO_PATCH_KPM
+                                kpmPatchEnabled = false,
+                                kpmUndoPatch = false
                             )
                         )
                     }
@@ -369,9 +353,7 @@ fun InstallScreen(
         spoofRelease = spoofRelease,
         spoofVersion = spoofVersion,
         anyKernel3State = anyKernel3State,
-        kpmPatchOption = kpmPatchOption,
         showSlotSelectionDialog = showSlotSelectionDialog,
-        showKpmPatchDialog = showKpmPatchDialog,
     )
     val actions = InstallScreenActions(
         onBack = dropUnlessResumed { navigator.pop() },
@@ -463,9 +445,6 @@ fun InstallScreen(
         },
         onReopenSlotDialog = { method ->
             anyKernel3State.onReopenSlotDialog(method)
-        },
-        onReopenKpmDialog = { method ->
-            anyKernel3State.onReopenKpmDialog(method)
         }
     )
 

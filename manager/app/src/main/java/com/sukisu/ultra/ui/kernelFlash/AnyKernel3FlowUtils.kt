@@ -3,17 +3,9 @@ package com.sukisu.ultra.ui.kernelFlash
 import androidx.compose.runtime.Stable
 import com.sukisu.ultra.ui.screen.install.InstallMethod
 
-enum class KpmPatchOption {
-    FOLLOW_KERNEL,
-    PATCH_KPM,
-    UNDO_PATCH_KPM
-}
-
 @Stable
 data class AnyKernel3State(
-    val kpmPatchOption: KpmPatchOption,
     val showSlotSelectionDialog: Boolean,
-    val showKpmPatchDialog: Boolean,
     /**
      * True while the user is being asked to confirm the archive they picked.
      *
@@ -26,10 +18,7 @@ data class AnyKernel3State(
     val onHorizonKernelSelected: (InstallMethod) -> Unit,
     val onSlotSelected: (String) -> Unit,
     val onDismissSlotDialog: () -> Unit,
-    val onOptionSelected: (KpmPatchOption) -> Unit,
-    val onDismissPatchDialog: () -> Unit,
     val onConfirmFlash: () -> Unit,
     val onDismissConfirmDialog: () -> Unit,
-    val onReopenSlotDialog: (InstallMethod) -> Unit,
-    val onReopenKpmDialog: (InstallMethod) -> Unit
+    val onReopenSlotDialog: (InstallMethod) -> Unit
 )

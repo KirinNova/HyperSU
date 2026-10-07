@@ -83,7 +83,6 @@ import com.sukisu.ultra.ui.screen.executemoduleaction.ExecuteModuleActionScreen
 import com.sukisu.ultra.ui.screen.flash.FlashScreen
 import com.sukisu.ultra.ui.screen.home.HomePager
 import com.sukisu.ultra.ui.screen.install.InstallScreen
-import com.sukisu.ultra.ui.screen.kpm.KpmScreen
 import com.sukisu.ultra.ui.screen.module.ModulePager
 import com.sukisu.ultra.ui.screen.modulerepo.ModuleRepoDetailScreen
 import com.sukisu.ultra.ui.screen.modulerepo.ModuleRepoScreen
@@ -272,7 +271,6 @@ class MainActivity : ComponentActivity() {
                                         key.kpmUndoPatch
                                     )
                                 }
-                                entry<Route.Kpm>(swipeDismiss = swipeDismiss) { KpmScreen() }
                                 entry<Route.SuSFS>(swipeDismiss = swipeDismiss) { SuSFSScreen() }
                                 entry<Route.Tool>(swipeDismiss = swipeDismiss) { ToolsScreen() }
                                 entry<Route.UmountManager>(swipeDismiss = swipeDismiss) { UmountManagerScreen() }

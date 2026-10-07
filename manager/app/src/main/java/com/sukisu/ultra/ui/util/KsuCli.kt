@@ -661,26 +661,6 @@ fun restartApp(packageName: String, userId: Int? = null) {
     launchApp(packageName, userId)
 }
 
-// KPM控制
-fun loadKpmModule(path: String, args: String? = null): Boolean {
-    val shell = getRootShell()
-    val cmd = "${getKsuDaemonPath()} kpm load $path ${args ?: ""}"
-    return ShellUtils.fastCmdResult(shell, cmd)
-}
-
-fun unloadKpmModule(name: String): Boolean {
-    val shell = getRootShell()
-    val cmd = "${getKsuDaemonPath()} kpm unload $name"
-    return ShellUtils.fastCmdResult(shell, cmd)
-}
-
-fun getKpmModuleCount(): Int {
-    val shell = getRootShell()
-    val cmd = "${getKsuDaemonPath()} kpm num"
-    val result = ShellUtils.fastCmd(shell, cmd)
-    return result.trim().toIntOrNull() ?: 0
-}
-
 fun runCmd(shell: Shell, cmd: String): String {
     return shell.newJob()
         .add(cmd)
@@ -707,42 +687,6 @@ suspend fun streamFile(path: String): List<String> = withContext(Dispatchers.IO)
 
     shell.newJob().add("cat $path || true").to(stdoutCallback, stderrCallback).exec()
     outLines
-}
-
-fun listKpmModules(): String {
-    val shell = getRootShell()
-    val cmd = "${getKsuDaemonPath()} kpm list"
-    return try {
-        runCmd(shell, cmd).trim()
-    } catch (e: Exception) {
-        Log.e(TAG, "Failed to list KPM modules", e)
-        ""
-    }
-}
-
-fun getKpmModuleInfo(name: String): String {
-    val shell = getRootShell()
-    val cmd = "${getKsuDaemonPath()} kpm info $name"
-    return try {
-        runCmd(shell, cmd).trim()
-    } catch (e: Exception) {
-        Log.e(TAG, "Failed to get KPM module info: $name", e)
-        ""
-    }
-}
-
-fun controlKpmModule(name: String, args: String? = null): Int {
-    val shell = getRootShell()
-    val cmd = """${getKsuDaemonPath()} kpm control $name "${args ?: ""}""""
-    val result = runCmd(shell, cmd)
-    return result.trim().toIntOrNull() ?: -1
-}
-
-fun getKpmVersion(): String {
-    val shell = getRootShell()
-    val cmd = "${getKsuDaemonPath()} kpm version"
-    val result = ShellUtils.fastCmd(shell, cmd)
-    return result.trim()
 }
 
 fun getSuSFSStatus(): String {
@@ -846,24 +790,10 @@ fun applyUmountConfigToKernel(): Boolean {
     return result
 }
 
-// 检查 KPM 版本是否可用
-@Composable
-fun rememberKpmAvailable(): Boolean {
-    var cachedVersion by rememberSaveable { mutableStateOf("") }
-    val kpmVersion by produceState(initialValue = cachedVersion) {
-        val result = withContext(Dispatchers.IO) {
-            runCatching { getKpmVersion() }.getOrElse { "" }
-        }
-        cachedVersion = result
-        value = result
-    }
-    return kpmVersion.isNotEmpty() && !kpmVersion.contains("Error", ignoreCase = true)
-}
-
 /**
  * 内核是否支持 SuSFS（`ksud susfs status` 打印 true/false）。
  *
- * 与 [rememberKpmAvailable] 一样在 IO 线程执行并用 rememberSaveable 缓存：早前这里是在
+ * 在 IO 线程执行并用 rememberSaveable 缓存：早前这里是在
  * 组合期同步调 shell，每次重组都会阻塞主线程一次 root 命令。
  */
 @Composable

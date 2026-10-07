@@ -65,7 +65,6 @@ fun SettingPagerFolk(
     uiState: SettingsUiState,
     actions: SettingsScreenActions,
     bottomInnerPadding: Dp,
-    isKpmAvailable: Boolean,
     isSusfsSupported: Boolean,
 ) {
     val snackBarHost = remember { SnackbarHostState() }
@@ -195,24 +194,7 @@ fun SettingPagerFolk(
                 }
             }
 
-            // KPM, when the kernel provides it.
-            if (isKpmAvailable) {
-                item {
-                    FolkSettingsSectionGroup(title = stringResource(R.string.kpm_title)) {
-                        item {
-                            FolkNavigationPreference(
-                                title = stringResource(R.string.kpm_title),
-                                summary = stringResource(R.string.settings_kpm_summary),
-                                icon = Icons.Filled.Fence,
-                                onClick = actions.onOpenKpm,
-                            )
-                        }
-                    }
-                }
-            }
-
-            // SuSFS is a ksud feature of its own: it never goes through KPM, so it must not be
-            // hidden when the kernel ships without KPM. Only SuSFS support gates this row.
+            // SuSFS is a ksud feature of its own, gated only by SuSFS support.
             if (isSusfsSupported) {
                 item {
                     FolkSettingsSectionGroup(title = stringResource(R.string.susfs_config_title)) {

@@ -44,7 +44,6 @@ import com.sukisu.ultra.ui.component.folk.FolkScaffold
 import com.sukisu.ultra.ui.component.folk.FolkSelectableRow
 import com.sukisu.ultra.ui.component.folk.FolkSettingsGroup
 import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
-import com.sukisu.ultra.ui.kernelFlash.KpmPatchOption
 import com.sukisu.ultra.ui.util.LkmSelection
 import com.sukisu.ultra.ui.util.isAbDevice
 
@@ -53,7 +52,7 @@ import com.sukisu.ultra.ui.util.isAbDevice
  *
  * The install-method list, the partition picker, the optional LKM upload, the
  * force-backup checkbox, the collapsible advanced group (shell/ADB/spoof) and
- * the AnyKernel3 slot/KPM rows are all preserved with their original enablement
+ * the AnyKernel3 slot row is preserved with their original enablement
  * rules and callbacks. The inactive-slot option still asks for confirmation
  * first, because it flashes the other slot.
  */
@@ -244,17 +243,6 @@ internal fun InstallScreenFolk(
                                 onClick = { actions.onReopenSlotDialog(archiveMethod) },
                             )
                         }
-                    }
-                    item {
-                        FolkNavigationPreference(
-                            title = when (uiState.kpmPatchOption) {
-                                KpmPatchOption.PATCH_KPM -> stringResource(R.string.kpm_patch_enabled)
-                                KpmPatchOption.UNDO_PATCH_KPM -> stringResource(R.string.kpm_undo_patch_enabled)
-                                KpmPatchOption.FOLLOW_KERNEL -> stringResource(R.string.kpm_follow_kernel_file)
-                            },
-                            icon = Icons.Filled.Security,
-                            onClick = { actions.onReopenKpmDialog(archiveMethod) },
-                        )
                     }
                 }
             }
