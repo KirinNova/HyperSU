@@ -9,6 +9,8 @@
     <string name="home_lkm_custom">自訂</string>
     <string name="home_unsupported">未受支援</string>
     <string name="home_unsupported_reason">未檢測到 KernelSU 驅動程序，核心錯誤?</string>
+    <string name="home_manager_unrecognized">管理器未被核心識別</string>
+    <string name="home_manager_unrecognized_reason">Root 正常，但核心未將本應用程式識別為管理器（模組內建的管理器簽章與本 APK 不一致）。請用本 APK 的簽章重新建置並刷入核心模組。</string>
     <string name="home_device_model">裝置型號</string>
     <string name="home_kernel">核心版本</string>
     <string name="home_manager_version">管理工具</string>
@@ -49,7 +51,7 @@
     <string name="home_click_to_learn_kernelsu">知曉安裝、使用 KernelSU 本體與其模組功能的方法</string>
     <string name="home_support_title">協助發展</string>
     <string name="home_support_content">KernelSU 一向以免費與開放原始碼自居，矢志不渝。若想協助我們，可以用小額捐款表達你對專案發展的大力支持。</string>
-    <string name="about_source_code"><![CDATA[前往 %1$s 檢閱原始碼<br/>前往 %2$s 加入頻道]]></string>
+    <string name="about_source_code"><![CDATA[前往 %1$s 檢閱原始碼<br/>点击链接加入群聊【HyperSU】：<a href="%2$s">%2$s</a>]]></string>
     <string name="profile_umount_modules">解除掛載模組功能</string>
     <string name="failed_to_update_app_profile">無法更新「%s」App Profile</string>
     <string name="require_manager_version">需要更新管理工具</string>

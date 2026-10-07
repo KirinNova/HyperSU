@@ -9,6 +9,8 @@
     <string name="home_lkm_custom">Custom</string>
     <string name="home_unsupported">Unsupported</string>
     <string name="home_unsupported_reason">No KernelSU driver detected on your kernel, wrong kernel?</string>
+    <string name="home_manager_unrecognized">Manager not recognized</string>
+    <string name="home_manager_unrecognized_reason">Root works, but the kernel does not recognize this manager: the manager signature built into the module differs from this APK. Rebuild and flash the kernel module with this manager signature.</string>
     <string name="home_device_model">Device model</string>
     <string name="home_kernel">Kernel version</string>
     <string name="home_manager_version">Manager version</string>
@@ -52,6 +54,15 @@
     <string name="confirm">Confirm</string>
     <string name="uninstall">Uninstall</string>
     <string name="module_install">Install</string>
+    <string name="module_install_confirm_title">Install this module?</string>
+    <string name="module_install_confirm_name">Name</string>
+    <string name="module_install_confirm_id">ID</string>
+    <string name="module_install_confirm_version">Version</string>
+    <string name="module_install_confirm_author">Author</string>
+    <string name="module_install_confirm_description">Description</string>
+    <string name="module_install_confirm_files">Files selected</string>
+    <string name="module_install_confirm_no_prop">This archive has no readable module.prop, so its details cannot be shown. Make sure you trust its source.</string>
+    <string name="module_install_confirm_action">Install</string>
     <string name="install">Install</string>
     <string name="reboot">Reboot</string>
     <string name="settings">Settings</string>
@@ -84,7 +95,7 @@
     <string name="home_support_title">Support Us</string>
     <string name="home_support_content">KernelSU is, and always will be, free, and open source. However, you can show us that you care by making a donation.</string>
     <string name="home_gki_warning">Starting from v3.0.0, the GKI work mode will be used only in testing environments. We do not recommend it for daily use, and image files will no longer be provided.</string>
-    <string name="about_source_code"><![CDATA[View source code at %1$s<br/>Join our %2$s channel<br/><br/>The icons are licensed under a special arrangement: drawn by 怡子曰曰, the copyright is held by 明风 OuO, and the vectorized icons are provided by this project.]]></string>
+    <string name="about_source_code"><![CDATA[View source code at %1$s<br/>Join the HyperSU QQ group: <a href="%2$s">%2$s</a><br/><br/>The icons are licensed under a special arrangement: drawn by 怡子曰曰, the copyright is held by 明风 OuO, and the vectorized icons are provided by this project.]]></string>
     <string name="profile" translatable="false">App Profile</string>
     <string name="profile_default">Default</string>
     <string name="profile_template">Template</string>
@@ -216,7 +227,7 @@
     <string name="module_undo_uninstall_failed">Failed to undo uninstall: %s</string>
     <string name="group_contains_apps">Contains %d apps</string>
     <string name="settings_theme">Theme</string>
-    <string name="settings_theme_summary">Choose the app theme mode.</string>
+    <string name="settings_theme_summary">Wallpaper, colour style, and theme save / import.</string>
     <string name="settings_theme_mode_system">Follow system</string>
     <string name="settings_theme_mode_light">Light</string>
     <string name="settings_theme_mode_dark">Dark</string>
@@ -435,6 +446,13 @@
     <string name="kernel_flashing">Kernel Flashing</string>
     <string name="horizon_kernel">AnyKernel3 Kernel</string>
     <string name="horizon_kernel_summary">Flash AnyKernel3 format kernel zip</string>
+    <string name="anykernel3_flash">Flash AnyKernel3</string>
+    <string name="anykernel3_summary">Pick an AnyKernel3 zip from storage and flash it</string>
+    <string name="flash_confirm_title">Flash this archive?</string>
+    <string name="flash_confirm_file">File</string>
+    <string name="flash_confirm_slot">Slot</string>
+    <string name="flash_confirm_unknown">Unknown file name</string>
+    <string name="flash_confirm_action">Flash</string>
     <!-- KPM -->
     <string name="kpm_title">KPM</string>
     <string name="settings_kpm_summary">Manage kernel modules with KPM</string>
@@ -704,6 +722,7 @@
     <string name="home_layout_default">List</string>
     <string name="home_layout_focus">Focus</string>
     <string name="home_layout_dashboard">Dashboard</string>
+    <string name="home_layout_grid">Grid</string>
 
     <!-- Audit log -->
     <string name="sulog_log_empty">No log entries</string>
@@ -718,4 +737,161 @@
     <!-- KPM -->
     <string name="kpm_install">Install</string>
     <string name="kpm_notice">KPM modules are loaded into the kernel; unload before updating</string>
+
+    <!-- Wallpaper (custom background) -->
+    <string name="settings_appearance_background">Background Settings</string>
+    <string name="settings_custom_background">Custom background</string>
+    <string name="settings_custom_background_summary">Set a custom background image</string>
+    <string name="settings_custom_background_opacity">Card opacity</string>
+    <string name="settings_custom_background_blur">Background blur</string>
+    <string name="settings_custom_background_dim">Background dim</string>
+    <string name="settings_custom_background_dual_dim">Enable dual day/night dim</string>
+    <string name="settings_custom_background_dual_dim_desc">Adjust background dim separately for light and dark themes</string>
+    <string name="settings_custom_background_day_dim">Day mode background dim</string>
+    <string name="settings_custom_background_night_dim">Night mode background dim</string>
+    <string name="settings_multi_background_mode">Multi-background mode</string>
+    <string name="settings_multi_background_mode_summary">Set different background images for different pages</string>
+    <string name="settings_select_home_background">Home page background</string>
+    <string name="settings_select_superuser_background">Superuser background</string>
+    <string name="settings_select_module_background">Module background</string>
+    <string name="settings_select_settings_background">Settings background</string>
+    <string name="settings_select_background_image">Select background image</string>
+    <string name="settings_background_selected">Background selected</string>
+    <string name="settings_clear_background">Clear background</string>
+    <string name="settings_clear_background_confirm">Are you sure you want to clear the background image?</string>
+    <string name="settings_custom_background_saved">Background saved successfully</string>
+    <string name="settings_custom_background_error">Failed to save background</string>
+    <string name="settings_background_image_cleared">Background removed</string>
+    <string name="file_picker_unavailable">Unable to open the file picker</string>
+
+    <!-- Font -->
+    <string name="font_section_title">Font Settings</string>
+    <string name="font_mode_title">Font style</string>
+    <string name="font_mode_app">App default</string>
+    <string name="font_mode_system">System default</string>
+    <string name="font_mode_custom">Custom font</string>
+    <string name="font_pick">Select font file</string>
+    <string name="font_pick_summary">Supports .ttf and .otf</string>
+    <string name="font_clear">Remove custom font</string>
+    <string name="font_clear_confirm">Remove the custom font and go back to the app default?</string>
+    <string name="font_saved">Font applied</string>
+    <string name="font_save_failed">Failed to apply the font</string>
+    <string name="font_cleared">Default font restored</string>
+
+    <!-- Background music -->
+    <string name="music_section_title">Background Music</string>
+    <string name="music_enabled">Enable background music</string>
+    <string name="music_enabled_summary">Play the selected track while the app is in the foreground</string>
+    <string name="music_select">Select music file</string>
+    <string name="music_selected">Music selected</string>
+    <string name="music_clear">Remove music</string>
+    <string name="music_clear_confirm">Remove the background music?</string>
+    <string name="music_volume">Music volume</string>
+    <string name="music_autoplay">Play automatically</string>
+    <string name="music_looping">Loop playback</string>
+    <string name="music_saved">Music applied</string>
+    <string name="music_save_failed">Failed to apply the music</string>
+    <string name="music_cleared">Background music removed</string>
+
+    <!-- Sound effects -->
+    <string name="sound_section_title">Sound Effects</string>
+    <string name="sound_enabled">Click sound</string>
+    <string name="sound_enabled_summary">Play a sound when you tap controls</string>
+    <string name="sound_scope_title">Play sound on</string>
+    <string name="sound_scope_global">Whole app</string>
+    <string name="sound_scope_bottom_bar">Bottom bar only</string>
+    <string name="sound_source_title">Sound source</string>
+    <string name="sound_source_local">Custom file</string>
+    <string name="sound_source_preset">Built-in preset</string>
+    <string name="sound_preset_title">Built-in sound</string>
+    <string name="sound_select">Select sound file</string>
+    <string name="sound_selected">Sound selected</string>
+    <string name="sound_clear">Remove custom sound</string>
+    <string name="sound_clear_confirm">Remove the custom sound and go back to the built-in preset?</string>
+    <string name="sound_startup_enabled">Startup sound</string>
+    <string name="sound_startup_enabled_summary">Play a sound when the app opens</string>
+    <string name="sound_saved">Sound applied</string>
+    <string name="sound_save_failed">Failed to apply the sound</string>
+    <string name="sound_cleared">Custom sound removed</string>
+
+    <!-- Video background -->
+    <string name="video_background">Video background</string>
+    <string name="video_background_summary">Play a looping video behind the app instead of a still wallpaper</string>
+    <string name="video_background_select">Select background video</string>
+    <string name="video_background_volume">Video volume</string>
+    <string name="video_background_clear">Clear background video</string>
+    <string name="video_background_clear_confirm">Are you sure you want to clear the background video?</string>
+    <string name="video_background_cleared">Background video removed</string>
+
+    <!-- Home card wallpapers (Focus / Dashboard layouts) -->
+    <string name="focus_card_section_title">Hero Card Wallpaper</string>
+    <string name="focus_card_background">Enable hero card wallpaper</string>
+    <string name="focus_card_background_summary">Show a wallpaper behind the main status card on Circle, Focus and Grid layouts</string>
+    <string name="dashboard_card_section_title">Dashboard Layout Tile Wallpapers</string>
+    <string name="dashboard_card_background">Enable tile wallpapers</string>
+    <string name="dashboard_card_background_summary">Show a wallpaper behind the tiles of the Dashboard home layout</string>
+    <string name="dashboard_tile_working">Working tile</string>
+    <string name="dashboard_tile_selinux">SELinux tile</string>
+    <string name="dashboard_tile_zygisk">Zygisk tile</string>
+    <string name="dashboard_tile_seccomp">Seccomp tile</string>
+    <string name="card_dual_dim_title">Enable dual day/night dim</string>
+    <string name="card_dual_dim_desc">Adjust card wallpaper dim separately for light and dark themes</string>
+    <string name="card_dim">Card wallpaper dim</string>
+    <string name="card_day_dim">Day mode card wallpaper dim</string>
+    <string name="card_night_dim">Night mode card wallpaper dim</string>
+    <string name="card_opacity">Card wallpaper opacity</string>
+    <string name="card_dual_opacity_title">Enable dual day/night opacity</string>
+    <string name="card_dual_opacity_desc">Adjust card wallpaper opacity separately for light and dark themes</string>
+    <string name="card_day_opacity">Day mode card wallpaper opacity</string>
+    <string name="card_night_opacity">Night mode card wallpaper opacity</string>
+
+    <!-- Module card banner -->
+    <string name="banner_section_title">Module Card Banner</string>
+    <string name="banner_enabled">Enable banners</string>
+    <string name="banner_enabled_summary">Show a banner image at the top of module cards</string>
+    <string name="banner_folk_enabled">Use the module\'s own banner</string>
+    <string name="banner_folk_enabled_summary">Read the banner from the module\'s banner property or files</string>
+    <string name="banner_api_mode">API banner mode</string>
+    <string name="banner_api_mode_summary">Fetch a banner from a random-image API or a local directory</string>
+    <string name="banner_api_source">Banner source</string>
+    <string name="banner_api_source_not_configured">Not configured</string>
+    <string name="banner_api_source_configured_url">Configured: API URL</string>
+    <string name="banner_api_source_configured_dir">Configured: local directory</string>
+    <string name="banner_api_source_title">Banner source</string>
+    <string name="banner_api_source_help">A random-image API URL, or an absolute directory path starting with /</string>
+    <string name="banner_api_source_hint">Source URL or directory</string>
+    <string name="banner_api_source_invalid">A source is required</string>
+    <string name="banner_cache_clear">Clear banner cache</string>
+    <string name="banner_cache_cleared">Banner cache cleared</string>
+    <string name="banner_custom_opacity">Custom banner opacity</string>
+    <string name="banner_custom_opacity_summary">Override the automatically derived banner opacity</string>
+    <string name="banner_opacity">Banner opacity</string>
+
+    <!-- Theme export / import / reset -->
+    <string name="settings_appearance_theme">Theme Settings</string>
+    <string name="settings_save_theme">Save theme</string>
+    <string name="settings_save_theme_summary">Export the current appearance as a theme file</string>
+    <string name="settings_import_theme">Import theme</string>
+    <string name="settings_import_theme_summary">Apply a theme file exported earlier</string>
+    <string name="settings_reset_theme">Reset theme</string>
+    <string name="settings_reset_theme_summary">Restore the default appearance and clear the background</string>
+    <string name="settings_reset_theme_confirm">Are you sure you want to reset all theme settings to default? This will clear the custom background, font, music and sound effects.</string>
+    <string name="settings_theme_saved">Theme saved</string>
+    <string name="settings_theme_save_failed">Failed to save theme</string>
+    <string name="settings_theme_imported">Theme imported</string>
+    <string name="settings_theme_import_failed">Failed to import theme</string>
+    <string name="settings_theme_reset">Theme reset to default</string>
+    <string name="settings_theme_reset_failed">Failed to reset theme</string>
+    <string name="theme_export_title">Save theme</string>
+    <string name="theme_export_details">Fill in the theme details</string>
+    <string name="theme_export_action">Save</string>
+    <string name="theme_field_name">Theme name</string>
+    <string name="theme_field_author">Author</string>
+    <string name="theme_field_description">Description (optional)</string>
+    <string name="theme_default_name">My theme</string>
+    <string name="theme_default_author">Unknown</string>
+    <string name="theme_import_title">Import theme</string>
+    <string name="theme_import_confirm">Apply this theme?</string>
+    <string name="theme_import_action">Import</string>
+    <string name="theme_import_invalid">Not a valid theme file</string>
 </resources>

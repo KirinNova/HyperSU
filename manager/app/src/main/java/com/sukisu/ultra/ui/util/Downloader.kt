@@ -6,8 +6,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
 import com.sukisu.ultra.ksuApp
-import com.sukisu.ultra.ui.util.module.LatestVersionInfo
-import okhttp3.Request
 
 /**
  * @author weishu
@@ -42,48 +40,4 @@ internal suspend fun isDownloadAvailable(uri: Uri): Boolean = withContext(Dispat
     runCatching {
         ksuApp.contentResolver.openFileDescriptor(uri, "r").use { it != null }
     }.getOrDefault(false)
-}
-
-fun checkNewVersion(): LatestVersionInfo {
-    if (!isNetworkAvailable(ksuApp)) return LatestVersionInfo()
-    // This build ships from this fork, so the update banner has to compare against
-    // this fork's releases. Pointing it at upstream reported upstream's versionCode as
-    // newer than ours, and tapping that banner is what crashed the manager.
-    val url = "https://api.github.com/repos/kafuzhi/HyperSU/releases/latest"
-    // default null value if failed
-    val defaultValue = LatestVersionInfo()
-    runCatching {
-        ksuApp.okhttpClient.newCall(Request.Builder().url(url).build()).execute()
-            .use { response ->
-                if (!response.isSuccessful) {
-                    return defaultValue
-                }
-                val body = response.body.string()
-                val json = org.json.JSONObject(body)
-                val changelog = json.optString("body")
-
-                val assets = json.getJSONArray("assets")
-                for (i in 0 until assets.length()) {
-                    val asset = assets.getJSONObject(i)
-                    val name = asset.getString("name")
-                    if (!name.endsWith(".apk")) {
-                        continue
-                    }
-
-                    val regex = Regex("v(.+?)_(\\d+)-")
-                    val matchResult = regex.find(name) ?: continue
-                    matchResult.groupValues[1]
-                    val versionCode = matchResult.groupValues[2].toLong()
-                    val downloadUrl = asset.getString("browser_download_url")
-
-                    return LatestVersionInfo(
-                        versionCode,
-                        downloadUrl,
-                        changelog
-                    )
-                }
-
-            }
-    }
-    return defaultValue
 }

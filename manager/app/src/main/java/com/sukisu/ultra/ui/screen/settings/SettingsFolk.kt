@@ -1,26 +1,5 @@
 package com.sukisu.ultra.ui.screen.settings
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import android.app.Activity
-import android.content.Intent
-import android.net.Uri
-import android.widget.Toast
-import androidx.core.content.FileProvider
-import com.sukisu.ultra.ui.screen.themeSettings.crop.BackgroundCropActivity
-import com.yalantis.ucrop.UCrop
-import java.io.File
-import java.io.FileOutputStream
-import androidx.compose.material.icons.rounded.Wallpaper
-import androidx.compose.material.icons.rounded.Image
-import androidx.compose.material.icons.rounded.BlurOn
-import androidx.compose.material.icons.rounded.Brush
-import androidx.compose.material.icons.rounded.Crop
-import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material.icons.rounded.Flare
-import androidx.compose.material.icons.rounded.Lightbulb
-import androidx.compose.material.icons.rounded.Tonality
-import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,11 +22,9 @@ import androidx.compose.material.icons.filled.LayersClear
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material.icons.rounded.Android
 import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -67,19 +44,11 @@ import com.sukisu.ultra.ui.component.folk.FolkNavigationPreference
 import com.sukisu.ultra.ui.component.folk.FolkScaffold
 import com.sukisu.ultra.ui.component.folk.FolkSendLogSheet
 import com.sukisu.ultra.ui.component.folk.FolkSettingsSectionGroup
-import com.sukisu.ultra.ui.component.folk.FolkSliderPreference
 import com.sukisu.ultra.ui.component.folk.FolkSwitchPreference
 import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
 import com.sukisu.ultra.ui.component.folk.FolkValuePreference
 import com.sukisu.ultra.ui.component.uninstalldialog.UninstallDialog
-import com.sukisu.ultra.ui.theme.BackgroundConfig
-import com.sukisu.ultra.ui.theme.glass.GlassConfig
-import com.sukisu.ultra.ui.theme.isInDarkTheme
 import com.sukisu.ultra.ui.util.LocaleHelper
-import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.darkColorScheme
-import top.yukonga.miuix.kmp.theme.lightColorScheme
 
 /**
  * The settings hub in the FolkPatch design.
@@ -96,7 +65,6 @@ fun SettingPagerFolk(
     uiState: SettingsUiState,
     actions: SettingsScreenActions,
     bottomInnerPadding: Dp,
-    isKpmAvailable: Boolean,
     isSusfsSupported: Boolean,
 ) {
     val snackBarHost = remember { SnackbarHostState() }
@@ -127,19 +95,12 @@ fun SettingPagerFolk(
                 bottom = bottomInnerPadding + innerPadding.calculateBottomPadding() + 16.dp,
             ),
         ) {
-            // Update checks (KSU only).
+            // Update checks (KSU only). Only module updates are offered: the manager no longer
+            // compares itself against upstream releases, which used to prompt "new version,
+            // tap to upgrade" and push the upstream APK over this build.
             item {
                 KsuIsValid {
                     FolkSettingsSectionGroup(title = stringResource(R.string.settings_check_update)) {
-                        item {
-                            FolkSwitchPreference(
-                                title = stringResource(R.string.settings_check_update),
-                                summary = stringResource(R.string.settings_check_update_summary),
-                                icon = Icons.Filled.SystemUpdate,
-                                checked = uiState.checkUpdate,
-                                onCheckedChange = actions.onSetCheckUpdate,
-                            )
-                        }
                         item {
                             FolkSwitchPreference(
                                 title = stringResource(R.string.settings_module_check_update),
@@ -157,29 +118,35 @@ fun SettingPagerFolk(
             item {
                 FolkSettingsSectionGroup(title = stringResource(R.string.settings_theme)) {
                     item {
+                        val context = LocalContext.current
                         val languageIndex = languageTags.indexOf(uiState.appLanguage)
                             .coerceAtLeast(0)
-                        // The choice stays inside the app: a Miuix window-level
-                        // dropdown instead of the system's per-app language page.
-                        // The switch itself is masked by the FolkLanguageSwitch
-                        // cover, so nothing hands the task away any more.
-                        MiuixTheme(
-                            colors = if (isInDarkTheme()) darkColorScheme() else lightColorScheme(),
-                        ) {
-                            WindowDropdownPreference(
+                        // Where the system has a per-app language page, the row hands
+                        // the choice to it: the switch then happens while our task is
+                        // in the background, so our activity is not recreated in front
+                        // of the user. Only where that page is missing does the row
+                        // open the app's own list.
+                        val systemPicker = remember {
+                            LocaleHelper.canLaunchSystemLanguageSettings(context)
+                        }
+                        if (systemPicker) {
+                            FolkValuePreference(
                                 title = stringResource(R.string.settings_language),
                                 summary = stringResource(R.string.settings_language_summary),
-                                items = languageNames,
+                                icon = Icons.Rounded.Language,
+                                value = languageNames[languageIndex],
+                                onClick = {
+                                    LocaleHelper.launchSystemLanguageSettings(context)
+                                },
+                            )
+                        } else {
+                            FolkChoicePreference(
+                                title = stringResource(R.string.settings_language),
+                                summary = stringResource(R.string.settings_language_summary),
+                                icon = Icons.Rounded.Language,
+                                options = languageNames,
                                 selectedIndex = languageIndex,
-                                startAction = {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Language,
-                                        contentDescription = null,
-                                    )
-                                },
-                                onSelectedIndexChange = { index ->
-                                    actions.onSetLanguage(languageTags[index])
-                                },
+                                onSelect = { index -> actions.onSetLanguage(languageTags[index]) },
                             )
                         }
                     }
@@ -189,193 +156,6 @@ fun SettingPagerFolk(
                             summary = stringResource(R.string.settings_theme_summary),
                             icon = Icons.Filled.Palette,
                             onClick = actions.onOpenTheme,
-                        )
-                    }
-
-                    // Custom background. Driven straight off BackgroundConfig rather than
-                    // through the view model: the value is already Compose state, and the
-                    // wallpaper on the screen behind this page reads the same object, so a
-                    // change here is visible before the row finishes its press animation.
-                    item {
-                        FolkSwitchPreference(
-                            title = stringResource(R.string.settings_background),
-                            summary = stringResource(R.string.settings_background_summary),
-                            icon = Icons.Rounded.Wallpaper,
-                            checked = BackgroundConfig.enabled,
-                            onCheckedChange = { BackgroundConfig.setEnabled(it) },
-                        )
-                    }
-                    item {
-                        val context = LocalContext.current
-                        val cropFailed = stringResource(R.string.background_crop_failed)
-                        // Every picture is cropped to the screen before it is stored,
-                        // ReSukiSU's adaptation: what the wallpaper draws is already the
-                        // shape of the display, so nothing has to guess at fit modes.
-                        val cropLauncher = rememberLauncherForActivityResult(
-                            contract = ActivityResultContracts.StartActivityForResult(),
-                        ) { result ->
-                            if (result.resultCode == Activity.RESULT_OK) {
-                                val output = result.data?.let { data -> UCrop.getOutput(data) }
-                                if (output != null) {
-                                    val saved = runCatching {
-                                        // Internal storage, not the crop cache: a wallpaper
-                                        // that vanishes when the cache is evicted reads as
-                                        // the setting having forgotten itself.
-                                        val file = File(context.filesDir, "custom_background.jpg")
-                                        context.contentResolver.openInputStream(output)?.use { input ->
-                                            FileOutputStream(file).use { out ->
-                                                input.copyTo(out)
-                                            }
-                                        }
-                                        BackgroundConfig.setUri(Uri.fromFile(file).toString())
-                                        BackgroundConfig.setEnabled(true)
-                                    }.isSuccess
-                                    if (!saved) {
-                                        BackgroundConfig.setUri(output.toString())
-                                        BackgroundConfig.setEnabled(true)
-                                    }
-                                }
-                            } else if (result.resultCode == UCrop.RESULT_ERROR) {
-                                Toast.makeText(context, cropFailed, Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                        val picker = rememberLauncherForActivityResult(
-                            contract = ActivityResultContracts.OpenDocument(),
-                        ) { uri ->
-                            if (uri != null) {
-                                // Persistable: the crop step reads the document once, but
-                                // picking the same image again after a process death would
-                                // otherwise hit a dead grant.
-                                runCatching {
-                                    context.contentResolver.takePersistableUriPermission(
-                                        uri,
-                                        Intent.FLAG_GRANT_READ_URI_PERMISSION,
-                                    )
-                                }
-                                val dm = context.resources.displayMetrics
-                                val outputUri = FileProvider.getUriForFile(
-                                    context,
-                                    "${context.packageName}.fileprovider",
-                                    File(
-                                        context.cacheDir,
-                                        "background_crop_${System.currentTimeMillis()}.jpg",
-                                    ),
-                                )
-                                cropLauncher.launch(
-                                    Intent(context, BackgroundCropActivity::class.java).apply {
-                                        putExtra(UCrop.EXTRA_INPUT_URI, uri)
-                                        putExtra(UCrop.EXTRA_OUTPUT_URI, outputUri)
-                                        putExtra(
-                                            UCrop.EXTRA_ASPECT_RATIO_X,
-                                            dm.widthPixels.toFloat(),
-                                        )
-                                        putExtra(
-                                            UCrop.EXTRA_ASPECT_RATIO_Y,
-                                            dm.heightPixels.toFloat(),
-                                        )
-                                        putExtra(UCrop.EXTRA_MAX_SIZE_X, dm.widthPixels)
-                                        putExtra(UCrop.EXTRA_MAX_SIZE_Y, dm.heightPixels)
-                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                        addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                                    },
-                                )
-                            }
-                        }
-                        FolkValuePreference(
-                            title = stringResource(R.string.settings_background_pick),
-                            summary = if (BackgroundConfig.uri.isEmpty()) {
-                                stringResource(R.string.settings_background_no_image)
-                            } else {
-                                null
-                            },
-                            icon = Icons.Rounded.Image,
-                            onClick = { picker.launch(arrayOf("image/*")) },
-                        )
-                    }
-                    item {
-                        FolkSliderPreference(
-                            title = stringResource(R.string.settings_background_blur),
-                            icon = Icons.Rounded.BlurOn,
-                            value = BackgroundConfig.blur,
-                            onValueChange = { BackgroundConfig.setBlur(it) },
-                            valueRange = 0f..40f,
-                            steps = 39,
-                            valueFormat = { "${it.toInt()} dp" },
-                            enabled = BackgroundConfig.isActive,
-                        )
-                    }
-                    item {
-                        FolkSliderPreference(
-                            title = stringResource(R.string.settings_background_dim),
-                            icon = Icons.Rounded.DarkMode,
-                            value = BackgroundConfig.dim,
-                            onValueChange = { BackgroundConfig.setDim(it) },
-                            valueRange = 0f..1f,
-                            steps = 19,
-                            valueFormat = { "${(it * 100).toInt()}%" },
-                            enabled = BackgroundConfig.isActive,
-                        )
-                    }
-                    // No fit-mode row: the crop screen is the adaptation now, same as
-                    // ReSukiSU. BackgroundConfig.cover stays at fill for drawing.
-                    item {
-                        FolkSwitchPreference(
-                            title = stringResource(R.string.settings_enable_glass),
-                            summary = stringResource(R.string.settings_enable_glass_summary),
-                            icon = Icons.Rounded.Tune,
-                            checked = GlassConfig.enabled,
-                            onCheckedChange = { GlassConfig.setEnabled(it) },
-                        )
-                    }
-                    item {
-                        FolkSliderPreference(
-                            title = stringResource(R.string.settings_glass_intensity),
-                            icon = Icons.Rounded.Tonality,
-                            value = GlassConfig.intensity,
-                            onValueChange = { GlassConfig.setIntensity(it) },
-                            valueRange = 0.4f..1.6f,
-                            steps = 24,
-                            valueFormat = { "x" + it },
-                            enabled = GlassConfig.enabled,
-                        )
-                    }
-                    item {
-                        FolkSliderPreference(
-                            title = stringResource(R.string.settings_glass_blur),
-                            icon = Icons.Rounded.BlurOn,
-                            value = GlassConfig.blur,
-                            onValueChange = { GlassConfig.setBlur(it) },
-                            valueRange = 0f..60f,
-                            steps = 60,
-                            valueFormat = { "${it.toInt()} dp" },
-                            enabled = GlassConfig.enabled && GlassConfig.blurEnabled,
-                        )
-                    }
-                    item {
-                        FolkSwitchPreference(
-                            title = stringResource(R.string.settings_glass_rim),
-                            icon = Icons.Rounded.Brush,
-                            checked = GlassConfig.rim,
-                            onCheckedChange = { GlassConfig.setRim(it) },
-                            enabled = GlassConfig.enabled,
-                        )
-                    }
-                    item {
-                        FolkSwitchPreference(
-                            title = stringResource(R.string.settings_glass_specular),
-                            icon = Icons.Rounded.Flare,
-                            checked = GlassConfig.specular,
-                            onCheckedChange = { GlassConfig.setSpecular(it) },
-                            enabled = GlassConfig.enabled,
-                        )
-                    }
-                    item {
-                        FolkSwitchPreference(
-                            title = stringResource(R.string.settings_glass_sheen),
-                            icon = Icons.Rounded.Lightbulb,
-                            checked = GlassConfig.sheen,
-                            onCheckedChange = { GlassConfig.setSheen(it) },
-                            enabled = GlassConfig.enabled,
                         )
                     }
                     item {
@@ -414,25 +194,7 @@ fun SettingPagerFolk(
                 }
             }
 
-            // KPM and SuSFS, when the kernel provides them.
-            if (isKpmAvailable) {
-                item {
-                    FolkSettingsSectionGroup(title = stringResource(R.string.kpm_title)) {
-                        item {
-                            FolkNavigationPreference(
-                                title = stringResource(R.string.kpm_title),
-                                summary = stringResource(R.string.settings_kpm_summary),
-                                icon = Icons.Filled.Fence,
-                                onClick = actions.onOpenKpm,
-                            )
-                        }
-                    }
-                }
-            }
-
-            // SuSFS config is its own section and reaches the kernel through ksud, so it
-            // must not inherit the KPM gate above it - a device without KPM was losing the
-            // SuSFS entry entirely.
+            // SuSFS is a ksud feature of its own, gated only by SuSFS support.
             if (isSusfsSupported) {
                 item {
                     FolkSettingsSectionGroup(title = stringResource(R.string.susfs_config_title)) {

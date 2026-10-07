@@ -29,13 +29,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sukisu.ultra.ui.theme.SoundEffectConfig
 import com.sukisu.ultra.ui.theme.tokens.FolkShape
+import com.sukisu.ultra.ui.util.SoundEffectManager
 
 /** Width of the rail. */
 private val RailWidth = 84.dp
@@ -59,6 +62,8 @@ fun FolkNavigationRail(
     badge: NavigationBadgeState,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+
     Surface(
         modifier = modifier
             .fillMaxHeight()
@@ -120,7 +125,15 @@ fun FolkNavigationRail(
                             interactionSource = interactionSource,
                             indication = null,
                             role = Role.Tab,
-                            onClick = { onSelectedIndexChange(index) },
+                            onClick = {
+                                onSelectedIndexChange(index)
+                                // The rail is this layout's tab bar, so it uses the same scope
+                                // as the bottom bar.
+                                SoundEffectManager.playScoped(
+                                    context,
+                                    SoundEffectConfig.SCOPE_BOTTOM_BAR,
+                                )
+                            },
                         )
                         .padding(vertical = 8.dp)
                         .width(RailWidth - 16.dp),

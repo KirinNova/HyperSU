@@ -7,7 +7,6 @@ import com.materialkolor.dynamiccolor.ColorSpec
 @Immutable
 data class SettingsUiState(
     val appLanguage: String = "",
-    val checkUpdate: Boolean = true,
     val checkModuleUpdate: Boolean = true,
     val alternativeIcon : Boolean = false,
     val themeMode: Int = 0,
@@ -62,7 +61,6 @@ data class SettingsUiState(
 
 @Immutable
 data class SettingsScreenActions(
-    val onSetCheckUpdate: (Boolean) -> Unit,
     val onSetCheckModuleUpdate: (Boolean) -> Unit,
     val onOpenTheme: () -> Unit,
     val onOpenProfileTemplate: () -> Unit,
@@ -79,6 +77,5 @@ data class SettingsScreenActions(
     val onOpenAbout: () -> Unit,
     val onSetAlternativeIcon: (Boolean) -> Unit,
     val onOpenTools: () -> Unit,
-    val onOpenKpm: () -> Unit,
     val onOpenSusfsConfig: () -> Unit,
 )

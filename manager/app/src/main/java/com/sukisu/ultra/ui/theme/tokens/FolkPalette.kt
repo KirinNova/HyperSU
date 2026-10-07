@@ -31,6 +31,16 @@ class FolkPalette internal constructor(
     val neutral: Color,
     /** True when the page shows a custom background image, so chrome should read straight through. */
     val onCustomBackground: Boolean,
+    /**
+     * An opaque colour that matches what is behind a pushed screen.
+     *
+     * In wallpaper mode [groupedBackground] is transparent on purpose - that is what lets the
+     * wallpaper show through the main tabs. A pushed screen must not use it: the nav host keeps
+     * the entry underneath composed for its card transition and swipe-back gesture, so a
+     * transparent container lets the previous screen's text bleed through. This is that colour,
+     * resolved from the same wallpaper-tinted surface the tabs sit on.
+     */
+    val pageBackground: Color,
 ) {
     companion object {
         /** Dark is read from luminance, which is what the settings pages were calibrated against. */
@@ -42,13 +52,15 @@ class FolkPalette internal constructor(
             val onCustomBackground = background.alpha < 0.99f
             val dark = background.luminance() < 0.5f
 
+            val groupedSurface = when {
+                onCustomBackground -> scheme.surfaceContainer
+                dark -> lerp(background, scheme.surfaceContainerHigh, 0.45f)
+                else -> lerp(background, scheme.surfaceContainer, 0.9f)
+            }
+
             return FolkPalette(
                 groupedBackground = background,
-                groupedSurface = when {
-                    onCustomBackground -> scheme.surfaceContainer
-                    dark -> lerp(background, scheme.surfaceContainerHigh, 0.45f)
-                    else -> lerp(background, scheme.surfaceContainer, 0.9f)
-                },
+                groupedSurface = groupedSurface,
                 groupedInset = when {
                     onCustomBackground ->
                         scheme.surfaceContainer.blendTo(scheme.surfaceContainerHigh, 0.45f)
@@ -62,6 +74,14 @@ class FolkPalette internal constructor(
                 critical = scheme.error,
                 neutral = scheme.onSurfaceVariant,
                 onCustomBackground = onCustomBackground,
+                // Opaque in both modes: in wallpaper mode take the surface tone with its alpha
+                // forced back to 1, so a pushed screen still reads as the same material as the
+                // tabs while covering what is behind it.
+                pageBackground = if (onCustomBackground) {
+                    groupedSurface.copy(alpha = 1f)
+                } else {
+                    background
+                },
             )
         }
     }

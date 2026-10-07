@@ -25,7 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.sukisu.ultra.ui.component.folk.FolkLoadingIndicator
-import com.sukisu.ultra.ui.theme.SukiSUTheme
+import com.sukisu.ultra.ui.theme.HyperSUTheme
 import com.sukisu.ultra.ui.theme.ThemeController
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -53,7 +53,7 @@ class WebUIActivity : ComponentActivity() {
                 onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
             }
 
-            SukiSUTheme(appSettings = appSettings) {
+            HyperSUTheme(appSettings = appSettings) {
                 MainContent(activity = this, onFinish = { finish() })
             }
         }

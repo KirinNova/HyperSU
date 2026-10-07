@@ -8,3 +8,15 @@ __pycache__
 /dist
 /repack-config.json
 /userspace/ksud/.lkm_image_bootstrap.o
+
+# --- build output / local config ---
+local.properties
+*.iml
+.gradle/
+build/
+*.apk
+*.aab
+*.rar
+*.zip
+.idea/
+.kotlin/

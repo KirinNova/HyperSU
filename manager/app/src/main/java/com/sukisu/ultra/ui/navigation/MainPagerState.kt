@@ -93,10 +93,22 @@ internal fun badgeFor(index: Int, state: NavigationBadgeState): NavBadge? = when
     BottomBarDestination.SuperUser.ordinal ->
         state.superuserCount.takeIf { it > 0 }?.let { NavBadge(it, BadgeTone.Accent) }
 
-    BottomBarDestination.Module.ordinal -> when {
-        state.moduleUpdatableCount > 0 -> NavBadge(state.moduleUpdatableCount, BadgeTone.Alert)
-        state.moduleEnabledCount > 0 -> NavBadge(state.moduleEnabledCount, BadgeTone.Accent)
-        else -> null
+    BottomBarDestination.Module.ordinal -> {
+        val enabled = state.moduleEnabledCount
+        when {
+            // The settings row promises the *enabled module count*, so that is what the number
+            // is. Tinting it amber when something can be updated keeps the "needs attention"
+            // signal without swapping the meaning of the figure - the old version showed the
+            // update count here, so a device with 15 enabled modules and one pending update
+            // read as "1".
+            enabled > 0 -> NavBadge(
+                enabled,
+                if (state.moduleUpdatableCount > 0) BadgeTone.Alert else BadgeTone.Accent,
+            )
+            // Nothing enabled: an update is the only thing worth showing.
+            state.moduleUpdatableCount > 0 -> NavBadge(state.moduleUpdatableCount, BadgeTone.Alert)
+            else -> null
+        }
     }
 
     else -> null

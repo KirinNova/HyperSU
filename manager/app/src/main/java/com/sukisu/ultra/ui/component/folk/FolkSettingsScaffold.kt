@@ -16,23 +16,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.rememberTopAppBarState
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import com.sukisu.ultra.ui.theme.backgroundWallpaper
-import com.sukisu.ultra.ui.theme.glass.glassAmbient
+import com.sukisu.ultra.ui.navigation.LocalIsRootPage
 import com.sukisu.ultra.ui.theme.tokens.FolkTheme
 import com.sukisu.ultra.ui.util.NavigationBarsSpacer
 import androidx.compose.foundation.layout.widthIn
@@ -99,45 +93,22 @@ fun FolkSettingsScaffold(
     actions: @Composable RowScope.() -> Unit = {},
     content: LazyListScope.() -> Unit,
 ) {
-    val scrollBehavior = MiuixScrollBehavior(rememberTopAppBarState())
-    // Same clear/elevated tint pair as FolkScaffold, one RGB at both ends.
-    val elevatedBarColor = folkGroupColor()
-    val scrolled by remember(scrollBehavior) {
-        derivedStateOf { scrollBehavior.state.contentOffset < -4f }
-    }
-    val barColor by animateColorAsState(
-        targetValue = if (FolkTheme.palette.onCustomBackground) {
-            Color.Transparent
-        } else if (scrolled) {
-            elevatedBarColor
-        } else {
-            elevatedBarColor.copy(alpha = 0f)
-        },
-        label = "folkBarColor",
-    )
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        // The page background, full bleed: behind the bar (transparent over a picture,
-        // so the wallpaper reaches the status bar) and above the still-composed entry
-        // underneath that a clear container would otherwise show through. Outside
-        // wallpaper mode this wash is an opaque background of its own, so the
-        // container below can stay clear in both modes.
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .backgroundWallpaper()
-                .glassAmbient(),
-        )
-        Scaffold(
+    Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            // Miuix: the Material bar drew its own surface over the title and
-            // showed up as a band across the wallpaper.
-            SmallTopAppBar(
-                title = title,
-                color = barColor,
-                titleColor = MaterialTheme.colorScheme.onBackground,
-                subtitleColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            TopAppBar(
+                title = {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+                colors = folkTopAppBarColors(),
                 navigationIcon = {
                     if (onBack != null) {
                         IconButton(onClick = onBack) {
@@ -152,11 +123,18 @@ fun FolkSettingsScaffold(
                 scrollBehavior = scrollBehavior,
             )
         },
-        // The full-bleed box above paints the page - wallpaper or wash - and also
-        // covers the still-composed entry underneath, so the container itself stays
-        // clear. contentColor is pinned because a transparent container derives
-        // Unspecified, which drops uncoloured text to black.
-        containerColor = Color.Transparent,
+        // Opaque on a pushed page, so the entry below (kept composed by the nav host for its card
+        // transition and swipe-back gesture) cannot show through. On a root tab page the opposite
+        // is wanted: it sits on the wallpaper, so the transparent background is what lets the
+        // image read through.
+        containerColor = if (LocalIsRootPage.current) {
+            MaterialTheme.colorScheme.background
+        } else {
+            FolkTheme.palette.pageBackground
+        },
+        // Deriving the content colour from a transparent container yields Unspecified, which
+        // drops any text that does not set its own colour to black - unreadable in dark mode.
+        // Pin it to the background's content colour, which holds in both branches above.
         contentColor = MaterialTheme.colorScheme.onBackground,
         snackbarHost = {
             if (snackbarHostState != null) {
@@ -168,34 +146,24 @@ fun FolkSettingsScaffold(
         // first item: with a translucent bar in wallpaper mode, content that
         // scrolls underneath would show through the title.
         // Cap the list width on large screens so rows stay readable.
-        //
-        // The backdrop is recorded once at the app root: the plates here sample a
-        // layer they are not drawn into - the rule that stops a plate reading back
-        // its own output - without every screen paying to record the same picture.
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding()),
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter,
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.TopCenter,
+            LazyColumn(
+                modifier = Modifier
+                    .widthIn(max = FolkSettingsDimens.ContentMaxWidth)
+                    .fillMaxSize()
+                    .padding(top = innerPadding.calculateTopPadding()),
+                contentPadding = PaddingValues(
+                    bottom = innerPadding.calculateBottomPadding() + FolkSettingsDimens.ScreenPadding,
+                ),
             ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .widthIn(max = FolkSettingsDimens.ContentMaxWidth)
-                        .fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        bottom = innerPadding.calculateBottomPadding() + FolkSettingsDimens.ScreenPadding,
-                    ),
-                ) {
-                    content()
-                    item(key = "folk_bottom") {
-                        NavigationBarsSpacer()
-                    }
+                content()
+                item(key = "folk_bottom") {
+                    NavigationBarsSpacer()
                 }
             }
         }
-    }
     }
 }

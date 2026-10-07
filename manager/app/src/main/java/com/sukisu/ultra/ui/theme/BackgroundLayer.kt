@@ -1,165 +1,223 @@
 package com.sukisu.ultra.ui.theme
 
-import android.graphics.BitmapFactory
-import android.graphics.RenderEffect
-import android.graphics.Shader
-import android.net.Uri
+import android.media.MediaPlayer
 import android.os.Build
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.VideoView
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asComposeRenderEffect
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.roundToInt
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.zIndex
+import coil.compose.rememberAsyncImagePainter
+import com.sukisu.ultra.ui.navigation.BottomBarDestination
+import com.sukisu.ultra.ui.navigation3.Route
+import top.yukonga.miuix.kmp.nav.core.NavKey
 
 /**
- * The decoded wallpaper, decoded once at the app root and handed down.
+ * Resolves the wallpaper URI shown for [route] according to the current background mode.
  *
- * The root box and every screen box draw the same picture - the root so glass behind the
- * status bar has something to sample, each screen so a still-composed entry underneath cannot
- * show through a transparent page. Decoding per box would mean three live copies of a camera
- * photo; null means either no picture or a host that never provided one, in which case
- * [backgroundWallpaper] falls back to its own decode.
+ * The manager is a four-tab pager inside [Route.Main]; a pushed detail route keeps the
+ * wallpaper of the tab it was opened from, so the background never changes underneath a push
+ * or a back gesture.
  */
-val LocalWallpaperBitmap = staticCompositionLocalOf<androidx.compose.ui.graphics.ImageBitmap?> { null }
+fun resolveBackgroundUriForRoute(route: NavKey?, mainPage: Int): String? {
+    if (!BackgroundConfig.isMultiBackgroundEnabled) return BackgroundConfig.customBackgroundUri
 
-/**
- * Draws the chosen picture behind a screen.
- *
- * Three things have to be right for this to read as a wallpaper rather than a sticker:
- *
- *  - it crops to fill, never letterboxes, so the picture reaches every edge;
- *  - it is sampled down before it reaches the GPU, because a full-resolution camera roll
- *    decoded at native size costs tens of megabytes every time the configuration changes;
- *  - a blurred copy is drawn overscanned, because blur samples its neighbours and the pixels
- *    just outside the viewport do not exist. Without the overscan the edges turn into a
- *    translucent halo that reads like a rendering bug.
- *
- * Blur needs RenderEffect, which is API 31. Below that the picture is drawn sharp and the
- * setting is accepted and ignored rather than hidden, so one theme file describes every device.
- */
-@Composable
-fun Modifier.backgroundWallpaper(): Modifier {
-    // Declared before the early returns: this is a composable hook, so it has to run on every
-    // recomposition even while no background is configured.
-    val bitmap by rememberWallpaperBitmap(
-        if (BackgroundConfig.isActive) BackgroundConfig.uri else "",
-    )
+    val pageIndex = when (route) {
+        is Route.Home -> BottomBarDestination.Home.pageIndex
+        is Route.SuperUser -> BottomBarDestination.SuperUser.pageIndex
+        is Route.Module -> BottomBarDestination.Module.pageIndex
+        is Route.Settings -> BottomBarDestination.Settings.pageIndex
+        // Detail routes and the main pager keep the tab the user is on.
+        else -> mainPage
+    }
 
-    val image = LocalWallpaperBitmap.current ?: bitmap ?: return this
+    val uri = when (pageIndex) {
+        BottomBarDestination.Home.pageIndex -> BackgroundConfig.homeBackgroundUri
+        BottomBarDestination.SuperUser.pageIndex -> BackgroundConfig.superuserBackgroundUri
+        BottomBarDestination.Module.pageIndex -> BackgroundConfig.moduleBackgroundUri
+        else -> BackgroundConfig.settingsBackgroundUri
+    }
 
-    val blurDp = BackgroundConfig.blur
-    val dim = BackgroundConfig.dim
-    val cover = BackgroundConfig.cover
-    val blurSupported = blurDp > 0f && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-
-    return this
-        .graphicsLayer {
-            if (blurSupported) {
-                val radius = blurDp.dp.toPx()
-                renderEffect = RenderEffect
-                    .createBlurEffect(radius, radius, Shader.TileMode.CLAMP)
-                    .asComposeRenderEffect()
-            }
-        }
-        .drawBehind {
-            // The blur reaches radius times three beyond the fragment it is drawn into, so the
-            // picture is laid out that much larger on every side, or the first pixels of the
-            // blur come back transparent.
-            val bleed = if (blurSupported) blurDp.dp.toPx() * 3f else 0f
-            val target = Size(size.width + bleed * 2f, size.height + bleed * 2f)
-
-            if (cover == BackgroundConfig.COVER_FIT) {
-                // The letterbox is part of the fit, so it is painted under the picture rather
-                // than left to whatever sits behind this layer - in wallpaper mode that would
-                // be the still-composed entry underneath showing through the gap.
-                drawRect(color = Color.Black, topLeft = Offset(-bleed, -bleed), size = target)
-            }
-
-            val drawnWidth: Float
-            val drawnHeight: Float
-            if (cover == BackgroundConfig.COVER_STRETCH) {
-                drawnWidth = target.width
-                drawnHeight = target.height
-            } else {
-                val ratio = if (cover == BackgroundConfig.COVER_FIT) {
-                    min(target.width / image.width, target.height / image.height)
-                } else {
-                    max(target.width / image.width, target.height / image.height)
-                }
-                drawnWidth = image.width * ratio
-                drawnHeight = image.height * ratio
-            }
-            val left = (target.width - drawnWidth) / 2f - bleed
-            val top = (target.height - drawnHeight) / 2f - bleed
-
-            drawImage(
-                image = image,
-                dstOffset = IntOffset(left.roundToInt(), top.roundToInt()),
-                dstSize = IntSize(drawnWidth.roundToInt(), drawnHeight.roundToInt()),
-            )
-
-            if (dim > 0f) {
-                drawRect(color = Color.Black.copy(alpha = dim))
-            }
-        }
+    // A tab without its own image falls back to the shared one instead of an empty page.
+    return uri ?: BackgroundConfig.customBackgroundUri
 }
 
 /**
- * The picture behind [uri], sampled to roughly twice the screen so a full-resolution photo
- * never lands in memory at full size. Null on a bad URI or a revoked permission - the screen
- * then falls back to the flat background it had before the picture was picked.
+ * The wallpaper the theme adapts its content colours to.
+ *
+ * Deliberately one stable image rather than whatever page is on screen: with multi-background
+ * mode the palette would otherwise flicker on every tab change. The video wins when it is on,
+ * because that is what is actually on screen.
+ */
+fun themeWallpaperUri(): String? {
+    if (BackgroundConfig.isVideoBackgroundEnabled) {
+        BackgroundConfig.videoBackgroundUri?.let { return it }
+    }
+    return BackgroundConfig.customBackgroundUri
+        ?: BackgroundConfig.homeBackgroundUri
+        ?: BackgroundConfig.superuserBackgroundUri
+        ?: BackgroundConfig.moduleBackgroundUri
+        ?: BackgroundConfig.settingsBackgroundUri
+}
+
+/**
+ * The wallpaper layer, drawn behind the whole app.
+ *
+ * Priority: image (single or per page) over a solid fallback. When the feature is off nothing
+ * is drawn, so the theme's own background stays in charge exactly as before.
  */
 @Composable
-fun rememberWallpaperBitmap(uri: String): State<ImageBitmap?> {
-    val context = LocalContext.current
-    return produceState<ImageBitmap?>(initialValue = null, key1 = uri) {
-        value = if (uri.isBlank()) {
-            null
+fun BackgroundLayer(
+    currentRoute: NavKey? = null,
+    mainPage: Int = 0,
+) {
+    if (!BackgroundConfig.isCustomBackgroundEnabled) return
+
+    // isInDarkTheme() follows the app's own colour mode, not the system one, so the fallback
+    // and the dim match the theme the user actually selected.
+    val darkTheme = isInDarkTheme()
+    // The theme may have raised the dim to keep text readable over a bright wallpaper; that
+    // rendered value wins over the raw preference.
+    val dim = LocalWallpaperDim.current ?: BackgroundConfig.getEffectiveBackgroundDim(darkTheme)
+    val targetUri = resolveBackgroundUriForRoute(currentRoute, mainPage)
+
+    // One group behind the content box in MainActivity: the fallback, the image and the dim
+    // are its children, so they stack in composition order and never depend on the zIndex of
+    // nodes a helper like Crossfade introduces.
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .zIndex(-1f),
+    ) {
+        // Solid base so the window background (often white) can never flash through while the
+        // image is still decoding or between page switches.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(if (darkTheme) Color.Black else Color.White),
+        )
+
+        // Priority: video > still image, so the moving wallpaper wins when both are set.
+        val videoUri = if (BackgroundConfig.isVideoBackgroundEnabled) {
+            BackgroundConfig.videoBackgroundUri
         } else {
-            withContext(Dispatchers.IO) {
-                runCatching {
-                    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                    context.contentResolver.openInputStream(Uri.parse(uri))?.use {
-                        BitmapFactory.decodeStream(it, null, bounds)
-                    }
+            null
+        }
 
-                    val screen = context.resources.displayMetrics
-                    // Bound the *longest* side and hard-cap it: a width-only check let a
-                    // tall photo keep its full height and land as a ~100 MB bitmap that the
-                    // GPU then refused to draw (Canvas "trying to draw too large"). The cap
-                    // keeps every dimension under the texture ceiling of stricter adapters
-                    // while staying twice the screen wherever the screen allows.
-                    val target = min(max(screen.widthPixels, screen.heightPixels) * 2, 4096)
-                    val longest = max(bounds.outWidth, bounds.outHeight)
-                    var sample = 1
-                    while (longest > 0 && longest / sample > target) {
-                        sample *= 2
-                    }
-
-                    val options = BitmapFactory.Options().apply { inSampleSize = sample }
-                    context.contentResolver.openInputStream(Uri.parse(uri))?.use {
-                        BitmapFactory.decodeStream(it, null, options)
-                    }
-                }.getOrNull()?.asImageBitmap()
+        if (!videoUri.isNullOrEmpty()) {
+            VideoWallpaper(uri = videoUri, dim = dim)
+        } else if (!targetUri.isNullOrEmpty()) {
+            // Crossfading between the per-page images keeps multi-background mode from popping.
+            Crossfade(
+                targetState = targetUri,
+                modifier = Modifier.fillMaxSize(),
+                animationSpec = tween(320),
+                label = "BackgroundWallpaper",
+            ) { uri ->
+                Image(
+                    painter = rememberAsyncImagePainter(model = uri),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        // RenderEffect blur is only honoured from Android 12; below that the
+                        // slider would silently do nothing, so keep the image untouched.
+                        .then(
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                                BackgroundConfig.customBackgroundBlur > 0f
+                            ) {
+                                Modifier.blur(BackgroundConfig.customBackgroundBlur.dp)
+                            } else {
+                                Modifier
+                            },
+                        ),
+                )
             }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = dim)),
+            )
         }
     }
+}
+
+/**
+ * The looping video wallpaper.
+ *
+ * A decode error is swallowed (`setOnErrorListener` returns true): the solid base behind this
+ * keeps the page readable instead of letting the window background flash through.
+ */
+@Composable
+private fun VideoWallpaper(uri: String, dim: Float) {
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+    val volume = BackgroundConfig.videoVolume
+
+    DisposableEffect(Unit) {
+        onDispose {
+            runCatching {
+                mediaPlayer?.stop()
+                mediaPlayer?.release()
+            }
+            mediaPlayer = null
+        }
+    }
+
+    key(uri) {
+        AndroidView(
+            factory = { ctx ->
+                object : VideoView(ctx) {
+                    // The default AT_MOST measurement letterboxes the clip; fill the layer.
+                    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+                        setMeasuredDimension(
+                            getDefaultSize(0, widthMeasureSpec),
+                            getDefaultSize(0, heightMeasureSpec),
+                        )
+                    }
+                }.apply {
+                    layoutParams = FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                    )
+                    setVideoPath(uri)
+                    setOnPreparedListener { mp ->
+                        mp.isLooping = true
+                        mp.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING)
+                        mp.setVolume(volume, volume)
+                        mediaPlayer = mp
+                        start()
+                    }
+                    setOnErrorListener { _, _, _ -> true }
+                }
+            },
+            update = { mediaPlayer?.setVolume(volume, volume) },
+            onRelease = { view -> runCatching { view.stopPlayback() } },
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = dim)),
+    )
 }

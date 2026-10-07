@@ -9,6 +9,8 @@
     <string name="home_lkm_custom">自定义</string>
     <string name="home_unsupported">不支持</string>
     <string name="home_unsupported_reason">内核上未检测到 KernelSU 驱动程序，内核错误?</string>
+    <string name="home_manager_unrecognized">管理器未被内核识别</string>
+    <string name="home_manager_unrecognized_reason">Root 正常，但内核未把本应用识别为管理器（模块内置的管理器签名与本 APK 不一致）。请用本 APK 的签名重新构建并刷入内核模块。</string>
     <string name="home_device_model">设备型号</string>
     <string name="home_kernel">内核版本</string>
     <string name="home_manager_version">管理器版本</string>
@@ -39,6 +41,15 @@
     <string name="module_repos_source_code">源码</string>
     <string name="uninstall">卸载</string>
     <string name="module_install">安装</string>
+    <string name="module_install_confirm_title">要安装此模块吗？</string>
+    <string name="module_install_confirm_name">名称</string>
+    <string name="module_install_confirm_id">ID</string>
+    <string name="module_install_confirm_version">版本</string>
+    <string name="module_install_confirm_author">作者</string>
+    <string name="module_install_confirm_description">描述</string>
+    <string name="module_install_confirm_files">已选择文件</string>
+    <string name="module_install_confirm_no_prop">此压缩包没有可读取的 module.prop，无法显示其详细信息。请确认来源可信。</string>
+    <string name="module_install_confirm_action">安装</string>
     <string name="install">安装</string>
     <string name="reboot">重启</string>
     <string name="settings">设置</string>
@@ -71,7 +82,7 @@
     <string name="home_support_title">支持开发</string>
     <string name="home_support_content">KernelSU 将保持免费开源，向开发者捐赠以表示支持</string>
     <string name="home_gki_warning">自 v3.0.0 起 GKI 工作模式将仅用于测试环境，我们不建议用于日常使用，也不再提供镜像文件</string>
-    <string name="about_source_code"><![CDATA[在 %1$s 查看源码<br/>加入我们的 %2$s 频道<br/><br/>图标以特别的形式授权，怡子曰曰绘制，版权明风OuO所有。矢量化图标由本项目提供。]]></string>
+    <string name="about_source_code"><![CDATA[在 %1$s 查看源码<br/>点击链接加入群聊【HyperSU】：<a href="%2$s">%2$s</a><br/><br/>图标以特别的形式授权，怡子曰曰绘制，版权明风OuO所有。矢量化图标由本项目提供。]]></string>
     <string name="profile_default">默认</string>
     <string name="profile_template">模板</string>
     <string name="profile_custom">自定义</string>
@@ -193,7 +204,7 @@
     <string name="module_undo_uninstall_failed">撤销卸载 %s 失败</string>
     <string name="group_contains_apps">包含 %d 个应用</string>
     <string name="settings_theme">主题设置</string>
-    <string name="settings_theme_summary">自定义更多主题选项</string>
+    <string name="settings_theme_summary">壁纸、配色风格，以及主题保存与导入</string>
     <string name="settings_theme_mode_system">跟随系统</string>
     <string name="settings_theme_mode_light">浅色</string>
     <string name="settings_theme_mode_dark">深色</string>
@@ -413,6 +424,13 @@
     <string name="kernel_flashing">内核刷入</string>
     <string name="horizon_kernel">AnyKernel3 内核</string>
     <string name="horizon_kernel_summary">刷入AnyKernel3格式的内核zip包</string>
+    <string name="anykernel3_flash">刷写 AnyKernel3</string>
+    <string name="anykernel3_summary">从存储中选择 AnyKernel3 压缩包并刷入</string>
+    <string name="flash_confirm_title">要刷入此压缩包吗？</string>
+    <string name="flash_confirm_file">文件</string>
+    <string name="flash_confirm_slot">分区槽位</string>
+    <string name="flash_confirm_unknown">未知文件名</string>
+    <string name="flash_confirm_action">刷入</string>
     <!-- KPM -->
     <string name="settings_kpm_summary">使用 KPM 管理内核模块</string>
     <string name="kpm_empty">当前没有安装内核模块</string>
@@ -658,4 +676,169 @@
     <string name="home_zygisk_not_installed">未安装</string>
     <string name="home_zygisk_disabled">已禁用</string>
     <string name="home_zygisk_reboot_required">需要重启</string>
+
+    <!-- 壁纸（自定义背景） -->
+    <string name="settings_appearance_background">背景设置</string>
+    <string name="settings_custom_background">自定义背景</string>
+    <string name="settings_custom_background_summary">设置自定义背景图片</string>
+    <string name="settings_custom_background_opacity">卡片不透明度</string>
+    <string name="settings_custom_background_blur">背景模糊</string>
+    <string name="settings_custom_background_dim">背景暗度</string>
+    <string name="settings_custom_background_dual_dim">启用双切暗色适配</string>
+    <string name="settings_custom_background_dual_dim_desc">为浅色和深色主题分别调整背景暗度</string>
+    <string name="settings_custom_background_day_dim">白天模式暗度</string>
+    <string name="settings_custom_background_night_dim">夜间模式暗度</string>
+    <string name="settings_multi_background_mode">启用多背景模式</string>
+    <string name="settings_multi_background_mode_summary">为不同页面设置不同的背景图片</string>
+    <string name="settings_select_home_background">主页背景</string>
+    <string name="settings_select_superuser_background">超级用户背景</string>
+    <string name="settings_select_module_background">模块背景</string>
+    <string name="settings_select_settings_background">设置页面背景</string>
+    <string name="settings_select_background_image">选择背景图片</string>
+    <string name="settings_background_selected">已选择背景</string>
+    <string name="settings_clear_background">清除背景</string>
+    <string name="settings_clear_background_confirm">确定要清除背景图片吗？</string>
+    <string name="settings_custom_background_saved">背景保存成功</string>
+    <string name="settings_custom_background_error">保存背景失败</string>
+    <string name="settings_background_image_cleared">已移除背景</string>
+    <string name="file_picker_unavailable">无法打开文件选择器</string>
+
+    <!-- 字体 -->
+    <string name="font_section_title">字体设置</string>
+    <string name="font_mode_title">字体样式</string>
+    <string name="font_mode_app">应用默认</string>
+    <string name="font_mode_system">跟随系统</string>
+    <string name="font_mode_custom">自定义字体</string>
+    <string name="font_pick">选择字体文件</string>
+    <string name="font_pick_summary">支持 .ttf 与 .otf</string>
+    <string name="font_clear">移除自定义字体</string>
+    <string name="font_clear_confirm">确定要移除自定义字体并恢复应用默认吗？</string>
+    <string name="font_saved">字体已应用</string>
+    <string name="font_save_failed">字体应用失败</string>
+    <string name="font_cleared">已恢复默认字体</string>
+
+    <!-- 背景音乐 -->
+    <string name="music_section_title">背景音乐</string>
+    <string name="music_enabled">启用背景音乐</string>
+    <string name="music_enabled_summary">应用在前台时播放所选音乐</string>
+    <string name="music_select">选择音乐文件</string>
+    <string name="music_selected">已选择音乐</string>
+    <string name="music_clear">移除音乐</string>
+    <string name="music_clear_confirm">确定要移除背景音乐吗？</string>
+    <string name="music_volume">音乐音量</string>
+    <string name="music_autoplay">自动播放</string>
+    <string name="music_looping">循环播放</string>
+    <string name="music_saved">音乐已应用</string>
+    <string name="music_save_failed">音乐应用失败</string>
+    <string name="music_cleared">已移除背景音乐</string>
+
+    <!-- 音效 -->
+    <string name="sound_section_title">音效</string>
+    <string name="sound_enabled">点击音效</string>
+    <string name="sound_enabled_summary">点击控件时播放提示音</string>
+    <string name="sound_scope_title">播放范围</string>
+    <string name="sound_scope_global">整个应用</string>
+    <string name="sound_scope_bottom_bar">仅底栏</string>
+    <string name="sound_source_title">音效来源</string>
+    <string name="sound_source_local">自定义文件</string>
+    <string name="sound_source_preset">内置预设</string>
+    <string name="sound_preset_title">内置音效</string>
+    <string name="sound_select">选择音效文件</string>
+    <string name="sound_selected">已选择音效</string>
+    <string name="sound_clear">移除自定义音效</string>
+    <string name="sound_clear_confirm">确定要移除自定义音效并恢复内置预设吗？</string>
+    <string name="sound_startup_enabled">开机音效</string>
+    <string name="sound_startup_enabled_summary">打开应用时播放提示音</string>
+    <string name="sound_saved">音效已应用</string>
+    <string name="sound_save_failed">音效应用失败</string>
+    <string name="sound_cleared">已移除自定义音效</string>
+
+    <!-- 视频背景 -->
+    <string name="video_background">视频背景</string>
+    <string name="video_background_summary">用循环播放的视频替代静态壁纸</string>
+    <string name="video_background_select">选择背景视频</string>
+    <string name="video_background_volume">视频音量</string>
+    <string name="video_background_clear">清除背景视频</string>
+    <string name="video_background_clear_confirm">确定要清除背景视频吗？</string>
+    <string name="video_background_cleared">已移除背景视频</string>
+
+    <!-- 首页卡片壁纸（焦点 / 仪表盘布局） -->
+    <string name="focus_card_section_title">首页主卡片壁纸</string>
+    <string name="focus_card_background">启用主卡片壁纸</string>
+    <string name="focus_card_background_summary">在首页主状态卡片后显示壁纸（圆形 / 焦点 / 网格布局）</string>
+    <string name="dashboard_card_section_title">仪表盘布局磁贴壁纸</string>
+    <string name="dashboard_card_background">启用磁贴壁纸</string>
+    <string name="dashboard_card_background_summary">在仪表盘布局的磁贴后显示壁纸</string>
+    <string name="dashboard_tile_working">工作磁贴</string>
+    <string name="dashboard_tile_selinux">SELinux 磁贴</string>
+    <string name="dashboard_tile_zygisk">Zygisk 磁贴</string>
+    <string name="dashboard_tile_seccomp">Seccomp 磁贴</string>
+    <string name="card_dual_dim_title">启用双切暗色适配</string>
+    <string name="card_dual_dim_desc">为浅色和深色主题分别调整卡片壁纸暗度</string>
+    <string name="card_dim">卡片壁纸暗度</string>
+    <string name="card_day_dim">白天模式卡片壁纸暗度</string>
+    <string name="card_night_dim">夜间模式卡片壁纸暗度</string>
+    <string name="card_opacity">卡片壁纸不透明度</string>
+    <string name="card_dual_opacity_title">启用双切透明度</string>
+    <string name="card_dual_opacity_desc">为浅色和深色主题分别调整卡片壁纸透明度</string>
+    <string name="card_day_opacity">白天模式卡片壁纸不透明度</string>
+    <string name="card_night_opacity">夜间模式卡片壁纸不透明度</string>
+
+    <!-- 模块卡片横幅 -->
+    <string name="banner_section_title">模块卡片横幅</string>
+    <string name="banner_enabled">启用横幅</string>
+    <string name="banner_enabled_summary">在模块卡片顶部显示横幅图片</string>
+    <string name="banner_folk_enabled">使用模块自带横幅</string>
+    <string name="banner_folk_enabled_summary">从模块自身的 banner 属性或文件读取</string>
+    <string name="banner_api_mode">API 横幅模式</string>
+    <string name="banner_api_mode_summary">从随机图接口或本地目录取横幅</string>
+    <string name="banner_api_source">横幅来源</string>
+    <string name="banner_api_source_not_configured">未配置</string>
+    <string name="banner_api_source_configured_url">已配置：API 地址</string>
+    <string name="banner_api_source_configured_dir">已配置：本地目录</string>
+    <string name="banner_api_source_title">设置横幅来源</string>
+    <string name="banner_api_source_help">填随机图接口地址，或以 / 开头的绝对目录路径</string>
+    <string name="banner_api_source_hint">来源地址或目录</string>
+    <string name="banner_api_source_invalid">请填写来源</string>
+    <string name="banner_cache_clear">清除横幅缓存</string>
+    <string name="banner_cache_cleared">横幅缓存已清除</string>
+    <string name="banner_custom_opacity">自定义横幅透明度</string>
+    <string name="banner_custom_opacity_summary">覆盖自动推算的横幅不透明度</string>
+    <string name="banner_opacity">横幅不透明度</string>
+
+    <!-- 主题导出 / 导入 / 重置 -->
+    <string name="settings_appearance_theme">主题设置</string>
+    <string name="settings_save_theme">保存主题</string>
+    <string name="settings_save_theme_summary">将当前外观导出为主题文件</string>
+    <string name="settings_import_theme">导入主题</string>
+    <string name="settings_import_theme_summary">应用之前导出的主题文件</string>
+    <string name="settings_reset_theme">恢复主题</string>
+    <string name="settings_reset_theme_summary">恢复默认外观并清除背景</string>
+    <string name="settings_reset_theme_confirm">确定要将所有主题设置恢复为默认值吗？这将清除自定义背景、字体、音乐和音效。</string>
+    <string name="settings_theme_saved">主题已保存</string>
+    <string name="settings_theme_save_failed">保存主题失败</string>
+    <string name="settings_theme_imported">主题已导入</string>
+    <string name="settings_theme_import_failed">导入主题失败</string>
+    <string name="settings_theme_reset">主题已恢复默认</string>
+    <string name="settings_theme_reset_failed">恢复主题失败</string>
+    <string name="theme_export_title">保存主题</string>
+    <string name="theme_export_details">填写主题信息</string>
+    <string name="theme_export_action">保存</string>
+    <string name="theme_field_name">主题名称</string>
+    <string name="theme_field_author">作者</string>
+    <string name="theme_field_description">描述（可选）</string>
+    <string name="theme_default_name">我的主题</string>
+    <string name="theme_default_author">未知</string>
+    <string name="theme_import_title">导入主题</string>
+    <string name="theme_import_confirm">要应用此主题吗？</string>
+    <string name="theme_import_action">导入</string>
+    <string name="theme_import_invalid">不是有效的主题文件</string>
+
+    <!-- 首页布局（此前 zh 缺失，界面会回退成英文） -->
+    <string name="home_layout">首页布局</string>
+    <string name="home_layout_circle">圆形</string>
+    <string name="home_layout_default">列表</string>
+    <string name="home_layout_focus">焦点</string>
+    <string name="home_layout_dashboard">仪表盘</string>
+    <string name="home_layout_grid">网格</string>
 </resources>

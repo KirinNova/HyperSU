@@ -13,6 +13,7 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import android.graphics.BitmapFactory
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
@@ -22,6 +23,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -81,12 +83,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -115,12 +122,25 @@ import com.sukisu.ultra.ui.component.folk.FolkScaffold
 import com.sukisu.ultra.ui.component.folk.FolkStateView
 import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
 import com.sukisu.ultra.ui.component.statustag.StatusTag
+import com.sukisu.ultra.ui.theme.BackgroundConfig
 import com.sukisu.ultra.ui.theme.LocalModuleDescriptionMaxLines
+import com.sukisu.ultra.ui.theme.bannerFadeColor
 import com.sukisu.ultra.ui.theme.tokens.FolkShape
 import com.sukisu.ultra.ui.theme.tokens.FolkType
+import com.sukisu.ultra.ui.util.ModuleBanner
 import com.sukisu.ultra.ui.util.reboot
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+
+/**
+ * Whether the module repository entry point is offered.
+ *
+ * Off for now: the repository it opens is backed by modules.kernelsu.org, which is offline and
+ * answers 404 for both the list and the per-module detail pages, so the screen could only show a
+ * fetch error. The route, view model and screens are all still in place, so this is the only
+ * switch to flip once a working index exists.
+ */
+private val SHOW_MODULE_REPO = false
 
 /**
  * The Module tab in the FolkPatch design.
@@ -144,10 +164,34 @@ internal fun ModulePagerFolk(
     val context = LocalContext.current
     val resource = LocalResources.current
 
+    // Null when the repository entry is hidden, so SearchAppBar draws no leading icon. Held in a
+    // typed local rather than inlined: the ternary would otherwise have to infer a composable
+    // lambda type against null.
+    val repoEntryAction: (@Composable () -> Unit)? = if (SHOW_MODULE_REPO) {
+        {
+            IconButton(onClick = actions.onOpenRepo) {
+                Icon(
+                    imageVector = Icons.Outlined.Cloud,
+                    contentDescription = stringResource(R.string.module_repos),
+                )
+            }
+        }
+    } else {
+        null
+    }
+
     val pullToRefreshState = rememberPullToRefreshState()
     val listState = rememberLazyListState()
     val searchListState = rememberLazyListState()
     val refreshTick = remember { mutableIntStateOf(0) }
+
+    // The zip the user picked, held back until they confirm. Reading module.prop is async, so
+    // the dialog is only shown once the metadata has arrived; a zip without one still reaches
+    // the dialog, with null info. The coroutine scope used to read it is the one declared
+    // further down for the module events.
+    var pendingInstall by remember { mutableStateOf<List<Uri>?>(null) }
+    var pendingInfo by remember { mutableStateOf<ModuleZipInfo?>(null) }
+    var pendingInfoLoading by remember { mutableStateOf(false) }
 
     val threshold = with(LocalDensity.current) { 100.dp.toPx() }
     val fabExpanded by remember {
@@ -262,14 +306,7 @@ internal fun ModulePagerFolk(
                 searchText = uiState.searchStatus.searchText,
                 onSearchTextChange = actions.onSearchTextChange,
                 onClearClick = actions.onClearSearch,
-                leadingActions = {
-                    IconButton(onClick = actions.onOpenRepo) {
-                        Icon(
-                            imageVector = Icons.Outlined.Cloud,
-                            contentDescription = stringResource(R.string.module_repos),
-                        )
-                    }
-                },
+                leadingActions = repoEntryAction,
                 dropdownContent = {
                     ModuleSortMenu(uiState, actions, haptic)
                 },
@@ -294,7 +331,22 @@ internal fun ModulePagerFolk(
                     } else {
                         data.data?.let { uris.add(it) }
                     }
-                    actions.onOpenFlash(uris)
+                    if (uris.isEmpty()) return@rememberLauncherForActivityResult
+
+                    // Hold the selection and read its metadata; the flash starts only from the
+                    // dialog's confirm. The first archive describes the selection - a multi-pick
+                    // is still one flash, and its other entries are reported by count.
+                    pendingInstall = uris
+                    pendingInfo = null
+                    pendingInfoLoading = true
+                    scope.launch {
+                        val info = ModuleZipReader.read(context, uris.first())
+                        // The user may have dismissed or picked again while this was reading.
+                        if (pendingInstall === uris) {
+                            pendingInfo = info
+                            pendingInfoLoading = false
+                        }
+                    }
                 }
 
                 SmallExtendedFloatingActionButton(
@@ -400,6 +452,26 @@ internal fun ModulePagerFolk(
             showShortcutDialog.value = false
         },
     )
+
+    // Shown only once the metadata has been read, so the dialog never appears and then
+    // reshuffles its rows as the values arrive.
+    val install = pendingInstall
+    if (install != null && !pendingInfoLoading) {
+        ModuleInstallConfirmDialog(
+            info = pendingInfo,
+            fileName = install.first().lastPathSegment?.substringAfterLast('/').orEmpty(),
+            fileCount = install.size,
+            onDismiss = {
+                pendingInstall = null
+                pendingInfo = null
+            },
+            onConfirm = {
+                pendingInstall = null
+                pendingInfo = null
+                actions.onOpenFlash(install)
+            },
+        )
+    }
 }
 
 @Composable
@@ -561,6 +633,8 @@ private fun ModuleItem(
         shape = FolkShape.Corner20,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
+        Box {
+            ModuleBannerLayer(module)
         Column(modifier = Modifier.padding(16.dp, 14.dp, 16.dp, 10.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -701,7 +775,71 @@ private fun ModuleItem(
                 )
             }
         }
+        }
     }
+}
+
+/**
+ * 模块卡片的横幅背景层，移植自 FolkPatch `APMModuleItem` 的横幅渲染。
+ *
+ * 画在卡片内容之下、卡片底色之上，用 `matchParentSize` 跟随卡片实际尺寸（卡片是
+ * wrap-content，`fillMaxSize` 会把它压成 0）。刻意**不动 Surface 颜色和任何文字颜色**：
+ * 横幅按 [BackgroundConfig.getEffectiveBannerOpacity] 只有 0.18 左右的不透明度，是装饰层，
+ * 加底部渐隐后完全压得住文字。
+ */
+@Composable
+private fun BoxScope.ModuleBannerLayer(module: Module) {
+    if (!BackgroundConfig.isBannerEnabled) return
+
+    val context = LocalContext.current
+    val opacity = BackgroundConfig.getEffectiveBannerOpacity(
+        isWallpaperMode = BackgroundConfig.isCustomBackgroundEnabled,
+        wallpaperOpacity = BackgroundConfig.customBackgroundOpacity,
+    )
+    // 任何一个影响解析顺序的配置变化都要重取，否则切了 API 源还会继续显示旧源的图。
+    val configKey = listOf(
+        BackgroundConfig.isBannerEnabled,
+        BackgroundConfig.isFolkBannerEnabled,
+        BackgroundConfig.isBannerApiModeEnabled,
+        BackgroundConfig.bannerApiSource,
+    )
+
+    val bytes by produceState(
+        initialValue = ModuleBanner.loadSync(context, module.id),
+        key1 = module.id,
+        key2 = configKey,
+    ) {
+        value = ModuleBanner.load(context, module.id, reload = true)
+    }
+
+    // BitmapPainter wants a Compose ImageBitmap; BitmapFactory hands back a platform Bitmap,
+    // so it has to be wrapped with asImageBitmap().
+    val bitmap = remember(bytes) {
+        bytes?.let {
+            runCatching { BitmapFactory.decodeByteArray(it, 0, it.size) }
+                .getOrNull()
+                ?.asImageBitmap()
+        }
+    } ?: return
+
+    Image(
+        painter = BitmapPainter(bitmap),
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .matchParentSize()
+            .alpha(opacity),
+    )
+    // 底部渐隐到卡片底色，保证压在图上的文字仍读得清。
+    Box(
+        modifier = Modifier
+            .matchParentSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color.Transparent, bannerFadeColor()),
+                ),
+            ),
+    )
 }
 
 /**

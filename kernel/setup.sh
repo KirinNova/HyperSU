@@ -39,15 +39,22 @@ perform_cleanup() {
 # Sets up or update KernelSU environment
 setup_kernelsu() {
     echo "[+] Setting up KernelSU..."
-    test -d "$GKI_ROOT/KernelSU" || git clone https://github.com/KirinNova/SukiSU-Ultra KernelSU && echo "[+] Repository cloned."
+    test -d "$GKI_ROOT/KernelSU" || git clone https://github.com/KirinNova/HyperSU KernelSU && echo "[+] Repository cloned."
     cd "$GKI_ROOT/KernelSU"
     git stash && echo "[-] Stashed current changes."
     if [ "$(git status | grep -Po 'v\d+(\.\d+)*' | head -n1)" ]; then
         git checkout main && echo "[-] Switched to main branch."
     fi
     git pull && echo "[+] Repository updated."
+    # No argument means main, not the newest tag.
+    #
+    # Upstream checks out the latest tag here, which is reasonable when tags track released
+    # work. The only tag in this repository, v4.2.0, predates the work that made the kernel
+    # report HyperSU rather than SukiSU, so checking it out silently downgrades the sources:
+    # the build then prints "SukiSU-Ultra version: ..." and carries SukiSU's manager
+    # certificate, which is why the manager is not recognised.
     if [ -z "${1-}" ]; then
-        git checkout "$(git describe --abbrev=0 --tags)" && echo "[-] Checked out latest tag."
+        git checkout main && echo "[-] Checked out main."
     else
         git checkout "$1" && echo "[-] Checked out $1." || echo "[-] Checkout default branch"
     fi

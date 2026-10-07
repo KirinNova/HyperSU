@@ -14,29 +14,27 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.rememberTopAppBarState
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sukisu.ultra.ui.navigation.LocalBottomBarVisible
 import com.sukisu.ultra.ui.navigation.LocalIsFloatingNavMode
-import com.sukisu.ultra.ui.theme.backgroundWallpaper
-import com.sukisu.ultra.ui.theme.glass.glassAmbient
+import com.sukisu.ultra.ui.navigation.LocalIsRootPage
 import com.sukisu.ultra.ui.theme.tokens.FolkTheme
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.Alignment
@@ -71,6 +69,7 @@ fun FolkScaffold(
     onBack: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
     snackbarHostState: SnackbarHostState? = null,
+    titleContent: (@Composable () -> Unit)? = null,
     /** Optional supporting line under a [FolkTitleStyle.Flexible] title. */
     subtitle: String? = null,
     floatingActionButton: @Composable () -> Unit = {},
@@ -93,38 +92,9 @@ fun FolkScaffold(
     addBottomClearance: Boolean = true,
     content: @Composable (PaddingValues) -> Unit,
 ) {
-    val scrollBehavior = MiuixScrollBehavior(rememberTopAppBarState())
-    // The tint flips between clear and the elevated tone as the content scrolls
-    // under the bar. Both ends keep one RGB so the animation never interpolates
-    // through black and leaves a grey scrim over the wallpaper.
-    val elevatedBarColor = folkGroupColor()
-    val scrolled by remember(scrollBehavior) {
-        derivedStateOf { scrollBehavior.state.contentOffset < -4f }
-    }
-    val barColor by animateColorAsState(
-        targetValue = if (FolkTheme.palette.onCustomBackground) {
-            Color.Transparent
-        } else if (scrolled) {
-            elevatedBarColor
-        } else {
-            elevatedBarColor.copy(alpha = 0f)
-        },
-        label = "folkBarColor",
-    )
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        // The page background, full bleed: behind the bar (transparent over a picture,
-        // so the wallpaper reaches the status bar) and above the still-composed entry
-        // underneath that a clear container would otherwise show through. Outside
-        // wallpaper mode this wash is an opaque background of its own, so the
-        // container below can stay clear in both modes.
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .backgroundWallpaper()
-                .glassAmbient(),
-        )
-        Scaffold(
+    Scaffold(
         // Only the collapsible built-in bar consumes scroll; the others need no
         // connection.
         modifier = if (topBar == null && (titleStyle == FolkTitleStyle.Large || titleStyle == FolkTitleStyle.Flexible)) {
@@ -137,27 +107,55 @@ fun FolkScaffold(
             if (custom != null) {
                 custom()
             } else {
-                // Miuix replaces the Material bars: the Material large/flexible
-                // bar paints its own default surface over the title region, which
-                // read as a white band across the wallpaper on every content page.
                 when (titleStyle) {
-                    FolkTitleStyle.Large, FolkTitleStyle.Flexible -> TopAppBar(
-                        title = title,
-                        largeTitle = title,
-                        subtitle = subtitle.orEmpty(),
-                        color = barColor,
-                        titleColor = MaterialTheme.colorScheme.onBackground,
-                        largeTitleColor = MaterialTheme.colorScheme.onBackground,
-                        subtitleColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    FolkTitleStyle.Large -> LargeTopAppBar(
+                        title = {
+                            // A caller-supplied title (e.g. a search field)
+                            // replaces the plain label entirely.
+                            if (titleContent != null) {
+                                titleContent()
+                            } else {
+                                Text(text = title, fontWeight = FontWeight.Bold)
+                            }
+                        },
+                        colors = folkTopAppBarColors(),
                         navigationIcon = { FolkBackButton(onBack) },
                         actions = actions,
                         scrollBehavior = scrollBehavior,
                     )
 
-                    FolkTitleStyle.Inline -> SmallTopAppBar(
-                        title = title,
-                        color = barColor,
-                        titleColor = MaterialTheme.colorScheme.onBackground,
+                    FolkTitleStyle.Flexible -> LargeFlexibleTopAppBar(
+                        title = {
+                            if (titleContent != null) {
+                                titleContent()
+                            } else {
+                                Text(text = title, fontWeight = FontWeight.Bold)
+                            }
+                        },
+                        subtitle = if (subtitle != null) {
+                            { Text(text = subtitle) }
+                        } else {
+                            null
+                        },
+                        colors = folkTopAppBarColors(),
+                        navigationIcon = { FolkBackButton(onBack) },
+                        actions = actions,
+                        scrollBehavior = scrollBehavior,
+                    )
+
+                    FolkTitleStyle.Inline -> TopAppBar(
+                        title = {
+                            if (titleContent != null) {
+                                titleContent()
+                            } else {
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
+                        },
+                        colors = folkTopAppBarColors(),
                         navigationIcon = { FolkBackButton(onBack) },
                         actions = actions,
                     )
@@ -166,11 +164,19 @@ fun FolkScaffold(
                 }
             }
         },
-        // The full-bleed box above paints the page - wallpaper or wash - and covers
-        // the still-composed entry underneath, so the container stays clear and lets
-        // that box show. contentColor stays pinned: a transparent container derives
-        // Unspecified, which would drop uncoloured text to black in dark mode.
-        containerColor = Color.Transparent,
+        // Paint the page background only on a pushed page. The nav host keeps the previous entry
+        // composed for its card transition and swipe-back gesture, so a page that does not paint
+        // its own background lets the screen underneath show through.
+        //
+        // A root tab page is the opposite case: it sits directly on the wallpaper, so an opaque
+        // container here would hide the image the user chose. In wallpaper mode
+        // colorScheme.background is already transparent for exactly that reason, and the opaque
+        // pageBackground exists only for the pushed case.
+        containerColor = if (LocalIsRootPage.current) {
+            MaterialTheme.colorScheme.background
+        } else {
+            FolkTheme.palette.pageBackground
+        },
         // Deriving the content colour from a transparent container yields
         // Unspecified, which drops any text that does not set its own colour to
         // black - unreadable in dark mode. Pin it to the background's content
@@ -194,21 +200,18 @@ fun FolkScaffold(
         // Keep the content viewport below the bar instead of only offsetting the
         // first item. With a translucent bar in wallpaper mode, content that
         // scrolls underneath would otherwise show through the title.
-        // The backdrop is recorded once at the app root, so plates here sample a
-        // layer they are not drawn into - the rule that stops a plate reading back
-        // its own output - without every screen recording the same picture again.
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = inner.calculateTopPadding()),
+            contentAlignment = Alignment.TopCenter,
         ) {
             // Cap the content column on large screens so rows do not stretch
             // across a tablet or desktop window; on a phone this is a no-op.
             Box(
                 modifier = Modifier
                     .widthIn(max = FolkSettingsDimens.ContentMaxWidth)
-                    .fillMaxSize()
-                    .align(Alignment.TopCenter),
+                    .fillMaxSize(),
             ) {
                 content(
                     PaddingValues(
@@ -220,7 +223,6 @@ fun FolkScaffold(
                 )
             }
         }
-    }
     }
 }
 

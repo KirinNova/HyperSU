@@ -79,7 +79,7 @@ import kotlin.math.max
 import kotlin.math.min
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.component.KeyPointSlider
-import com.sukisu.ultra.ui.theme.SukiSUTheme
+import com.sukisu.ultra.ui.theme.HyperSUTheme
 
 class BackgroundCropActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,7 +101,7 @@ class BackgroundCropActivity : ComponentActivity() {
         val sourceImageAspectRatio = resolveImageAspectRatio(inputUri)
 
         setContent {
-            SukiSUTheme {
+            HyperSUTheme {
                 BackgroundCropScreen(
                     inputUri = inputUri,
                     outputUri = outputUri,

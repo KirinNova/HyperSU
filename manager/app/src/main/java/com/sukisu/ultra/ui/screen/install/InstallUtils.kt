@@ -34,6 +34,11 @@ sealed class InstallMethod : Parcelable {
             get() = R.string.install_inactive_slot
     }
 
+    /**
+     * An AnyKernel3 archive this app fetched, and one the user picked, are the same flow over
+     * the same kind of file. They stay separate classes so the install-method list can tell
+     * which row was chosen; [isKernelArchive] is how the shared steps accept either.
+     */
     data class HorizonKernel(
         val uri: Uri? = null,
         val slot: String? = null,
@@ -41,10 +46,56 @@ sealed class InstallMethod : Parcelable {
         override val summary: String? = null
     ) : InstallMethod()
 
+    data class AnyKernel3(
+        val uri: Uri? = null,
+        val slot: String? = null,
+        @get:StringRes override val label: Int = R.string.anykernel3_flash,
+        override val summary: String? = null
+    ) : InstallMethod()
+
     abstract val label: Int
 
     @IgnoredOnParcel
     open val summary: String? = null
+}
+
+/*
+ * These three are declared on the nullable receiver so a call site holding an
+ * `InstallMethod?` needs no `?.` or `!!`. A null method simply is not an archive.
+ */
+
+/** The uri of an archive row, or null for the methods that carry no archive. */
+val InstallMethod?.archiveUri: Uri?
+    get() = when (this) {
+        is InstallMethod.HorizonKernel -> uri
+        is InstallMethod.AnyKernel3 -> uri
+        else -> null
+    }
+
+/** The slot of an archive row, or null when none is recorded or not applicable. */
+val InstallMethod?.archiveSlot: String?
+    get() = when (this) {
+        is InstallMethod.HorizonKernel -> slot
+        is InstallMethod.AnyKernel3 -> slot
+        else -> null
+    }
+
+/** True for the two archive rows, which share the slot, KPM and confirmation steps. */
+val InstallMethod?.isKernelArchive: Boolean
+    get() = this is InstallMethod.HorizonKernel || this is InstallMethod.AnyKernel3
+
+/**
+ * The same archive with a slot recorded, keeping its own type.
+ *
+ * The slot dialog hands back only a slot string, so the archive has to be rebuilt. Rebuilding
+ * it as a fixed type is what made the install list lose its selection mark: the row the user
+ * picked was an AnyKernel3, and the rebuilt value was a HorizonKernel, so the two no longer
+ * matched. Copying keeps whichever type it was.
+ */
+fun InstallMethod.withArchiveSlot(slot: String?): InstallMethod = when (this) {
+    is InstallMethod.HorizonKernel -> copy(slot = slot)
+    is InstallMethod.AnyKernel3 -> copy(slot = slot)
+    else -> this
 }
 
 fun isKoFile(context: Context, uri: Uri): Boolean {

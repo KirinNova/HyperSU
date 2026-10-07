@@ -35,7 +35,6 @@ class SettingsViewModel(
 
     fun refresh() {
         viewModelScope.launch {
-            val checkUpdate = repo.checkUpdate
             val checkModuleUpdate = repo.checkModuleUpdate
             val alternativeIcon = repo.alternativeIcon
             val themeMode = repo.themeMode
@@ -77,7 +76,6 @@ class SettingsViewModel(
             _uiState.update {
                 it.copy(
                     appLanguage = appLanguage,
-                    checkUpdate = checkUpdate,
                     checkModuleUpdate = checkModuleUpdate,
                     alternativeIcon = alternativeIcon,
                     themeMode = themeMode,
@@ -113,12 +111,6 @@ class SettingsViewModel(
             }
         }
     }
-
-    fun setCheckUpdate(enabled: Boolean) {
-        repo.checkUpdate = enabled
-        _uiState.update { it.copy(checkUpdate = enabled) }
-    }
-
 
     fun setLanguage(context: Context, tag: String) {
         if (repo.appLanguage == tag) return

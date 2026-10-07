@@ -21,6 +21,8 @@ lateinit var ksuApp: KernelSUApplication
 class KernelSUApplication : Application(), ViewModelStoreOwner {
 
     companion object {
+        private const val TAG = "KernelSUApplication"
+
         fun setEnableOnBackInvokedCallback(appInfo: ApplicationInfo, enable: Boolean) {
             runCatching {
                 val applicationInfoClass = ApplicationInfo::class.java
@@ -49,6 +51,37 @@ class KernelSUApplication : Application(), ViewModelStoreOwner {
             return
         }
 
+        // Appearance configuration is read here because the first frame needs it. Each load is
+        // isolated: a preference that cannot be read (a corrupt or wrongly-typed entry left by an
+        // older build, a truncated file) must cost the user a theme, never the app. Without this
+        // the exception escaped onCreate, and since the failure happens before any UI exists there
+        // was no way to recover from inside the app.
+        runCatching {
+            // Wallpaper settings must be in memory before the first frame decides whether the
+            // page background is transparent, so read them once here rather than in composition.
+            com.sukisu.ultra.ui.theme.BackgroundConfig.load(this)
+        }.onFailure { android.util.Log.e(TAG, "BackgroundConfig.load failed", it) }
+
+        runCatching {
+            // Same for the typeface: the opening frame already needs the right font family.
+            com.sukisu.ultra.ui.theme.FontConfig.load(this)
+        }.onFailure { android.util.Log.e(TAG, "FontConfig.load failed", it) }
+
+        runCatching {
+            // Background music: read its preferences first, then let the lifecycle callbacks own
+            // playback so no player starts before the config is in memory.
+            com.sukisu.ultra.ui.theme.MusicConfig.load(this)
+        }.onFailure { android.util.Log.e(TAG, "MusicConfig.load failed", it) }
+
+        runCatching {
+            com.sukisu.ultra.ui.util.MusicManager.init(this)
+        }.onFailure { android.util.Log.e(TAG, "MusicManager.init failed", it) }
+
+        runCatching {
+            // Click / startup sounds are read by SoundEffectManager on demand.
+            com.sukisu.ultra.ui.theme.SoundEffectConfig.load(this)
+        }.onFailure { android.util.Log.e(TAG, "SoundEffectConfig.load failed", it) }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             val enable = SettingsRepositoryImpl().enablePredictiveBack
             HiddenApiBypass.addHiddenApiExemptions("Landroid/content/pm/ApplicationInfo;->setEnableOnBackInvokedCallback")
@@ -71,7 +104,7 @@ class KernelSUApplication : Application(), ViewModelStoreOwner {
                 .addInterceptor { block ->
                     block.proceed(
                         block.request().newBuilder()
-                            .header("User-Agent", "SukiSU/${BuildConfig.VERSION_CODE}")
+                            .header("User-Agent", "HyperSU/${BuildConfig.VERSION_CODE}")
                             .header("Accept-Language", Locale.getDefault().toLanguageTag()).build()
                     )
                 }.build()

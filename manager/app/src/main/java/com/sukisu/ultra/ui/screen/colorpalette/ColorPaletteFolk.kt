@@ -51,6 +51,7 @@ import androidx.compose.material.icons.rounded.Swipe
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -73,6 +74,15 @@ import com.materialkolor.dynamiccolor.ColorSpec
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.navigation.useNavigationRail
 import com.sukisu.ultra.ui.component.folk.FolkButtonDefaults
+import com.sukisu.ultra.ui.component.dialog.rememberLoadingDialog
+import com.sukisu.ultra.ui.screen.settings.AppearanceBackgroundSection
+import com.sukisu.ultra.ui.screen.settings.AppearanceBannerSection
+import com.sukisu.ultra.ui.screen.settings.AppearanceDashboardCardSection
+import com.sukisu.ultra.ui.screen.settings.AppearanceFocusCardSection
+import com.sukisu.ultra.ui.screen.settings.AppearanceFontSection
+import com.sukisu.ultra.ui.screen.settings.AppearanceThemeSection
+import com.sukisu.ultra.ui.screen.settings.MultimediaMusicSection
+import com.sukisu.ultra.ui.screen.settings.MultimediaSoundSection
 import com.sukisu.ultra.ui.component.folk.FolkSettingsDimens
 import com.sukisu.ultra.ui.component.folk.FolkChoicePreference
 import com.sukisu.ultra.ui.component.folk.FolkPreference
@@ -110,9 +120,13 @@ fun ColorPaletteScreenFolk(
         (currentColorMode.isSystem && isSystemInDarkTheme())
     val isAmoled = currentColorMode.isAmoled
 
+    val snackbarHost = remember { SnackbarHostState() }
+    val loadingDialog = rememberLoadingDialog()
+
     FolkSettingsScaffold(
         title = stringResource(R.string.settings_theme),
         onBack = actions.onBack,
+        snackbarHostState = snackbarHost,
     ) {
         item {
             Column(
@@ -357,6 +371,62 @@ fun ColorPaletteScreenFolk(
                     )
                 }
             }
+        }
+
+        item {
+            AppearanceBackgroundSection(
+                snackBarHost = snackbarHost,
+                loadingDialog = loadingDialog,
+            )
+        }
+
+        item {
+            AppearanceFocusCardSection(
+                snackBarHost = snackbarHost,
+                loadingDialog = loadingDialog,
+            )
+        }
+
+        item {
+            AppearanceDashboardCardSection(
+                snackBarHost = snackbarHost,
+                loadingDialog = loadingDialog,
+            )
+        }
+
+        item {
+            AppearanceBannerSection(
+                snackBarHost = snackbarHost,
+                loadingDialog = loadingDialog,
+            )
+        }
+
+        item {
+            AppearanceFontSection(
+                snackBarHost = snackbarHost,
+                loadingDialog = loadingDialog,
+            )
+        }
+
+        item {
+            MultimediaMusicSection(
+                snackBarHost = snackbarHost,
+                loadingDialog = loadingDialog,
+            )
+        }
+
+        item {
+            MultimediaSoundSection(
+                snackBarHost = snackbarHost,
+                loadingDialog = loadingDialog,
+            )
+        }
+
+        item {
+            AppearanceThemeSection(
+                snackBarHost = snackbarHost,
+                loadingDialog = loadingDialog,
+            )
         }
 
         item {

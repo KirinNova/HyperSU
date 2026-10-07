@@ -2,7 +2,6 @@ package com.sukisu.ultra.ui.screen.install
 
 import androidx.compose.runtime.Immutable
 import com.sukisu.ultra.ui.kernelFlash.AnyKernel3State
-import com.sukisu.ultra.ui.kernelFlash.KpmPatchOption
 import com.sukisu.ultra.ui.util.LkmSelection
 
 @Immutable
@@ -26,9 +25,7 @@ internal data class InstallUiState(
     val spoofVersion: String,
     // AnyKernel3 相关状态
     val anyKernel3State: AnyKernel3State?,
-    val kpmPatchOption: KpmPatchOption,
     val showSlotSelectionDialog: Boolean,
-    val showKpmPatchDialog: Boolean,
 )
 
 @Immutable
@@ -47,7 +44,6 @@ internal data class InstallScreenActions(
     val onSelectForceBackup: (Boolean) -> Unit,
     val onSpoofReleaseChange: (String) -> Unit,
     val onSpoofVersionChange: (String) -> Unit,
-    val onHorizonKernelSelected: (InstallMethod.HorizonKernel) -> Unit = {},
-    val onReopenSlotDialog: (InstallMethod.HorizonKernel) -> Unit = {},
-    val onReopenKpmDialog: (InstallMethod.HorizonKernel) -> Unit = {},
+    val onHorizonKernelSelected: (InstallMethod) -> Unit = {},
+    val onReopenSlotDialog: (InstallMethod) -> Unit = {},
 )

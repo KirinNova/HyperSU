@@ -12,12 +12,12 @@ import com.sukisu.ultra.ui.navigation3.LocalNavigator
 fun AboutScreen() {
     val navigator = LocalNavigator.current
     val uriHandler = LocalUriHandler.current
+    // Source code plus the project's QQ group; the Telegram channel the upstream string
+    // mentions is not part of this project.
     val htmlString = stringResource(
         id = R.string.about_source_code,
-        // This fork is the source the user is running, so the About link has to be
-        // this repository - pointing it upstream offered a download of a different app.
-        "<b><a href=\"https://github.com/kafuzhi/HyperSU\">GitHub</a></b>",
-        "<b><a href=\"https://t.me/SukiKSU\">Telegram</a></b>",
+        "<b><a href=\"https://github.com/KirinNova/HyperSU\">GitHub</a></b>",
+        "https://qun.qq.com/universal-share/share?ac=1&authKey=8hQdPwdedWVxmI7Oj12BDYlwHUIgehcpvzVycp3bd%2FNRg2zlRbtnJiaTPr%2FX0lNG&busi_data=eyJncm91cENvZGUiOiIxMTIxOTA4NjQxIiwidG9rZW4iOiJlbmVBSnBhWjNnWFRvUm5IbHNsK08vaDVndTBuTGc5Qy9Uazl5aW5nUi9ydXhDQUFzcmd6bVpkb0dUd1NDSVVrIiwidWluIjoiMjQxNTgzMTk0NiJ9&data=an4ho15SknABma67muFTwUOjtktp1ndORbPazI0j-BJaTsapc52ZYjEZpO3sAtz48dJeuiZjioJx7NlAaIqsiw&svctype=4&tempid=h5_group_info",
     )
     val state = AboutUiState(
         title = stringResource(R.string.about),

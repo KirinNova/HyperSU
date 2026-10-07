@@ -150,6 +150,7 @@ HyperSU, mükemmel açık kaynak projelerin omuzlarında yükselmektedir. Üst k
 
 - [SukiSU](https://github.com/SukiSU-Ultra/SukiSU-Ultra): Doğrudan üst kaynak / çatal temeli. SukiSU ekibine ve tüm katkıda bulunanlara özel teşekkürler.
 - [KernelSU](https://github.com/tiann/KernelSU): SukiSU\'nun üst kaynağı. tiann\'a ve tüm KernelSU katkıda bulunanlara özel teşekkürler.
+- [FolkPatch](https://github.com/LyraVoid/FolkPatch): Bu projenin yönetici UI'si FolkPatch'ten port edilmiştir. FolkPatch ekibinin harika UI/UX tasarımı için teşekkür ederiz. Özellikle LyraVoid'e ve tüm katkıda bulunanlara teşekkür ederiz.
 - [MKSU](https://github.com/5ec1cff/KernelSU): Kullanılan proje
 - [RKSU](https://github.com/rsuntk/KernelsU): GKI olmayan cihazlar için destek sağlayan proje
 - [susfs4ksu](https://gitlab.com/simonpunk/susfs4ksu): Kullanılan susfs dosya sistemi

@@ -15,7 +15,7 @@ import com.sukisu.ultra.R
 
 /**
  * Main-tab destinations of the bottom navigation, ported from FolkPatch
- * `ui/navigation/BottomBarDestination.kt` and mapped onto SukiSU's four
+ * `ui/navigation/BottomBarDestination.kt` and mapped onto HyperSU's four
  * pager tabs (Home / SuperUser / Module / Settings).
  *
  * [pageIndex] is the tab index inside the main HorizontalPager.

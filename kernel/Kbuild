@@ -15,6 +15,9 @@ kernelsu-objs += hook/arm64/syscall_hook.o
 else ifeq ($(CONFIG_X86_64),y)
 kernelsu-objs += hook/x86_64/patch_memory.o
 kernelsu-objs += hook/x86_64/syscall_hook.o
+else ifeq ($(CONFIG_RISCV),y)
+kernelsu-objs += hook/riscv64/patch_memory.o
+kernelsu-objs += hook/riscv64/syscall_hook.o
 endif
 
 kernelsu-objs += infra/file_wrapper.o
@@ -99,8 +102,8 @@ obj-$(CONFIG_KSU) += kernelsu.o
 
 MDIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
-REPO_OWNER  := SukiSU-Ultra
-REPO_NAME   := SukiSU-Ultra
+REPO_OWNER  := KirinNova
+REPO_NAME   := HyperSU
 REPO_BRANCH := main
 
 VERSION_BASE    := 40000
@@ -131,12 +134,20 @@ $(info -- $(REPO_NAME) version: $(KSU_VERSION) [$(KSU_VERSION_FULL)])
 ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
 ccflags-y += -DKSU_VERSION_FULL=\"$(KSU_VERSION_FULL)\"
 
+# HyperSU's release signing certificate.
+#
+# These are the values for the key that signs the released manager, and they are what makes
+# the kernel recognise that manager. They used to hold SukiSU's certificate, so a kernel
+# built here accepted SukiSU's manager and rejected HyperSU's own.
+#
+# KSU_EXPECTED_SIZE2/HASH2 stay free for the pull-request build, whose throwaway keystore
+# differs every run and is passed in by the workflow.
 ifndef KSU_EXPECTED_SIZE
-KSU_EXPECTED_SIZE := 0x35c
+KSU_EXPECTED_SIZE := 0x378
 endif
 
 ifndef KSU_EXPECTED_HASH
-KSU_EXPECTED_HASH := 947ae944f3de4ed4c21a7e4f7953ecf351bfa2b36239da37a34111ad29993eef
+KSU_EXPECTED_HASH := aaef52d74182a668b257065f27a53ecb3669047826c5090ed8102af6a7c3bcc4
 endif
 
 ifdef KSU_MANAGER_PACKAGE

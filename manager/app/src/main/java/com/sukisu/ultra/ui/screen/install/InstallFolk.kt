@@ -44,9 +44,6 @@ import com.sukisu.ultra.ui.component.folk.FolkScaffold
 import com.sukisu.ultra.ui.component.folk.FolkSelectableRow
 import com.sukisu.ultra.ui.component.folk.FolkSettingsGroup
 import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
-import com.sukisu.ultra.ui.kernelFlash.KpmPatchOption
-import com.sukisu.ultra.ui.kernelFlash.KpmPatchSelectionDialog
-import com.sukisu.ultra.ui.kernelFlash.component.SlotSelectionDialog
 import com.sukisu.ultra.ui.util.LkmSelection
 import com.sukisu.ultra.ui.util.isAbDevice
 
@@ -55,7 +52,7 @@ import com.sukisu.ultra.ui.util.isAbDevice
  *
  * The install-method list, the partition picker, the optional LKM upload, the
  * force-backup checkbox, the collapsible advanced group (shell/ADB/spoof) and
- * the AnyKernel3 slot/KPM rows are all preserved with their original enablement
+ * the AnyKernel3 slot row is preserved with their original enablement
  * rules and callbacks. The inactive-slot option still asks for confirmation
  * first, because it flashes the other slot.
  */
@@ -68,22 +65,8 @@ internal fun InstallScreenFolk(
     val isAb by produceState(initialValue = false) { value = isAbDevice() }
     val isGki by produceState(initialValue = false) { value = getKernelVersion().isGKI() }
 
-    if (uiState.showSlotSelectionDialog && isAb) {
-        SlotSelectionDialog(
-            show = true,
-            onDismiss = { uiState.anyKernel3State?.onDismissSlotDialog() },
-            onSlotSelected = { slot -> uiState.anyKernel3State?.onSlotSelected(slot) },
-        )
-    }
-
-    if (uiState.showKpmPatchDialog) {
-        KpmPatchSelectionDialog(
-            show = true,
-            currentOption = uiState.kpmPatchOption,
-            onDismiss = { uiState.anyKernel3State?.onDismissPatchDialog() },
-            onOptionSelected = { option -> uiState.anyKernel3State?.onOptionSelected(option) },
-        )
-    }
+    // The slot, KPM and confirmation dialogs are drawn by InstallScreen, which owns the state
+    // they act on. Drawing them here as well stacked two copies of each on top of one another.
 
     FolkScaffold(
         title = stringResource(R.string.install),
@@ -137,7 +120,7 @@ internal fun InstallScreenFolk(
                     }
                 }
 
-                if (uiState.canForceBackup && uiState.installMethod !is InstallMethod.HorizonKernel) {
+                if (uiState.canForceBackup && !uiState.installMethod.isKernelArchive) {
                     item {
                         FolkCheckboxPreference(
                             title = stringResource(R.string.install_force_backup),
@@ -148,7 +131,7 @@ internal fun InstallScreenFolk(
                     }
                 }
 
-                if (isGki && uiState.installMethod !is InstallMethod.HorizonKernel) {
+                if (isGki && !uiState.installMethod.isKernelArchive) {
                     item {
                         FolkNavigationPreference(
                             title = stringResource(R.string.install_upload_lkm_file),
@@ -240,35 +223,26 @@ internal fun InstallScreenFolk(
                 }
             }
 
-            // AnyKernel3 slot and KPM rows.
-            (uiState.installMethod as? InstallMethod.HorizonKernel)?.let { method ->
+            // AnyKernel3 slot and KPM rows. Either archive row qualifies, so this guards on the
+            // shared predicate rather than one concrete class.
+            val archiveMethod = uiState.installMethod?.takeIf { it.isKernelArchive }
+            if (archiveMethod != null) {
                 FolkSettingsGroup {
-                    if (isAb && method.slot != null) {
+                    if (isAb && archiveMethod.archiveSlot != null) {
                         item {
                             FolkNavigationPreference(
                                 title = stringResource(
                                     R.string.selected_slot,
-                                    if (method.slot == "a") {
+                                    if (archiveMethod.archiveSlot == "a") {
                                         stringResource(R.string.slot_a)
                                     } else {
                                         stringResource(R.string.slot_b)
                                     },
                                 ),
                                 icon = Icons.Filled.SdStorage,
-                                onClick = { actions.onReopenSlotDialog(method) },
+                                onClick = { actions.onReopenSlotDialog(archiveMethod) },
                             )
                         }
-                    }
-                    item {
-                        FolkNavigationPreference(
-                            title = when (uiState.kpmPatchOption) {
-                                KpmPatchOption.PATCH_KPM -> stringResource(R.string.kpm_patch_enabled)
-                                KpmPatchOption.UNDO_PATCH_KPM -> stringResource(R.string.kpm_undo_patch_enabled)
-                                KpmPatchOption.FOLLOW_KERNEL -> stringResource(R.string.kpm_follow_kernel_file)
-                            },
-                            icon = Icons.Filled.Security,
-                            onClick = { actions.onReopenKpmDialog(method) },
-                        )
                     }
                 }
             }
@@ -305,6 +279,7 @@ private fun SelectInstallMethod(
         when (option) {
             is InstallMethod.SelectFile -> onSelectBootImage(option)
             is InstallMethod.HorizonKernel -> onSelectBootImage(option)
+            is InstallMethod.AnyKernel3 -> onSelectBootImage(option)
             is InstallMethod.DownloadFile -> onDownloadFile()
             is InstallMethod.DirectInstall -> onSelected(option)
             is InstallMethod.DirectInstallToInactiveSlot ->
