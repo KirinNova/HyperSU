@@ -93,6 +93,7 @@ Thanks also go to all other upstream projects and contributors mentioned in the 
 
 - [SukiSU](https://github.com/SukiSU-Ultra/SukiSU-Ultra): direct upstream / fork base. Special thanks to the SukiSU team and all contributors.
 - [KernelSU](https://github.com/tiann/KernelSU): upstream of SukiSU. Special thanks to tiann and all KernelSU contributors.
+- [FolkPatch](https://github.com/LyraVoid/FolkPatch): The manager UI is ported from this project. We thank the FolkPatch team for their excellent UI/UX design work. Special thanks to LyraVoid and all contributors.
 - [MKSU](https://github.com/5ec1cff/KernelSU): Magic Mount
 - [RKSU](https://github.com/rsuntk/KernelsU): support non-GKI
 - [susfs](https://gitlab.com/simonpunk/susfs4ksu): An addon root hiding kernel patches and userspace module for KernelSU.
