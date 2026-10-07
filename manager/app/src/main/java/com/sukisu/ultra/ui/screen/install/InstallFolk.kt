@@ -121,7 +121,7 @@ internal fun InstallScreenFolk(
                     }
                 }
 
-                if (uiState.canForceBackup && uiState.installMethod !is InstallMethod.KernelArchive) {
+                if (uiState.canForceBackup && !uiState.installMethod.isKernelArchive) {
                     item {
                         FolkCheckboxPreference(
                             title = stringResource(R.string.install_force_backup),
@@ -132,7 +132,7 @@ internal fun InstallScreenFolk(
                     }
                 }
 
-                if (isGki && uiState.installMethod !is InstallMethod.KernelArchive) {
+                if (isGki && !uiState.installMethod.isKernelArchive) {
                     item {
                         FolkNavigationPreference(
                             title = stringResource(R.string.install_upload_lkm_file),
@@ -224,23 +224,24 @@ internal fun InstallScreenFolk(
                 }
             }
 
-            // AnyKernel3 slot and KPM rows. Either archive type qualifies, so this matches the
-            // KernelArchive interface rather than one concrete class.
-            (uiState.installMethod as? InstallMethod.KernelArchive)?.let { method ->
+            // AnyKernel3 slot and KPM rows. Either archive row qualifies, so this guards on the
+            // shared predicate rather than one concrete class.
+            val archiveMethod = uiState.installMethod?.takeIf { it.isKernelArchive }
+            if (archiveMethod != null) {
                 FolkSettingsGroup {
-                    if (isAb && method.slot != null) {
+                    if (isAb && archiveMethod.archiveSlot != null) {
                         item {
                             FolkNavigationPreference(
                                 title = stringResource(
                                     R.string.selected_slot,
-                                    if (method.slot == "a") {
+                                    if (archiveMethod.archiveSlot == "a") {
                                         stringResource(R.string.slot_a)
                                     } else {
                                         stringResource(R.string.slot_b)
                                     },
                                 ),
                                 icon = Icons.Filled.SdStorage,
-                                onClick = { actions.onReopenSlotDialog(method) },
+                                onClick = { actions.onReopenSlotDialog(archiveMethod) },
                             )
                         }
                     }
@@ -252,7 +253,7 @@ internal fun InstallScreenFolk(
                                 KpmPatchOption.FOLLOW_KERNEL -> stringResource(R.string.kpm_follow_kernel_file)
                             },
                             icon = Icons.Filled.Security,
-                            onClick = { actions.onReopenKpmDialog(method) },
+                            onClick = { actions.onReopenKpmDialog(archiveMethod) },
                         )
                     }
                 }

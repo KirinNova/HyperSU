@@ -23,6 +23,8 @@ import com.sukisu.ultra.ui.component.folk.FolkAlertDialog
 import com.sukisu.ultra.ui.component.folk.FolkButtonDefaults
 import com.sukisu.ultra.ui.component.folk.folkGroupColor
 import com.sukisu.ultra.ui.screen.install.InstallMethod
+import com.sukisu.ultra.ui.screen.install.archiveSlot
+import com.sukisu.ultra.ui.screen.install.archiveUri
 import com.sukisu.ultra.ui.theme.tokens.FolkShape
 import com.sukisu.ultra.ui.theme.tokens.FolkType
 
@@ -35,12 +37,12 @@ import com.sukisu.ultra.ui.theme.tokens.FolkType
  */
 @Composable
 fun FlashConfirmDialog(
-    archive: InstallMethod.KernelArchive,
+    archive: InstallMethod,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    val fileName = archive.uri?.lastPathSegment?.substringAfterLast('/').orEmpty()
-    val slotLabel = when (archive.slot) {
+    val fileName = archive.archiveUri?.lastPathSegment?.substringAfterLast('/').orEmpty()
+    val slotLabel = when (archive.archiveSlot) {
         "a" -> stringResource(R.string.slot_a)
         "b" -> stringResource(R.string.slot_b)
         else -> null

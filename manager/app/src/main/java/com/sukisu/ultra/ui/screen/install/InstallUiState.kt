@@ -47,7 +47,7 @@ internal data class InstallScreenActions(
     val onSelectForceBackup: (Boolean) -> Unit,
     val onSpoofReleaseChange: (String) -> Unit,
     val onSpoofVersionChange: (String) -> Unit,
-    val onHorizonKernelSelected: (InstallMethod.KernelArchive) -> Unit = {},
-    val onReopenSlotDialog: (InstallMethod.KernelArchive) -> Unit = {},
-    val onReopenKpmDialog: (InstallMethod.KernelArchive) -> Unit = {},
+    val onHorizonKernelSelected: (InstallMethod) -> Unit = {},
+    val onReopenSlotDialog: (InstallMethod) -> Unit = {},
+    val onReopenKpmDialog: (InstallMethod) -> Unit = {},
 )

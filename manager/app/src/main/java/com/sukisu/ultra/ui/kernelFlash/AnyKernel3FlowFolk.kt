@@ -27,7 +27,9 @@ import com.sukisu.ultra.ui.component.folk.FolkAlertDialog
 import com.sukisu.ultra.ui.component.folk.FolkButtonDefaults
 import com.sukisu.ultra.ui.component.folk.FolkSelectableRow
 import com.sukisu.ultra.ui.screen.install.InstallMethod
-import com.sukisu.ultra.ui.screen.install.withSlot
+import com.sukisu.ultra.ui.screen.install.archiveSlot
+import com.sukisu.ultra.ui.screen.install.archiveUri
+import com.sukisu.ultra.ui.screen.install.withArchiveSlot
 import com.sukisu.ultra.ui.theme.tokens.FolkType
 
 /**
@@ -38,8 +40,8 @@ import com.sukisu.ultra.ui.theme.tokens.FolkType
  * sequence - it stays on its own row on the install screen.
  *
  * The archive keeps its concrete type throughout, so the row the user picked keeps its
- * selection mark; the flow only needs the uri and the slot, which the KernelArchive interface
- * provides for either type.
+ * selection mark; the flow only needs the uri and the slot, which the archiveUri and
+ * archiveSlot extensions provide for either row.
  */
 @Composable
 fun rememberAnyKernel3State(
@@ -52,16 +54,14 @@ fun rememberAnyKernel3State(
     var showSlotSelectionDialog by remember { mutableStateOf(false) }
     var showKpmPatchDialog by remember { mutableStateOf(false) }
     var showConfirmDialog by remember { mutableStateOf(false) }
-    var tempKernelUri by remember { mutableStateOf<Uri?>(null) }
 
     /** The archive being decided on, kept so the slot step can rebuild the same type. */
-    var pendingArchive by remember { mutableStateOf<InstallMethod.KernelArchive?>(null) }
+    var pendingArchive by remember { mutableStateOf<InstallMethod?>(null) }
 
-    val onHorizonKernelSelected: (InstallMethod.KernelArchive) -> Unit = { method ->
-        val uri = method.uri
+    val onHorizonKernelSelected: (InstallMethod) -> Unit = { method ->
+        val uri = method.archiveUri
         if (uri != null) {
-            if (isAbDevice && method.slot == null) {
-                tempKernelUri = uri
+            if (isAbDevice && method.archiveSlot == null) {
                 pendingArchive = method
                 showSlotSelectionDialog = true
             } else {
@@ -75,16 +75,15 @@ fun rememberAnyKernel3State(
         }
     }
 
-    val onReopenSlotDialog: (InstallMethod.KernelArchive) -> Unit = { method ->
-        val uri = method.uri
+    val onReopenSlotDialog: (InstallMethod) -> Unit = { method ->
+        val uri = method.archiveUri
         if (uri != null && isAbDevice) {
-            tempKernelUri = uri
             pendingArchive = method
             showSlotSelectionDialog = true
         }
     }
 
-    val onReopenKpmDialog: (InstallMethod.KernelArchive) -> Unit = { method ->
+    val onReopenKpmDialog: (InstallMethod) -> Unit = { method ->
         installMethodState.value = method
         showKpmPatchDialog = true
     }
@@ -93,9 +92,8 @@ fun rememberAnyKernel3State(
         // Rebuild the archive the user actually picked, with the slot added, so the install
         // list still matches it.
         val archive = pendingArchive
-        if (archive != null && archive.uri != null) {
-            installMethodState.value = archive.withSlot(slot)
-            tempKernelUri = null
+        if (archive != null && archive.archiveUri != null) {
+            installMethodState.value = archive.withArchiveSlot(slot)
             pendingArchive = null
             showSlotSelectionDialog = false
             showConfirmDialog = true
@@ -104,7 +102,6 @@ fun rememberAnyKernel3State(
 
     val onDismissSlotDialog = {
         showSlotSelectionDialog = false
-        tempKernelUri = null
         pendingArchive = null
     }
 
@@ -138,7 +135,6 @@ fun rememberAnyKernel3State(
                         summary = horizonKernelSummary,
                     )
                     if (isAbDevice) {
-                        tempKernelUri = preselectedUri
                         pendingArchive = method
                         showSlotSelectionDialog = true
                     } else {

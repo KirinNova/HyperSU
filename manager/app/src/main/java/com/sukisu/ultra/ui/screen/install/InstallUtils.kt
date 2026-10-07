@@ -11,19 +11,6 @@ import com.sukisu.ultra.R
 
 @Parcelize
 sealed class InstallMethod : Parcelable {
-    /**
-     * An AnyKernel3 archive, whatever its origin.
-     *
-     * [HorizonKernel] and [AnyKernel3] are the same flow over the same kind of file, and the
-     * slot and KPM steps have to accept either. They stay separate types so the install-method
-     * list can tell which row the user actually picked - collapsing one into the other made the
-     * chosen row lose its selection mark.
-     */
-    interface KernelArchive {
-        val uri: Uri?
-        val slot: String?
-    }
-
     data class SelectFile(
         val uri: Uri? = null,
         @get:StringRes override val label: Int = R.string.select_file,
@@ -47,32 +34,55 @@ sealed class InstallMethod : Parcelable {
             get() = R.string.install_inactive_slot
     }
 
+    /**
+     * An AnyKernel3 archive this app fetched, and one the user picked, are the same flow over
+     * the same kind of file. They stay separate classes so the install-method list can tell
+     * which row was chosen; [isKernelArchive] is how the shared steps accept either.
+     */
     data class HorizonKernel(
-        override val uri: Uri? = null,
-        override val slot: String? = null,
+        val uri: Uri? = null,
+        val slot: String? = null,
         @get:StringRes override val label: Int = R.string.horizon_kernel,
         override val summary: String? = null
-    ) : InstallMethod(), KernelArchive
+    ) : InstallMethod()
 
-    /**
-     * Flash an AnyKernel3 archive the user picked themselves.
-     *
-     * HorizonKernel is the same flow for a kernel this app downloads; this one exists so a
-     * locally held AnyKernel3 zip can be flashed without going through the download path.
-     * It carries the same slot and KPM-patch steps.
-     */
     data class AnyKernel3(
-        override val uri: Uri? = null,
-        override val slot: String? = null,
+        val uri: Uri? = null,
+        val slot: String? = null,
         @get:StringRes override val label: Int = R.string.anykernel3_flash,
         override val summary: String? = null
-    ) : InstallMethod(), KernelArchive
+    ) : InstallMethod()
 
     abstract val label: Int
 
     @IgnoredOnParcel
     open val summary: String? = null
 }
+
+/*
+ * These three are declared on the nullable receiver so a call site holding an
+ * `InstallMethod?` needs no `?.` or `!!`. A null method simply is not an archive.
+ */
+
+/** The uri of an archive row, or null for the methods that carry no archive. */
+val InstallMethod?.archiveUri: Uri?
+    get() = when (this) {
+        is InstallMethod.HorizonKernel -> uri
+        is InstallMethod.AnyKernel3 -> uri
+        else -> null
+    }
+
+/** The slot of an archive row, or null when none is recorded or not applicable. */
+val InstallMethod?.archiveSlot: String?
+    get() = when (this) {
+        is InstallMethod.HorizonKernel -> slot
+        is InstallMethod.AnyKernel3 -> slot
+        else -> null
+    }
+
+/** True for the two archive rows, which share the slot, KPM and confirmation steps. */
+val InstallMethod?.isKernelArchive: Boolean
+    get() = this is InstallMethod.HorizonKernel || this is InstallMethod.AnyKernel3
 
 /**
  * The same archive with a slot recorded, keeping its own type.
@@ -82,9 +92,10 @@ sealed class InstallMethod : Parcelable {
  * picked was an AnyKernel3, and the rebuilt value was a HorizonKernel, so the two no longer
  * matched. Copying keeps whichever type it was.
  */
-fun InstallMethod.KernelArchive.withSlot(slot: String?): InstallMethod = when (this) {
+fun InstallMethod.withArchiveSlot(slot: String?): InstallMethod = when (this) {
     is InstallMethod.HorizonKernel -> copy(slot = slot)
     is InstallMethod.AnyKernel3 -> copy(slot = slot)
+    else -> this
 }
 
 fun isKoFile(context: Context, uri: Uri): Boolean {

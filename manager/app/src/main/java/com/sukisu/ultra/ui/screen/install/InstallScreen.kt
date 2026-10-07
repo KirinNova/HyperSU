@@ -198,14 +198,14 @@ fun InstallScreen(
     val onInstall = {
         installMethod?.let { method ->
             when (method) {
-                // Either archive type goes through the kernel-flash route; matching only
+                // Either archive row goes through the kernel-flash route; matching only
                 // HorizonKernel sent a picked AnyKernel3 down the boot-image path instead.
-                is InstallMethod.KernelArchive -> {
-                    method.uri?.let { uri ->
+                is InstallMethod.HorizonKernel, is InstallMethod.AnyKernel3 -> {
+                    method.archiveUri?.let { uri ->
                         navigator.push(
                             Route.KernelFlash(
                                 kernelUri = uri,
-                                selectedSlot = method.slot,
+                                selectedSlot = method.archiveSlot,
                                 kpmPatchEnabled = kpmPatchOption == KpmPatchOption.PATCH_KPM,
                                 kpmUndoPatch = kpmPatchOption == KpmPatchOption.UNDO_PATCH_KPM
                             )
@@ -250,7 +250,8 @@ fun InstallScreen(
     // appear at this point, which asked about patching before anything had been confirmed.
     // Declared after onInstall because confirming is what starts the flash.
     if (anyKernel3State.showConfirmDialog) {
-        (installMethod as? InstallMethod.KernelArchive)?.let { archive ->
+        val archive = installMethod
+        if (archive != null && archive.isKernelArchive) {
             FlashConfirmDialog(
                 archive = archive,
                 onDismiss = { anyKernel3State.onDismissConfirmDialog() },
@@ -339,7 +340,7 @@ fun InstallScreen(
                 option?.let { opt ->
                     installMethod = opt
                     // Both archive rows enter the same slot-selection and confirmation flow.
-                    if (opt is InstallMethod.KernelArchive) {
+                    if (opt.isKernelArchive) {
                         anyKernel3State.onHorizonKernelSelected(opt)
                     }
                 }
@@ -377,7 +378,7 @@ fun InstallScreen(
         onSelectMethod = { method ->
             when {
                 // An archive that already carries a uri (a download) enters the flow directly.
-                method is InstallMethod.KernelArchive && method.uri != null ->
+                method.isKernelArchive && method.archiveUri != null ->
                     anyKernel3State.onHorizonKernelSelected(method)
 
                 // The AnyKernel3 row carries no uri until the user picks one, so selecting it
@@ -427,7 +428,7 @@ fun InstallScreen(
                 is InstallMethod.SelectFile -> true
                 else -> isKmiUnknown
             }
-            if (isGkiDevice && !isLkmSelected && isKmiUnresolved && installMethod !is InstallMethod.KernelArchive) {
+            if (isGkiDevice && !isLkmSelected && isKmiUnresolved && !installMethod.isKernelArchive) {
                 showChooseKmiDialog.value = true
             } else {
                 onInstall()

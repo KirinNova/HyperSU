@@ -22,13 +22,14 @@ data class AnyKernel3State(
      * flashed and waits for an answer, and the KPM choice stays on its own row.
      */
     val showConfirmDialog: Boolean,
-    val onHorizonKernelSelected: (InstallMethod.KernelArchive) -> Unit,
+    /** Either archive row; the callbacks ignore anything that is not one. */
+    val onHorizonKernelSelected: (InstallMethod) -> Unit,
     val onSlotSelected: (String) -> Unit,
     val onDismissSlotDialog: () -> Unit,
     val onOptionSelected: (KpmPatchOption) -> Unit,
     val onDismissPatchDialog: () -> Unit,
     val onConfirmFlash: () -> Unit,
     val onDismissConfirmDialog: () -> Unit,
-    val onReopenSlotDialog: (InstallMethod.KernelArchive) -> Unit,
-    val onReopenKpmDialog: (InstallMethod.KernelArchive) -> Unit
+    val onReopenSlotDialog: (InstallMethod) -> Unit,
+    val onReopenKpmDialog: (InstallMethod) -> Unit
 )
