@@ -6,6 +6,15 @@ bool __maybe_unused is_ksu_transition(const struct task_security_struct *old_tse
 }
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0) && !defined(KSU_COMPAT_HAS_CURRENT_SID)
+static inline u32 current_sid(void)
+{
+    const struct task_security_struct *tsec = selinux_cred(current_cred());
+
+    return tsec->sid;
+}
+#endif
+
 /*
  * Cached SID values for frequently checked contexts.
  * These are resolved once at init and used for fast u32 comparison

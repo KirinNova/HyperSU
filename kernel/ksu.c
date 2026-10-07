@@ -30,8 +30,9 @@
 #include "feature/kernel_umount.h"
 #include "feature/sucompat.h"
 #include "feature/sulog.h"
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
 #include "feature/selinux_hide.h"
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0)
+#include "infra/symbol_resolver.h"
 #endif
 #include "runtime/ksud.h"
 #include "sulog/event.h"
@@ -92,8 +93,10 @@
 #include "hook/lsm_hook.c"
 
 #include "selinux/selinux.c"
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
 #include "selinux/sepolicy.c"
 #include "selinux/rules.c"
+#endif
 
 #include "infra/kernel_compat.c"
 
@@ -127,6 +130,11 @@ int __init kernelsu_init(void)
         return -ENOSYS;
     }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0)
+    ksu_init_symbol_resolver();
+    ksu_selinux_init();
+#endif
+
 #ifdef CONFIG_KSU_SUSFS
     susfs_init();
 #endif
@@ -143,9 +151,7 @@ int __init kernelsu_init(void)
 
     ksu_adb_root_init();
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
     ksu_selinux_hide_init();
-#endif
 
     ksu_kernel_umount_init();
 

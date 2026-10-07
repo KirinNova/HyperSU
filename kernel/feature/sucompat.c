@@ -1,7 +1,34 @@
 #define SU_PATH "/system/bin/su"
 #define SH_PATH "/system/bin/sh"
 
+#if defined(CONFIG_KSU_SUSFS) && defined(KSU_COMPAT_USE_STATIC_KEY)
+DEFINE_STATIC_KEY_TRUE(ksu_su_compat_enabled);
+
+static bool ksu_su_compat_is_enabled(void)
+{
+    return static_branch_likely(&ksu_su_compat_enabled);
+}
+
+static void ksu_su_compat_set_enabled(bool enable)
+{
+    if (enable)
+        static_branch_enable(&ksu_su_compat_enabled);
+    else
+        static_branch_disable(&ksu_su_compat_enabled);
+}
+#else
 bool ksu_su_compat_enabled __read_mostly = true;
+
+static bool ksu_su_compat_is_enabled(void)
+{
+    return ksu_su_compat_enabled;
+}
+
+static void ksu_su_compat_set_enabled(bool enable)
+{
+    ksu_su_compat_enabled = enable;
+}
+#endif
 
 static const char su_path[] = SU_PATH;
 static const char sh_path[] = SH_PATH;
@@ -9,14 +36,14 @@ static const char ksud_path[] = KSUD_PATH;
 
 static int su_compat_feature_get(u64 *value)
 {
-    *value = ksu_su_compat_enabled ? 1 : 0;
+    *value = ksu_su_compat_is_enabled() ? 1 : 0;
     return 0;
 }
 
 static int su_compat_feature_set(u64 value)
 {
     bool enable = value != 0;
-    ksu_su_compat_enabled = enable;
+    ksu_su_compat_set_enabled(enable);
     pr_info("su_compat: set to %d\n", enable);
     return 0;
 }
@@ -118,56 +145,68 @@ int ksu_handle_execveat_sucompat(int *fd, struct filename **filename_ptr,
     int ret;
 
     if (unlikely(!filename_ptr))
-        return -EINVAL;
+        return 1;
 
     filename = *filename_ptr;
     if (IS_ERR(filename))
-        return -EINVAL;
+        return 1;
 
     if (!ksu_handle_execveat_init(filename, (struct user_arg_ptr*)argv_user, (struct user_arg_ptr*)envp_user))
-        return -EINVAL;
+        return 1;
 
     if (!(__ksu_is_allow_uid_for_current(current_uid().val)))
-        return -EINVAL;
+        return 1;
 
     if (likely(memcmp(filename->name, su_path, sizeof(su_path))))
-        return -EINVAL;
+        return 1;
 
     if (current_chrooted())
     {
         pr_err("ksu_handle_execveat_sucompat: su found but NOT allowed! Because current process is running in chrooted environment\n");
-        return -EINVAL;
+        return 1;
     }
 
-    ret = escape_with_root_profile();
+    pr_info("ksu_handle_execveat_sucompat: su found\n");
 
-    pr_info("ksu_handle_execveat_sucompat: su->ksud!\n");
     memcpy((void *)filename->name, ksud_path, sizeof(ksud_path));
 
     pending_sucompat = ksu_sulog_capture_sucompat(filename->name, (struct user_arg_ptr*)argv_user, GFP_KERNEL);
 
+    ret = escape_with_root_profile();
+    if (ret)
+        pr_err("escape_with_root_profile() failed: %d\n", ret);
+
     const char __user *argv_user_ptr = get_user_arg_ptr(*((struct user_arg_ptr*)argv_user), 0);
     if (!argv_user_ptr || IS_ERR(argv_user_ptr)) {
         pr_err("!argv_user_ptr || IS_ERR(argv_user_ptr)\n");
-        return -EINVAL;
+        return 0;
     }
 
     ksu_sulog_emit_pending(pending_sucompat, ret, GFP_KERNEL);
-
-    if (ret) {
-        pr_err("escape_with_root_profile() failed: %d\n", ret);
-        return -EINVAL;
-    }
     return 0;
 }
 
-int ksu_handle_post_execveat_sucompat(int *fd, struct filename **filename_ptr,
-                 void *argv_user, void *envp_user,
-                 int *__never_use_flags, int *retval)
+// Legacy SUSFS inline hooks invoke this after do_execveat_common(). Installing
+// the scoped fd only after a successful exec prevents capability leakage when
+// exec fails and lets the new ksud use wrappers under custom SELinux profiles.
+int ksu_handle_post_execveat_sucompat(int *fd, struct filename **filename_ptr, void *argv_user, void *envp_user,
+                                      int *flags, int *retval)
 {
-    if (*retval >= 0) {
-        (void)ksu_install_su_fd();
-    }
+    int su_fd;
+
+    (void)fd;
+    (void)filename_ptr;
+    (void)argv_user;
+    (void)envp_user;
+    (void)flags;
+
+    if (!retval || *retval)
+        return 0;
+
+    su_fd = ksu_install_su_fd();
+    if (su_fd < 0)
+        pr_warn("install su session fd failed: %d\n", su_fd);
+
     return 0;
 }
 
@@ -203,7 +242,6 @@ int ksu_handle_faccessat(int *dfd, struct filename **filename, int *mode,
         pr_err("ksu_handle_faccessat: su found but NOT allowed! Because current process is running in chrooted environment\n");
         return 0;
     }
-
     pr_info("ksu_handle_faccessat: su->sh!\n");
     memcpy((void *)((*filename)->name), sh_path, sizeof(sh_path));
     return 0;
@@ -221,7 +259,6 @@ int ksu_handle_stat(int *dfd, struct filename **filename, int *flags) {
         pr_err("ksu_handle_stat: su found but NOT allowed! Because current process is running in chrooted environment\n");
         return 0;
     }
-
     pr_info("ksu_handle_stat: su->sh!\n");
     memcpy((void *)((*filename)->name), sh_path, sizeof(sh_path));
     return 0;

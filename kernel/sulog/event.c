@@ -141,8 +141,8 @@ static __u32 ksu_sulog_flatten_argv(struct user_arg_ptr *argv_user, char *dst, _
         if (IS_ERR(arg_user))
             return ksu_sulog_copy_empty_string(dst);
 
-        copied =
-            strncpy_from_user_nofault(arg, (const void __user *)untagged_addr((unsigned long)arg_user), sizeof(arg));
+        copied = ksu_strncpy_from_user_nofault(
+            arg, (const void __user *)untagged_addr((unsigned long)arg_user), sizeof(arg));
         if (copied <= 0)
             return ksu_sulog_copy_empty_string(dst);
 
