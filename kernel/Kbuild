@@ -140,11 +140,11 @@ ccflags-y += -DKSU_VERSION_FULL=\"$(KSU_VERSION_FULL)\"
 # KSU_EXPECTED_SIZE2/HASH2 stay free for the pull-request build, whose throwaway keystore
 # differs every run and is passed in by the workflow.
 ifndef KSU_EXPECTED_SIZE
-KSU_EXPECTED_SIZE := 0x578
+KSU_EXPECTED_SIZE := 0x378
 endif
 
 ifndef KSU_EXPECTED_HASH
-KSU_EXPECTED_HASH := f2d6f10390140c63180428aa7f1946350e1b2e804252700bd006d7af5edeed10
+KSU_EXPECTED_HASH := aaef52d74182a668b257065f27a53ecb3669047826c5090ed8102af6a7c3bcc4
 endif
 
 ifdef KSU_MANAGER_PACKAGE
