@@ -20,9 +20,13 @@ struct ksu_ioctl_cmd_map {
 
 // Install KSU fd to current process
 int ksu_install_fd(void);
-// Install a KSU fd that authorizes operations required while starting su.
+// Install a KSU fd scoped to operations needed while starting a su session.
 int ksu_install_su_fd(void);
 bool ksu_is_su_session_fd(const struct file *filp);
+
+#ifdef CONFIG_KSU_SUSFS
+int ksu_supercall_reboot_handler(void __user **arg);
+#endif
 
 void ksu_supercalls_init(void);
 void ksu_supercalls_exit(void);

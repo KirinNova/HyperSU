@@ -1,30 +1,3 @@
-#include <linux/rcupdate.h>
-#include <linux/limits.h>
-#include <linux/rculist.h>
-#include <linux/mutex.h>
-#include <linux/task_work.h>
-#include <linux/capability.h>
-#include <linux/compiler.h>
-#include <linux/fs.h>
-#include <linux/gfp.h>
-#include <linux/kernel.h>
-#include <linux/list.h>
-#include <linux/printk.h>
-#include <linux/slab.h>
-#include <linux/types.h>
-#include <linux/version.h>
-#include <linux/compiler_types.h>
-#include <linux/hashtable.h>
-#include <linux/kref.h>
-
-#include "klog.h" // IWYU pragma: keep
-#include "ksu.h"
-#include "runtime/ksud_boot.h"
-#include "selinux/selinux.h"
-#include "policy/allowlist.h"
-#include "manager/manager_identity.h"
-#include "infra/su_mount_ns.h"
-
 #define FILE_MAGIC 0x7f4b5355 // ' KSU', u32
 #define FILE_FORMAT_VERSION 4 // u32
 
@@ -37,7 +10,7 @@ static DEFINE_MUTEX(allowlist_mutex);
 static struct root_profile default_root_profile;
 static struct non_root_profile default_non_root_profile;
 
-static void __init init_default_profiles()
+static void __init init_default_profiles(void)
 {
     kernel_cap_t full_cap = CAP_FULL_SET;
 
@@ -133,7 +106,6 @@ static bool profile_valid(struct app_profile *profile)
     }
 
     if (profile->allow_su) {
-#ifndef CONFIG_KSU_DISABLE_POLICY
         if (profile->rp_config.profile.groups_count > KSU_MAX_GROUPS) {
             pr_err("invalid groups_count in app_profile: %s\n", profile->key);
             return false;
@@ -146,11 +118,12 @@ static bool profile_valid(struct app_profile *profile)
             pr_err("invalid selinux_domain in app_profile: %s\n", profile->key);
             return false;
         }
-#endif
     }
 
     return true;
 }
+
+static void migrate_profile(u32 version, struct app_profile *profile);
 
 static void release_perm_data(struct kref *ref)
 {
@@ -168,21 +141,21 @@ int ksu_set_app_profile(struct app_profile *profile)
     struct perm_data *p, *np;
     int result = 0;
 
+#if KSU_APP_PROFILE_VER == 4
+    /* Accept the v2/v3 prefix copied by dispatch.c from older managers. */
+    if (profile && (profile->version == 2 || profile->version == 3)) {
+        u32 old_version = profile->version;
+        migrate_profile(old_version, profile);
+        pr_info("migrated incoming app profile v%d to v%d: key=%s uid=%d\n",
+                old_version, KSU_APP_PROFILE_VER, profile->key,
+                profile->curr_uid);
+    }
+#endif
+
     if (!profile_valid(profile)) {
         pr_err("Failed to set app profile: invalid profile!\n");
         return -EINVAL;
     }
-
-#ifdef CONFIG_KSU_DISABLE_POLICY
-    if (profile->allow_su) {
-        profile->rp_config.use_default = true;
-        memset(profile->rp_config.template_name, 0, sizeof(profile->rp_config.template_name));
-        memset(&profile->rp_config.profile, 0, sizeof(profile->rp_config.profile));
-    } else {
-        profile->nrp_config.use_default = true;
-        memset(&profile->nrp_config.profile, 0, sizeof(profile->nrp_config.profile));
-    }
-#endif
 
     // only allow default non root profile
     if (unlikely(profile->curr_uid == KSU_APP_PROFILE_PRESERVE_UID && strcmp(profile->key, "$") != 0)) {
@@ -298,9 +271,7 @@ bool ksu_uid_should_umount(uid_t uid)
         // we should not umount on manager!
         return false;
     }
-#ifdef CONFIG_KSU_DISABLE_POLICY
-    return !__ksu_is_allow_uid(uid);
-#else
+
     rcu_read_lock();
     profile = ksu_get_app_profile(uid);
     if (!profile) {
@@ -322,7 +293,6 @@ bool ksu_uid_should_umount(uid_t uid)
     if (profile)
         ksu_put_app_profile(profile);
     return res;
-#endif
 }
 
 void ksu_put_app_profile(struct app_profile *profile)
@@ -333,10 +303,6 @@ void ksu_put_app_profile(struct app_profile *profile)
 
 struct root_profile *ksu_get_root_profile(uid_t uid)
 {
-#ifdef CONFIG_KSU_DISABLE_POLICY
-    (void)uid;
-    return &default_root_profile;
-#else
     struct perm_data *p = NULL;
     struct root_profile *res;
 
@@ -370,7 +336,6 @@ retry:
 
     rcu_read_unlock();
     return res;
-#endif
 }
 
 void ksu_put_root_profile(struct root_profile *profile)
@@ -450,7 +415,7 @@ out:
     kfree(_cb);
 }
 
-void ksu_persistent_allow_list()
+void ksu_persistent_allow_list(void)
 {
     struct task_struct *tsk;
 
@@ -503,13 +468,8 @@ static void migrate_profile(u32 version, struct app_profile *profile)
     profile->version = KSU_APP_PROFILE_VER;
 }
 
-void ksu_load_allow_list()
+void ksu_load_allow_list(void)
 {
-#ifdef CONFIG_KSU_DISABLE_POLICY
-    pr_info("allowlist load skipped because policy is disabled\n");
-    return;
-#endif
-
     loff_t off = 0;
     ssize_t ret = 0;
     struct file *fp = NULL;
@@ -543,8 +503,7 @@ void ksu_load_allow_list()
 
     pr_info("allowlist version: %d\n", version);
 
-    static const size_t kAppProfileSizePreV4 = 776;
-    app_profile_size = version < KSU_APP_PROFILE_VER ? kAppProfileSizePreV4 : sizeof(struct app_profile);
+    app_profile_size = version < KSU_APP_PROFILE_VER ? KSU_APP_PROFILE_SIZE_PRE_V4 : sizeof(struct app_profile);
 
     while (true) {
         struct app_profile profile;

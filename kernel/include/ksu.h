@@ -8,18 +8,14 @@
 #define KERNEL_SU_VERSION KSU_VERSION
 
 extern struct cred *ksu_cred;
-extern bool ksu_late_loaded;
 extern bool allow_shell;
-#ifdef MODULE
-extern bool ksu_bundled;
-#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0) || defined(KSU_COMPAT_HAS_SELINUX_POLICY_STRUCT)
 extern struct selinux_policy *backup_sepolicy;
-extern bool ksu_no_custom_rc;
-
-// SukiSU Ultra kernel su version full strings
-#ifndef KSU_VERSION_FULL
-#define KSU_VERSION_FULL "v3.x-00000000@unknown"
+#else
+extern struct policydb *backup_policydb;
+extern struct sidtab *backup_sidtab;
 #endif
+extern bool ksu_no_custom_rc;
 
 static inline int startswith(char *s, char *prefix)
 {

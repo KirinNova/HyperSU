@@ -1,22 +1,2 @@
-.idea
-CLAUDE.md
-AGENTS.md
-.DS_Store
-/target
-.cargo/config.toml
-__pycache__
-/dist
-/repack-config.json
-/userspace/ksud/.lkm_image_bootstrap.o
-
-# --- build output / local config ---
-local.properties
-*.iml
-.gradle/
-build/
-*.apk
-*.aab
-*.rar
-*.zip
-.idea/
-.kotlin/
+manager/
+/build-4.9.log

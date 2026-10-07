@@ -1,12 +1,3 @@
-#include <linux/cache.h>
-#include <linux/compiler_types.h>
-
-#include "feature/sulog.h"
-#include "klog.h" // IWYU pragma: keep
-#include "policy/feature.h"
-#include "sulog/event.h"
-#include "sulog/fd.h"
-
 static bool ksu_sulog_enabled __read_mostly = false;
 
 static int sulog_feature_get(u64 *value)

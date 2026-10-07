@@ -1,16 +1,3 @@
-#include <linux/anon_inodes.h>
-#include <linux/err.h>
-#include <linux/fdtable.h>
-#include <linux/file.h>
-#include <linux/fs.h>
-#include <linux/mutex.h>
-#include <linux/poll.h>
-#include <linux/sched.h>
-
-#include "infra/event_queue.h"
-#include "klog.h" // IWYU pragma: keep
-#include "sulog/event.h"
-
 static DEFINE_MUTEX(ksu_sulog_fd_lock);
 static bool ksu_sulog_fd_active;
 
@@ -19,7 +6,7 @@ static ssize_t ksu_sulog_read(struct file *file, char __user *buf, size_t count,
     return ksu_event_queue_read(ksu_sulog_get_queue(), buf, count, file->f_flags);
 }
 
-static __poll_t ksu_sulog_poll(struct file *file, poll_table *wait)
+static unsigned __bitwise ksu_sulog_poll(struct file *file, poll_table *wait)
 {
     return ksu_event_queue_poll(ksu_sulog_get_queue(), file, wait);
 }

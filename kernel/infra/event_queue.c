@@ -1,16 +1,3 @@
-#include <linux/ktime.h>
-#include <linux/list.h>
-#include <linux/mutex.h>
-#include <linux/overflow.h>
-#include <linux/poll.h>
-#include <linux/slab.h>
-#include <linux/spinlock.h>
-#include <linux/string.h>
-#include <linux/uaccess.h>
-#include <linux/wait.h>
-
-#include "infra/event_queue.h"
-
 struct ksu_event_queue_node {
     struct list_head list;
     struct ksu_event_record_hdr hdr;
@@ -369,9 +356,9 @@ out_unlock:
     return copied;
 }
 
-__poll_t ksu_event_queue_poll(struct ksu_event_queue *queue, struct file *file, poll_table *wait)
+unsigned __bitwise ksu_event_queue_poll(struct ksu_event_queue *queue, struct file *file, poll_table *wait)
 {
-    __poll_t mask = 0;
+    unsigned __bitwise mask = 0;
     unsigned long irq_flags;
 
     poll_wait(file, &queue->read_wait, wait);
