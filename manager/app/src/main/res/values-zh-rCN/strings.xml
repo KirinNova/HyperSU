@@ -325,6 +325,12 @@
     <string name="settings_navigation_badge">导航栏角标</string>
     <string name="settings_navigation_badge_summary">在导航栏显示已授权应用和已启用模块数量</string>
     <string name="settings_navigation">导航栏</string>
+    <string name="background_crop_title">裁切背景</string>
+    <string name="background_crop_apply">应用</string>
+    <string name="background_crop_reset">重置</string>
+    <string name="background_crop_loading">正在载入图片</string>
+    <string name="background_crop_rotation_angle">旋转角度</string>
+    <string name="background_crop_failed">图片裁切失败</string>
     <!-- Customize -->
     <string name="hook_type">钩子类型</string>
     <string name="home_susfs_version">SuSFS 版本</string>

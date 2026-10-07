@@ -192,6 +192,7 @@ base {
 dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.appcompat)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.material.icons.extended)
@@ -246,6 +247,7 @@ dependencies {
 
     implementation(libs.commons.compress)
     implementation(libs.xz)
+    implementation(libs.ucrop)
     implementation(libs.protobuf.kotlin.lite)
 }
 

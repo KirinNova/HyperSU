@@ -1,30 +1,34 @@
 package com.sukisu.ultra.ui.navigation
 
+import android.os.Build
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgeDefaults
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -47,7 +51,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sukisu.ultra.ui.component.FloatingBottomBar
+import com.sukisu.ultra.ui.component.FloatingBottomBarItem
+import com.sukisu.ultra.ui.theme.glass.GlassConfig
 import com.sukisu.ultra.ui.theme.glass.GlassStrength
+import com.sukisu.ultra.ui.theme.glass.LocalGlassBackdrop
 import com.sukisu.ultra.ui.theme.glass.liquidGlass
 import com.sukisu.ultra.ui.theme.tokens.ContinuousCornerShape
 import com.sukisu.ultra.ui.theme.tokens.FolkShape
@@ -55,26 +63,24 @@ import com.sukisu.ultra.ui.theme.tokens.FolkShape
 /** Height of the docked bar, excluding the system navigation-bar inset. */
 private val DockedBarHeight = 68.dp
 
-/** Height of the floating capsule. */
-private val FloatingBarHeight = 62.dp
-
 /**
- * The FolkPatch bottom navigation bar.
+ * The bottom navigation bar.
  *
- * A visual port of FolkPatch's `NavigationBarContent` (`BottomBarContent` in its non-drawer
- * shape): a surface holding one selectable item per [BottomBarDestination], where the selected
- * item carries a pill behind its icon and both the icon and the label spring into the accent
- * colour. The floating variant shrinks the surface into a capsule inset from the screen edges;
- * the docked variant spans the full width with only its top corners rounded.
+ * The floating variant is ReSukiSU's FloatingBottomBar ported verbatim: a blurred pill with
+ * its own damped drag gesture, gravity-tracked specular indicator and no chrome around it -
+ * no frosted slot, no elevation shadow. It needs the S blur pipeline, so below that the bar
+ * falls back to the docked layout, which is the FolkPatch visual port: a surface holding
+ * one selectable item per [BottomBarDestination] where the selected item carries a pill
+ * behind its icon and both the icon and the label spring into the accent colour.
  *
  * Selection is driven purely by [selectedIndex] and reported back through
  * [onSelectedIndexChange] - there is no NavHostController, no compose-destinations route and no
  * repository behind this composable, so the caller keeps owning navigation.
  *
- * @param selectedIndex index of the active tab, `0..BottomBarDestination.PAGE_COUNT - 1`.
+ * @param selectedIndex index of the active tab, 0..BottomBarDestination.PAGE_COUNT - 1.
  * @param onSelectedIndexChange invoked with the newly tapped tab index.
  * @param badge per-tab badge counts; a zero count renders no badge.
- * @param isFloating `true` for the floating capsule, `false` for the docked bar.
+ * @param isFloating true for the floating pill, false for the docked bar.
  */
 @Composable
 fun FolkBottomBar(
@@ -85,15 +91,85 @@ fun FolkBottomBar(
     modifier: Modifier = Modifier,
 ) {
     val destinations = BottomBarDestination.entries
-    val density = LocalDensity.current
 
-    // Shared shape switch: the capsule is reused for the floating mode, while the docked bar keeps
-    // the same corner family on its top edge only.
-    val barShape = if (isFloating) {
-        FolkShape.CornerFull
-    } else {
-        ContinuousCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    if (isFloating && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        // The pill samples the recorded page backdrop; the AGSL highlight on top of it
+        // needs a runtime shader, so the refraction-only fallback kicks in below 33.
+        val blurEnabled = LocalGlassBackdrop.current != null &&
+            GlassConfig.blurEnabled &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(
+                    WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal),
+                )
+                .padding(
+                    bottom = 12.dp +
+                        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            FloatingBottomBar(
+                selectedIndex = selectedIndex,
+                onSelected = onSelectedIndexChange,
+                tabsCount = destinations.size,
+                isBlurEnabled = blurEnabled,
+            ) { activateTab ->
+                destinations.forEachIndexed { index, destination ->
+                    FloatingBottomBarItem(
+                        selected = index == selectedIndex,
+                        onClick = { activateTab(index) },
+                        modifier = Modifier.defaultMinSize(minWidth = 76.dp),
+                    ) {
+                        val navBadge = badgeFor(index, badge)
+                        val icon: @Composable () -> Unit = {
+                            Icon(
+                                imageVector = destination.iconSelected,
+                                contentDescription = stringResource(destination.label),
+                                tint = LocalContentColor.current,
+                            )
+                        }
+                        if (navBadge != null) {
+                            BadgedBox(
+                                badge = {
+                                    Badge(
+                                        containerColor = when (navBadge.tone) {
+                                            BadgeTone.Alert -> MaterialTheme.colorScheme.error
+                                            BadgeTone.Accent -> MaterialTheme.colorScheme.primary
+                                        },
+                                        contentColor = when (navBadge.tone) {
+                                            BadgeTone.Alert -> MaterialTheme.colorScheme.onError
+                                            BadgeTone.Accent -> MaterialTheme.colorScheme.onPrimary
+                                        },
+                                    ) {
+                                        Text(text = navBadge.count.coerceAtMost(99).toString())
+                                    }
+                                },
+                            ) {
+                                icon()
+                            }
+                        } else {
+                            icon()
+                        }
+                        Text(
+                            text = stringResource(destination.label),
+                            color = LocalContentColor.current,
+                            fontSize = 11.sp,
+                            lineHeight = 14.sp,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Visible,
+                        )
+                    }
+                }
+            }
+        }
+        return
     }
+
+    val density = LocalDensity.current
+    val barShape = ContinuousCornerShape(topStart = 24.dp, topEnd = 24.dp)
     val haptics = LocalHapticFeedback.current
     val currentSelected by rememberUpdatedState(selectedIndex)
     val currentSelect by rememberUpdatedState(onSelectedIndexChange)
@@ -134,51 +210,13 @@ fun FolkBottomBar(
                 )
             },
     ) {
-        if (isFloating) {
-            // The frosted slot the capsule floats in: edge to edge, flush with the bottom
-            // of the screen, rounded only on the top. It exists to be blur - rim,
-            // specular and sheen stay off so the capsule remains the only glass object.
-            // Refraction works here because the app root records the wallpaper and wash
-            // behind everything, this overlay included.
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .height(
-                        FloatingBarHeight + 16.dp +
-                            WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
-                    )
-                    .liquidGlass(
-                        shape = ContinuousCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                        strength = GlassStrength.Subtle,
-                        refract = true,
-                        rim = false,
-                        specular = false,
-                        sheen = false,
-                    ),
-            )
-        }
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .then(
-                    if (isFloating) {
-                        Modifier.padding(
-                            start = 16.dp,
-                            end = 16.dp,
-                            top = 8.dp,
-                            // The capsule sits above the system bar; the inset is added below.
-                            bottom = 8.dp,
-                        )
-                    } else {
-                        Modifier
-                    }
-                )
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                // The root recording runs under the bar too, so the capsule refracts it
-                // like any other plate - it used to read as tint only because the layer
-                // never reached down here.
+                // The root recording runs under the bar too, so the surface refracts it
+                // like any other plate.
                 .liquidGlass(
                     shape = barShape,
                     strength = GlassStrength.Subtle,
@@ -187,17 +225,14 @@ fun FolkBottomBar(
             shape = barShape,
             color = Color.Transparent,
             contentColor = MaterialTheme.colorScheme.onSurface,
-            // Elevation is pointless over a transparent body - it only tints a fill that is
-            // no longer there - so the floating variant keeps its drop shadow and drops the
-            // tonal lift.
             tonalElevation = 0.dp,
-            shadowElevation = if (isFloating) 8.dp else 0.dp,
+            shadowElevation = 0.dp,
         ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(if (isFloating) FloatingBarHeight else DockedBarHeight)
-                .padding(horizontal = if (isFloating) 6.dp else 4.dp)
+                .height(DockedBarHeight)
+                .padding(horizontal = 4.dp)
                 .selectableGroup(),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
@@ -213,7 +248,7 @@ fun FolkBottomBar(
                         dampingRatio = Spring.DampingRatioMediumBouncy,
                         stiffness = Spring.StiffnessMediumLow,
                     ),
-                    label = "FolkBottomBarSelection$index",
+                    label = "FolkBottomBarSelection" + index,
                 )
 
                 val iconColor by animateColorAsState(
@@ -222,7 +257,7 @@ fun FolkBottomBar(
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     },
-                    label = "FolkBottomBarIconColor$index",
+                    label = "FolkBottomBarIconColor" + index,
                 )
 
                 val labelColor by animateColorAsState(
@@ -231,7 +266,7 @@ fun FolkBottomBar(
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     },
-                    label = "FolkBottomBarLabelColor$index",
+                    label = "FolkBottomBarLabelColor" + index,
                 )
 
                 val pillColor = MaterialTheme.colorScheme.secondaryContainer

@@ -2,7 +2,15 @@ package com.sukisu.ultra.ui.screen.settings
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import android.app.Activity
 import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
+import androidx.core.content.FileProvider
+import com.sukisu.ultra.ui.screen.themeSettings.crop.BackgroundCropActivity
+import com.yalantis.ucrop.UCrop
+import java.io.File
+import java.io.FileOutputStream
 import androidx.compose.material.icons.rounded.Wallpaper
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.BlurOn
@@ -199,22 +207,78 @@ fun SettingPagerFolk(
                     }
                     item {
                         val context = LocalContext.current
+                        val cropFailed = stringResource(R.string.background_crop_failed)
+                        // Every picture is cropped to the screen before it is stored,
+                        // ReSukiSU's adaptation: what the wallpaper draws is already the
+                        // shape of the display, so nothing has to guess at fit modes.
+                        val cropLauncher = rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.StartActivityForResult(),
+                        ) { result ->
+                            if (result.resultCode == Activity.RESULT_OK) {
+                                val output = result.data?.let { data -> UCrop.getOutput(data) }
+                                if (output != null) {
+                                    val saved = runCatching {
+                                        // Internal storage, not the crop cache: a wallpaper
+                                        // that vanishes when the cache is evicted reads as
+                                        // the setting having forgotten itself.
+                                        val file = File(context.filesDir, "custom_background.jpg")
+                                        context.contentResolver.openInputStream(output)?.use { input ->
+                                            FileOutputStream(file).use { out ->
+                                                input.copyTo(out)
+                                            }
+                                        }
+                                        BackgroundConfig.setUri(Uri.fromFile(file).toString())
+                                        BackgroundConfig.setEnabled(true)
+                                    }.isSuccess
+                                    if (!saved) {
+                                        BackgroundConfig.setUri(output.toString())
+                                        BackgroundConfig.setEnabled(true)
+                                    }
+                                }
+                            } else if (result.resultCode == UCrop.RESULT_ERROR) {
+                                Toast.makeText(context, cropFailed, Toast.LENGTH_SHORT).show()
+                            }
+                        }
                         val picker = rememberLauncherForActivityResult(
                             contract = ActivityResultContracts.OpenDocument(),
                         ) { uri ->
                             if (uri != null) {
-                                // Persistable, so the picture outlives the process. An
-                                // unpersisted grant dies with it and the background quietly
-                                // falls back to flat the next time the app opens, which
-                                // reads as the setting having forgotten itself.
+                                // Persistable: the crop step reads the document once, but
+                                // picking the same image again after a process death would
+                                // otherwise hit a dead grant.
                                 runCatching {
                                     context.contentResolver.takePersistableUriPermission(
                                         uri,
                                         Intent.FLAG_GRANT_READ_URI_PERMISSION,
                                     )
                                 }
-                                BackgroundConfig.setUri(uri.toString())
-                                BackgroundConfig.setEnabled(true)
+                                val dm = context.resources.displayMetrics
+                                val outputUri = FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    File(
+                                        context.cacheDir,
+                                        "background_crop_${System.currentTimeMillis()}.jpg",
+                                    ),
+                                )
+                                cropLauncher.launch(
+                                    Intent(context, BackgroundCropActivity::class.java).apply {
+                                        putExtra(UCrop.EXTRA_INPUT_URI, uri)
+                                        putExtra(UCrop.EXTRA_OUTPUT_URI, outputUri)
+                                        putExtra(
+                                            UCrop.EXTRA_ASPECT_RATIO_X,
+                                            dm.widthPixels.toFloat(),
+                                        )
+                                        putExtra(
+                                            UCrop.EXTRA_ASPECT_RATIO_Y,
+                                            dm.heightPixels.toFloat(),
+                                        )
+                                        putExtra(UCrop.EXTRA_MAX_SIZE_X, dm.widthPixels)
+                                        putExtra(UCrop.EXTRA_MAX_SIZE_Y, dm.heightPixels)
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                        addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                                    },
+                                )
                             }
                         }
                         FolkValuePreference(
@@ -252,20 +316,8 @@ fun SettingPagerFolk(
                             enabled = BackgroundConfig.isActive,
                         )
                     }
-                    item {
-                        FolkChoicePreference(
-                            title = stringResource(R.string.settings_background_cover),
-                            options = listOf(
-                                stringResource(R.string.settings_background_cover_fill),
-                                stringResource(R.string.settings_background_cover_fit),
-                                stringResource(R.string.settings_background_cover_stretch),
-                            ),
-                            selectedIndex = BackgroundConfig.cover,
-                            onSelect = { BackgroundConfig.setCover(it) },
-                            icon = Icons.Rounded.Crop,
-                            enabled = BackgroundConfig.isActive,
-                        )
-                    }
+                    // No fit-mode row: the crop screen is the adaptation now, same as
+                    // ReSukiSU. BackgroundConfig.cover stays at fill for drawing.
                     item {
                         FolkSwitchPreference(
                             title = stringResource(R.string.settings_enable_glass),
