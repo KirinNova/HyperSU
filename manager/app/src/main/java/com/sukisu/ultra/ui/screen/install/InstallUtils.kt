@@ -41,6 +41,20 @@ sealed class InstallMethod : Parcelable {
         override val summary: String? = null
     ) : InstallMethod()
 
+    /**
+     * Flash an AnyKernel3 archive the user picked themselves.
+     *
+     * HorizonKernel is the same flow for a kernel this app downloads; this one exists so a
+     * locally held AnyKernel3 zip can be flashed without going through the download path.
+     * It carries the same slot and KPM-patch steps.
+     */
+    data class AnyKernel3(
+        val uri: Uri? = null,
+        val slot: String? = null,
+        @get:StringRes override val label: Int = R.string.anykernel3_flash,
+        override val summary: String? = null
+    ) : InstallMethod()
+
     abstract val label: Int
 
     @IgnoredOnParcel

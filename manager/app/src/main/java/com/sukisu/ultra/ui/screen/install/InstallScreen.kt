@@ -92,10 +92,16 @@ fun InstallScreen(
     val downloadFileMsg = stringResource(id = R.string.download_dialog_msg)
 
     val horizonKernelSummary = stringResource(R.string.horizon_kernel_summary)
+    val anyKernel3Summary = stringResource(R.string.anykernel3_summary)
     val installMethodOptions = remember(rootAvailable, isAbDevice, isGkiDevice, selectFileTip, selectFileTipNoGki, downloadFileMsg, horizonKernelSummary) {
         buildList {
             add(InstallMethod.SelectFile(summary = if (isGkiDevice) selectFileTip else selectFileTipNoGki))
             add(InstallMethod.DownloadFile(summary = downloadFileMsg))
+            // The AnyKernel3 row needs root only: it flashes a kernel archive the user holds,
+            // which does not require the device to be GKI.
+            if (rootAvailable) {
+                add(InstallMethod.AnyKernel3(summary = anyKernel3Summary))
+            }
             if (rootAvailable && isGkiDevice) {
                 add(InstallMethod.DirectInstall)
                 if (isAbDevice) add(InstallMethod.DirectInstallToInactiveSlot)
@@ -106,7 +112,7 @@ fun InstallScreen(
 
     val installMethodState = remember { mutableStateOf<InstallMethod?>(null) }
 
-    // AnyKernel3 状态
+    // AnyKernel3 flow state (slot selection and KPM patching).
     val anyKernel3State = rememberAnyKernel3State(
         installMethodState = installMethodState,
         preselectedKernelUri = preselectedKernelUri?.toString(),
@@ -114,7 +120,7 @@ fun InstallScreen(
         isAbDevice = isAbDevice
     )
 
-    // 同步 installMethod 和 anyKernel3State
+    // Keep installMethod and anyKernel3State in step.
     LaunchedEffect(installMethod) {
         installMethodState.value = installMethod
     }
@@ -290,7 +296,10 @@ fun InstallScreen(
             it.data?.data?.let { uri ->
                 val option = when (installMethod) {
                     is InstallMethod.SelectFile -> InstallMethod.SelectFile(uri, summary = selectFileTip)
+                    // Both the HorizonKernel row and the AnyKernel3 row feed the AnyKernel3
+                    // flow; they differ only in where the archive comes from.
                     is InstallMethod.HorizonKernel -> InstallMethod.HorizonKernel(uri, summary = horizonKernelSummary)
+                    is InstallMethod.AnyKernel3 -> InstallMethod.HorizonKernel(uri, summary = horizonKernelSummary)
                     else -> null
                 }
                 option?.let { opt ->
@@ -332,10 +341,22 @@ fun InstallScreen(
     val actions = InstallScreenActions(
         onBack = dropUnlessResumed { navigator.pop() },
         onSelectMethod = { method ->
-            if (method is InstallMethod.HorizonKernel && method.uri != null) {
-                anyKernel3State.onHorizonKernelSelected(method)
-            } else {
-                installMethod = method
+            when {
+                method is InstallMethod.HorizonKernel && method.uri != null ->
+                    anyKernel3State.onHorizonKernelSelected(method)
+
+                // The AnyKernel3 row carries no URI until the user picks one, so selecting it
+                // opens the picker; the result is turned into a HorizonKernel above and then
+                // enters the same slot and KPM steps.
+                method is InstallMethod.AnyKernel3 -> {
+                    installMethod = method
+                    selectImageLauncher.launch(Intent(Intent.ACTION_GET_CONTENT).apply {
+                        type = "application/*"
+                        putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/zip", "application/octet-stream"))
+                    })
+                }
+
+                else -> installMethod = method
             }
         },
         onDownloadFile = { downloadDialogShown = true },

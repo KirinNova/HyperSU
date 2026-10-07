@@ -52,6 +52,15 @@
     <string name="confirm">Confirm</string>
     <string name="uninstall">Uninstall</string>
     <string name="module_install">Install</string>
+    <string name="module_install_confirm_title">Install this module?</string>
+    <string name="module_install_confirm_name">Name</string>
+    <string name="module_install_confirm_id">ID</string>
+    <string name="module_install_confirm_version">Version</string>
+    <string name="module_install_confirm_author">Author</string>
+    <string name="module_install_confirm_description">Description</string>
+    <string name="module_install_confirm_files">Files selected</string>
+    <string name="module_install_confirm_no_prop">This archive has no readable module.prop, so its details cannot be shown. Make sure you trust its source.</string>
+    <string name="module_install_confirm_action">Install</string>
     <string name="install">Install</string>
     <string name="reboot">Reboot</string>
     <string name="settings">Settings</string>
@@ -412,6 +421,8 @@
     <string name="kernel_flashing">Kernel Flashing</string>
     <string name="horizon_kernel">AnyKernel3 Kernel</string>
     <string name="horizon_kernel_summary">Flash AnyKernel3 format kernel zip</string>
+    <string name="anykernel3_flash">Flash AnyKernel3</string>
+    <string name="anykernel3_summary">Pick an AnyKernel3 zip from storage and flash it</string>
     <!-- KPM -->
     <string name="kpm_title">KPM</string>
     <string name="settings_kpm_summary">Manage kernel modules with KPM</string>

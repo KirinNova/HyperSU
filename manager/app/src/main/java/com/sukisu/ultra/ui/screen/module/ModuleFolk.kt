@@ -185,6 +185,14 @@ internal fun ModulePagerFolk(
     val searchListState = rememberLazyListState()
     val refreshTick = remember { mutableIntStateOf(0) }
 
+    // The zip the user picked, held back until they confirm. Reading module.prop is async, so
+    // the dialog is only shown once the metadata has arrived; a zip without one still reaches
+    // the dialog, with null info. The coroutine scope used to read it is the one declared
+    // further down for the module events.
+    var pendingInstall by remember { mutableStateOf<List<Uri>?>(null) }
+    var pendingInfo by remember { mutableStateOf<ModuleZipInfo?>(null) }
+    var pendingInfoLoading by remember { mutableStateOf(false) }
+
     val threshold = with(LocalDensity.current) { 100.dp.toPx() }
     val fabExpanded by remember {
         var lastIndex = 0
@@ -323,7 +331,22 @@ internal fun ModulePagerFolk(
                     } else {
                         data.data?.let { uris.add(it) }
                     }
-                    actions.onOpenFlash(uris)
+                    if (uris.isEmpty()) return@rememberLauncherForActivityResult
+
+                    // Hold the selection and read its metadata; the flash starts only from the
+                    // dialog's confirm. The first archive describes the selection - a multi-pick
+                    // is still one flash, and its other entries are reported by count.
+                    pendingInstall = uris
+                    pendingInfo = null
+                    pendingInfoLoading = true
+                    scope.launch {
+                        val info = ModuleZipReader.read(context, uris.first())
+                        // The user may have dismissed or picked again while this was reading.
+                        if (pendingInstall === uris) {
+                            pendingInfo = info
+                            pendingInfoLoading = false
+                        }
+                    }
                 }
 
                 SmallExtendedFloatingActionButton(
@@ -429,6 +452,26 @@ internal fun ModulePagerFolk(
             showShortcutDialog.value = false
         },
     )
+
+    // Shown only once the metadata has been read, so the dialog never appears and then
+    // reshuffles its rows as the values arrive.
+    val install = pendingInstall
+    if (install != null && !pendingInfoLoading) {
+        ModuleInstallConfirmDialog(
+            info = pendingInfo,
+            fileName = install.first().lastPathSegment?.substringAfterLast('/').orEmpty(),
+            fileCount = install.size,
+            onDismiss = {
+                pendingInstall = null
+                pendingInfo = null
+            },
+            onConfirm = {
+                pendingInstall = null
+                pendingInfo = null
+                actions.onOpenFlash(install)
+            },
+        )
+    }
 }
 
 @Composable
