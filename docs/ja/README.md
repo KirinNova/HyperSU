@@ -152,6 +152,7 @@ HyperSU は優れたオープンソースプロジェクトの肩の上に成り
 
 - [SukiSU](https://github.com/SukiSU-Ultra/SukiSU-Ultra): 直接の上流 / フォーク元。SukiSU チームとすべての貢献者に特別な感謝を表します。
 - [KernelSU](https://github.com/tiann/KernelSU): SukiSU の上流。tiann とすべての KernelSU 貢献者に特別な感謝を表します。
+- [FolkPatch](https://github.com/LyraVoid/FolkPatch): 本プロジェクトのマネージャー UI は FolkPatch から移植されています。FolkPatch チームの優れた UI/UX デザインに感謝します。特に LyraVoid 氏とすべての貢献者に感謝します。
 - [MKSU](https://github.com/5ec1cff/KernelSU): 使用しているプロジェクト
 - [RKSU](https://github.com/rsuntk/KernelsU): このプロジェクトのカーネルを使用した非 GKI デバイスのサポートの再導入
 - [susfs](https://gitlab.com/simonpunk/susfs4ksu): susfs ファイルシステムの使用
