@@ -91,7 +91,7 @@ fun Modifier.liquidGlass(
     val doSpecular = specular && GlassConfig.specular
     val doSheen = sheen && GlassConfig.sheen
     val blurRadius = GlassConfig.blur
-    val blurred = refract && backdrop != null && blurRadius > 0f
+    val blurred = refract && backdrop != null && blurRadius > 0f && GlassConfig.blurEnabled
 
     return this
         .then(

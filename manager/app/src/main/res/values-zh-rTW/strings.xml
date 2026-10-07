@@ -547,4 +547,11 @@
     <string name="home_zygisk_not_installed">未安裝</string>
     <string name="home_zygisk_disabled">已停用</string>
     <string name="home_zygisk_reboot_required">需要重啟</string>
+    <string name="settings_navigation">導航欄</string>
+    <string name="settings_navigation_badge">導航欄角標</string>
+    <string name="settings_navigation_badge_summary">在導航欄顯示已授權應用及已啟用模組數量</string>
+    <string name="settings_enable_blur">模糊</string>
+    <string name="settings_enable_blur_summary">啟用頂欄和底欄的模糊效果</string>
+    <string name="settings_floating_bottom_bar">懸浮底欄</string>
+    <string name="settings_floating_bottom_bar_summary">使用 Apple 風格的懸浮底欄</string>
 </resources>

@@ -23,6 +23,7 @@ object GlassConfig {
     private const val KEY_ENABLED = "glass_enabled"
     private const val KEY_INTENSITY = "glass_intensity"
     private const val KEY_BLUR = "glass_blur"
+    private const val KEY_BLUR_ENABLED = "glass_blur_enabled"
     private const val KEY_RIM = "glass_rim"
     private const val KEY_SPECULAR = "glass_specular"
     private const val KEY_SHEEN = "glass_sheen"
@@ -41,6 +42,7 @@ object GlassConfig {
     private val enabledState = mutableStateOf(true)
     private val intensityState = mutableStateOf(1f)
     private val blurState = mutableStateOf(DEFAULT_BLUR)
+    private val blurEnabledState = mutableStateOf(true)
     private val rimState = mutableStateOf(true)
     private val specularState = mutableStateOf(true)
     private val sheenState = mutableStateOf(true)
@@ -52,6 +54,7 @@ object GlassConfig {
         enabledState.value = prefs.getBoolean(KEY_ENABLED, true)
         intensityState.value = prefs.getFloat(KEY_INTENSITY, 1f)
         blurState.value = prefs.getFloat(KEY_BLUR, DEFAULT_BLUR)
+        blurEnabledState.value = prefs.getBoolean(KEY_BLUR_ENABLED, true)
         rimState.value = prefs.getBoolean(KEY_RIM, true)
         specularState.value = prefs.getBoolean(KEY_SPECULAR, true)
         sheenState.value = prefs.getBoolean(KEY_SHEEN, true)
@@ -80,6 +83,13 @@ object GlassConfig {
         get() {
             ensureLoaded()
             return blurState.value
+        }
+
+    /** Whether any plate may blur the backdrop - the app-wide "enable blur" switch. */
+    val blurEnabled: Boolean
+        get() {
+            ensureLoaded()
+            return blurEnabledState.value
         }
 
     /** The hairline rim around each plate. */
@@ -130,6 +140,13 @@ object GlassConfig {
         val clamped = value.coerceIn(0f, 60f)
         blurState.value = clamped
         prefs.edit { putFloat(KEY_BLUR, clamped) }
+        touched()
+    }
+
+    fun setBlurEnabled(value: Boolean) {
+        ensureLoaded()
+        blurEnabledState.value = value
+        prefs.edit { putBoolean(KEY_BLUR_ENABLED, value) }
         touched()
     }
 

@@ -296,7 +296,7 @@ fun SettingPagerFolk(
                             valueRange = 0f..60f,
                             steps = 60,
                             valueFormat = { "${it.toInt()} dp" },
-                            enabled = GlassConfig.enabled,
+                            enabled = GlassConfig.enabled && GlassConfig.blurEnabled,
                         )
                     }
                     item {
