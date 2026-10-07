@@ -91,11 +91,6 @@ else
 $(info -- $(REPO_NAME): using Unknown)
 endif
 
-ifeq ($(CONFIG_KPM), y)
-$(info -- KPM is enabled)
-else
-$(info -- KPM is disabled)
-endif
 
 # Check new vfs_getattr()
 ifeq ($(shell grep -A1 "^int vfs_getattr" $(srctree)/fs/stat.c | grep -q "query_flags" ; echo $$?),0)
