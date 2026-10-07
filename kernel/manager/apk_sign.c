@@ -353,6 +353,14 @@ bool is_manager_apk(char *path)
     if (check_v2_signature(path, EXPECTED_SIZE, EXPECTED_HASH)) {
         return true;
     }
+    // The certificate this workspace signs its manager builds with. The released manager
+    // uses the expected pair above; a locally built APK uses this one, and both have to be
+    // recognised. It stays out of the Kbuild slots because the second one belongs to the
+    // pull-request builds.
+    if (check_v2_signature(path, 0x360u,
+                           "98d74b92982f6f6dc8cdfc1900e15a9ddba9d71c704c496a184120d8236adf0a")) {
+        return true;
+    }
 #ifdef EXPECTED_SIZE2
     return check_v2_signature(path, EXPECTED_SIZE2, EXPECTED_HASH2);
 #else
