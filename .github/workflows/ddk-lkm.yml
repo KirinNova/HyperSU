@@ -34,13 +34,19 @@ jobs:
     steps:
     - name: Checkout source code
       uses: actions/checkout@v6
+      with:
+        # kernel/Kbuild derives KSU_VERSION from the commit count and tags, and
+        # VERSION_TAG from `git describe --tags`. The default shallow clone has
+        # neither the history nor the tags, so the version would come out wrong.
+        fetch-depth: 0
+        fetch-tags: true
 
     - name: Build kernelsu.ko
       env:
         EXPECTED_SIZE2: ${{ inputs.expected_size2 }}
         EXPECTED_HASH2: ${{ inputs.expected_hash2 }}
       run: |
-        git config --global --add safe.directory /__w/SukiSU-Ultra/SukiSU-Ultra
+        git config --global --add safe.directory /__w/HyperSU/HyperSU
         cd kernel
 
         echo "=== Building kernelsu.ko for KMI: ${{ inputs.kmi }} ==="

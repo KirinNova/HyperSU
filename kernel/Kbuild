@@ -99,8 +99,8 @@ obj-$(CONFIG_KSU) += kernelsu.o
 
 MDIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
-REPO_OWNER  := SukiSU-Ultra
-REPO_NAME   := SukiSU-Ultra
+REPO_OWNER  := KirinNova
+REPO_NAME   := HyperSU
 REPO_BRANCH := main
 
 VERSION_BASE    := 40000
