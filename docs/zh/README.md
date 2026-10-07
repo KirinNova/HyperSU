@@ -93,6 +93,7 @@ HyperSU 站在优秀开源项目的肩膀上。我们衷心感谢上游项目及
 
 - [SukiSU](https://github.com/SukiSU-Ultra/SukiSU-Ultra): 直接上游 / 分叉基础。特别感谢 SukiSU 团队及所有贡献者。
 - [KernelSU](https://github.com/tiann/KernelSU): SukiSU 的上游。特别感谢 tiann 及所有 KernelSU 贡献者。
+- [FolkPatch](https://github.com/LyraVoid/FolkPatch): 本项目的管理器 UI 移植自该项目。感谢 FolkPatch 团队优秀的 UI/UX 设计工作。特别感谢 LyraVoid 及所有贡献者。
 - [MKSU](https://github.com/5ec1cff/KernelSU): 魔法坐骑支持
 - [RKSU](https://github.com/rsuntk/KernelsU): non-GKI 支持
 - [susfs](https://gitlab.com/simonpunk/susfs4ksu): 隐藏内核补丁以及用户空间模组的 KernelSU 附件
