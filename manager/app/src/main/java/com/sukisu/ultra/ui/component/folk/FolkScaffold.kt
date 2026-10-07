@@ -14,29 +14,30 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.basic.TopAppBar
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.rememberTopAppBarState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sukisu.ultra.ui.navigation.LocalBottomBarVisible
 import com.sukisu.ultra.ui.navigation.LocalIsFloatingNavMode
 import com.sukisu.ultra.ui.theme.backgroundWallpaper
 import com.sukisu.ultra.ui.theme.glass.glassAmbient
+import com.sukisu.ultra.ui.theme.tokens.FolkTheme
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.Alignment
 
@@ -70,7 +71,6 @@ fun FolkScaffold(
     onBack: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
     snackbarHostState: SnackbarHostState? = null,
-    titleContent: (@Composable () -> Unit)? = null,
     /** Optional supporting line under a [FolkTitleStyle.Flexible] title. */
     subtitle: String? = null,
     floatingActionButton: @Composable () -> Unit = {},
@@ -93,7 +93,24 @@ fun FolkScaffold(
     addBottomClearance: Boolean = true,
     content: @Composable (PaddingValues) -> Unit,
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = MiuixScrollBehavior(rememberTopAppBarState())
+    // The tint flips between clear and the elevated tone as the content scrolls
+    // under the bar. Both ends keep one RGB so the animation never interpolates
+    // through black and leaves a grey scrim over the wallpaper.
+    val elevatedBarColor = folkGroupColor()
+    val scrolled by remember(scrollBehavior) {
+        derivedStateOf { scrollBehavior.state.contentOffset < -4f }
+    }
+    val barColor by animateColorAsState(
+        targetValue = if (FolkTheme.palette.onCustomBackground) {
+            Color.Transparent
+        } else if (scrolled) {
+            elevatedBarColor
+        } else {
+            elevatedBarColor.copy(alpha = 0f)
+        },
+        label = "folkBarColor",
+    )
 
     Box(modifier = Modifier.fillMaxSize()) {
         // The page background, full bleed: behind the bar (transparent over a picture,
@@ -120,55 +137,27 @@ fun FolkScaffold(
             if (custom != null) {
                 custom()
             } else {
+                // Miuix replaces the Material bars: the Material large/flexible
+                // bar paints its own default surface over the title region, which
+                // read as a white band across the wallpaper on every content page.
                 when (titleStyle) {
-                    FolkTitleStyle.Large -> LargeTopAppBar(
-                        title = {
-                            // A caller-supplied title (e.g. a search field)
-                            // replaces the plain label entirely.
-                            if (titleContent != null) {
-                                titleContent()
-                            } else {
-                                Text(text = title, fontWeight = FontWeight.Bold)
-                            }
-                        },
-                        colors = folkTopAppBarColors(),
+                    FolkTitleStyle.Large, FolkTitleStyle.Flexible -> TopAppBar(
+                        title = title,
+                        largeTitle = title,
+                        subtitle = subtitle.orEmpty(),
+                        color = barColor,
+                        titleColor = MaterialTheme.colorScheme.onBackground,
+                        largeTitleColor = MaterialTheme.colorScheme.onBackground,
+                        subtitleColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         navigationIcon = { FolkBackButton(onBack) },
                         actions = actions,
                         scrollBehavior = scrollBehavior,
                     )
 
-                    FolkTitleStyle.Flexible -> LargeFlexibleTopAppBar(
-                        title = {
-                            if (titleContent != null) {
-                                titleContent()
-                            } else {
-                                Text(text = title, fontWeight = FontWeight.Bold)
-                            }
-                        },
-                        subtitle = if (subtitle != null) {
-                            { Text(text = subtitle) }
-                        } else {
-                            null
-                        },
-                        colors = folkTopAppBarColors(),
-                        navigationIcon = { FolkBackButton(onBack) },
-                        actions = actions,
-                        scrollBehavior = scrollBehavior,
-                    )
-
-                    FolkTitleStyle.Inline -> TopAppBar(
-                        title = {
-                            if (titleContent != null) {
-                                titleContent()
-                            } else {
-                                Text(
-                                    text = title,
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                            }
-                        },
-                        colors = folkTopAppBarColors(),
+                    FolkTitleStyle.Inline -> SmallTopAppBar(
+                        title = title,
+                        color = barColor,
+                        titleColor = MaterialTheme.colorScheme.onBackground,
                         navigationIcon = { FolkBackButton(onBack) },
                         actions = actions,
                     )

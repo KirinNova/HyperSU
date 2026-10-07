@@ -16,11 +16,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.basic.rememberTopAppBarState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -94,7 +99,22 @@ fun FolkSettingsScaffold(
     actions: @Composable RowScope.() -> Unit = {},
     content: LazyListScope.() -> Unit,
 ) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = MiuixScrollBehavior(rememberTopAppBarState())
+    // Same clear/elevated tint pair as FolkScaffold, one RGB at both ends.
+    val elevatedBarColor = folkGroupColor()
+    val scrolled by remember(scrollBehavior) {
+        derivedStateOf { scrollBehavior.state.contentOffset < -4f }
+    }
+    val barColor by animateColorAsState(
+        targetValue = if (FolkTheme.palette.onCustomBackground) {
+            Color.Transparent
+        } else if (scrolled) {
+            elevatedBarColor
+        } else {
+            elevatedBarColor.copy(alpha = 0f)
+        },
+        label = "folkBarColor",
+    )
 
     Box(modifier = Modifier.fillMaxSize()) {
         // The page background, full bleed: behind the bar (transparent over a picture,
@@ -111,17 +131,13 @@ fun FolkSettingsScaffold(
         Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                },
-                colors = folkTopAppBarColors(),
+            // Miuix: the Material bar drew its own surface over the title and
+            // showed up as a band across the wallpaper.
+            SmallTopAppBar(
+                title = title,
+                color = barColor,
+                titleColor = MaterialTheme.colorScheme.onBackground,
+                subtitleColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 navigationIcon = {
                     if (onBack != null) {
                         IconButton(onClick = onBack) {
