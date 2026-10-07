@@ -72,8 +72,12 @@ fun AppearanceThemeSection(
 
     // Declared outside the dialogs so the launcher keeps one position in composition for the
     // whole lifetime of the screen.
+    //
+    // The MIME type is deliberately generic. A .fpt is a ZIP, but declaring "application/zip"
+    // made some file managers rewrite the name to .zip on save, so the exported file no longer
+    // looked like a theme and would not come back through the importer.
     val exportLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/zip"),
+        ActivityResultContracts.CreateDocument("application/octet-stream"),
     ) { uri ->
         val metadata = pendingExport
         pendingExport = null
@@ -90,6 +94,8 @@ fun AppearanceThemeSection(
         }
     }
 
+    // "*/*" and not a ZIP filter: the picker is the system document UI, where a .fpt has no
+    // registered MIME type, so any narrower filter hides the very files this screen exports.
     val importLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent(),
     ) { uri ->
@@ -99,7 +105,7 @@ fun AppearanceThemeSection(
                 val metadata = ThemeManager.readThemeMetadata(context, uri)
                 loadingDialog.hide()
                 if (metadata == null) {
-                    // Not a themed archive: nothing to confirm, report it as invalid.
+                    // Not a theme archive: nothing to confirm, report it as invalid.
                     showMessage(R.string.theme_import_invalid)
                 } else {
                     pendingImportUri = uri

@@ -124,8 +124,9 @@ fun FolkSettingsScaffold(
         },
         // Opaque, so the entry below this screen (kept composed by the nav
         // host for its card transition and swipe-back gesture) cannot show
-        // through the page.
-        containerColor = MaterialTheme.colorScheme.background,
+        // through the page. FolkTheme.palette.pageBackground stays opaque in wallpaper mode,
+        // where colorScheme.background is transparent by design.
+        containerColor = FolkTheme.palette.pageBackground,
         snackbarHost = {
             if (snackbarHostState != null) {
                 SnackbarHost(snackbarHostState)

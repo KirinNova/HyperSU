@@ -59,6 +59,9 @@ class MainActivityViewModel(
             "key_color",
             "color_style",
             "color_spec",
+            // Not part of MainActivityUiState, but a theme import writes it and the home screen
+            // has to rebuild for the new layout to appear without a restart.
+            "home_layout_style",
             "page_scale",
             "module_description_max_lines",
             "enable_floating_bottom_bar",

@@ -1,5 +1,7 @@
 package com.sukisu.ultra.ui.screen.home
 
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,6 +39,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,7 +58,9 @@ import com.sukisu.ultra.data.repository.HOME_LAYOUT_FOCUS
 import com.sukisu.ultra.data.repository.HOME_LAYOUT_GRID
 import com.sukisu.ultra.data.repository.HOME_LAYOUT_LIST
 import com.sukisu.ultra.data.repository.HOME_LAYOUT_OPTIONS
+import com.sukisu.ultra.data.repository.KEY_HOME_LAYOUT
 import com.sukisu.ultra.data.repository.SettingsRepositoryImpl
+import com.sukisu.ultra.ksuApp
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -154,7 +159,20 @@ internal fun HomePagerFolk(
     bottomInnerPadding: Dp,
 ) {
     val settingsRepo = remember { SettingsRepositoryImpl() }
+    // Observed rather than remembered once: a theme import rewrites home_layout_style while
+    // this screen is alive, and a plain remember would keep showing the old layout until the
+    // app restarted.
+    val prefs = remember { ksuApp.getSharedPreferences("settings", Context.MODE_PRIVATE) }
     var layout by remember { mutableStateOf(settingsRepo.homeLayoutStyle) }
+    DisposableEffect(prefs) {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == null || key == KEY_HOME_LAYOUT) {
+                layout = settingsRepo.homeLayoutStyle
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
 
     FolkScaffold(
         title = stringResource(R.string.app_name),

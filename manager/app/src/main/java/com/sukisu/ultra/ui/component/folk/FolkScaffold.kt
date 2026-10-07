@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sukisu.ultra.ui.navigation.LocalBottomBarVisible
 import com.sukisu.ultra.ui.navigation.LocalIsFloatingNavMode
+import com.sukisu.ultra.ui.theme.tokens.FolkTheme
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.Alignment
 
@@ -166,7 +167,12 @@ fun FolkScaffold(
         // transparent. The nav host keeps the previous entry composed for its
         // card transition and swipe-back gesture, so a page that does not paint
         // its own background lets the screen underneath show through.
-        containerColor = MaterialTheme.colorScheme.background,
+        //
+        // Deliberately FolkTheme.palette.pageBackground and not colorScheme.background: in
+        // wallpaper mode the latter is transparent on purpose (that is what lets the image show
+        // through the main tabs), and using it here is exactly what let a pushed screen display
+        // the previous screen's text on top of the wallpaper.
+        containerColor = FolkTheme.palette.pageBackground,
         // Deriving the content colour from a transparent container yields
         // Unspecified, which drops any text that does not set its own colour to
         // black - unreadable in dark mode. Pin it to the background's content
