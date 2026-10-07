@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.core.content.edit
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
+import com.sukisu.ultra.data.repository.HOME_LAYOUT_FALLBACK
 import com.sukisu.ultra.data.repository.HOME_LAYOUT_OPTIONS
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -440,10 +441,12 @@ object ThemeManager {
             put("useSystemDynamicColor", colorMode.isMonet)
             // FolkPatch has no AMOLED flag; a theme cannot express it, so it is not written.
             put("customColor", settings.intPref("key_color", 0).toString())
-            put("colorStyle", settings.stringPref("color_style", PaletteStyle.TonalSpot.name))
+            // org.json's put(String, Any) throws on null, so every optional string needs a
+            // fallback rather than a nullable value.
+            put("colorStyle", settings.stringPref("color_style", PaletteStyle.TonalSpot.name) ?: PaletteStyle.TonalSpot.name)
             put("colorStandard", if (colorSpec == ColorSpec.SpecVersion.SPEC_2021.name) "MD3_2021" else "MD3_2025")
             put("colorGenerationMode", if (colorMode.isMonet) "custom" else "classic")
-            put("homeLayoutStyle", settings.stringPref("home_layout_style", "circle"))
+            put("homeLayoutStyle", settings.stringPref("home_layout_style", HOME_LAYOUT_FALLBACK) ?: HOME_LAYOUT_FALLBACK)
 
             put("isFontEnabled", font.booleanPref("custom_font_enabled", false))
             put("fontMode", FontMode.fromName(font.stringPref("font_mode", null))?.serializedName ?: "system")
@@ -456,7 +459,7 @@ object ThemeManager {
 
             put("isSoundEffectEnabled", sound.booleanPref("sound_effect_enabled", false))
             put("soundEffectFilename", sound.stringPref("sound_effect_filename", "") ?: "")
-            put("soundEffectScope", sound.stringPref("sound_effect_scope", SoundEffectConfig.SCOPE_GLOBAL))
+            put("soundEffectScope", sound.stringPref("sound_effect_scope", SoundEffectConfig.SCOPE_GLOBAL) ?: SoundEffectConfig.SCOPE_GLOBAL)
 
             // ---- HyperSU-native sections (exact restore) ----
             put("hsSettings", readKeys(settings, appearanceKeys))

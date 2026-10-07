@@ -21,6 +21,8 @@ lateinit var ksuApp: KernelSUApplication
 class KernelSUApplication : Application(), ViewModelStoreOwner {
 
     companion object {
+        private const val TAG = "KernelSUApplication"
+
         fun setEnableOnBackInvokedCallback(appInfo: ApplicationInfo, enable: Boolean) {
             runCatching {
                 val applicationInfoClass = ApplicationInfo::class.java
@@ -33,10 +35,6 @@ class KernelSUApplication : Application(), ViewModelStoreOwner {
 
     lateinit var okhttpClient: OkHttpClient
     private val appViewModelStore by lazy { ViewModelStore() }
-
-    private companion object {
-        const val TAG = "KernelSUApplication"
-    }
 
     override fun attachBaseContext(base: android.content.Context) {
         super.attachBaseContext(com.sukisu.ultra.ui.util.LocaleHelper.wrap(base))

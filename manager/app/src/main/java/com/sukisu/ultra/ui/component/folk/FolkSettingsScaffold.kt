@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import com.sukisu.ultra.ui.navigation.LocalIsRootPage
 import com.sukisu.ultra.ui.theme.tokens.FolkTheme
 import com.sukisu.ultra.ui.util.NavigationBarsSpacer
 import androidx.compose.foundation.layout.widthIn
@@ -122,11 +123,19 @@ fun FolkSettingsScaffold(
                 scrollBehavior = scrollBehavior,
             )
         },
-        // Opaque, so the entry below this screen (kept composed by the nav
-        // host for its card transition and swipe-back gesture) cannot show
-        // through the page. FolkTheme.palette.pageBackground stays opaque in wallpaper mode,
-        // where colorScheme.background is transparent by design.
-        containerColor = FolkTheme.palette.pageBackground,
+        // Opaque on a pushed page, so the entry below (kept composed by the nav host for its card
+        // transition and swipe-back gesture) cannot show through. On a root tab page the opposite
+        // is wanted: it sits on the wallpaper, so the transparent background is what lets the
+        // image read through.
+        containerColor = if (LocalIsRootPage.current) {
+            MaterialTheme.colorScheme.background
+        } else {
+            FolkTheme.palette.pageBackground
+        },
+        // Deriving the content colour from a transparent container yields Unspecified, which
+        // drops any text that does not set its own colour to black - unreadable in dark mode.
+        // Pin it to the background's content colour, which holds in both branches above.
+        contentColor = MaterialTheme.colorScheme.onBackground,
         snackbarHost = {
             if (snackbarHostState != null) {
                 SnackbarHost(snackbarHostState)

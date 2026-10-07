@@ -65,6 +65,7 @@ import com.sukisu.ultra.ui.navigation.FolkBottomBar
 import com.sukisu.ultra.ui.navigation.FolkNavigationRail
 import com.sukisu.ultra.ui.navigation.LocalBottomBarVisible
 import com.sukisu.ultra.ui.navigation.LocalIsFloatingNavMode
+import com.sukisu.ultra.ui.navigation.LocalIsRootPage
 import com.sukisu.ultra.ui.navigation.MainPagerState
 import com.sukisu.ultra.ui.navigation.NavigationBadgeState
 import com.sukisu.ultra.ui.navigation.rememberMainPagerState
@@ -431,43 +432,47 @@ fun MainScreen(
         }
     }
 
-    if (useNavigationRail) {
-        val startInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout)
-            .only(WindowInsetsSides.Start)
-        val navBarBottomPadding = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
+    // Every page inside the tab pager is a root page: it is drawn directly over the wallpaper,
+    // with no entry beneath it, so it must not paint an opaque container or the image disappears.
+    CompositionLocalProvider(LocalIsRootPage provides true) {
+        if (useNavigationRail) {
+            val startInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout)
+                .only(WindowInsetsSides.Start)
+            val navBarBottomPadding = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
 
-        Scaffold(containerColor = MaterialTheme.colorScheme.background) {
-            Row {
-                FolkNavigationRail(
-                    selectedIndex = mainPagerState.selectedPage,
-                    onSelectedIndexChange = mainPagerState::animateToPage,
-                    badge = navigationBadge,
-                )
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .consumeWindowInsets(startInsets)
-                ) {
-                    pagerContent(navBarBottomPadding)
-                }
-            }
-        }
-    } else {
-        Scaffold(
-            bottomBar = {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    FolkBottomBar(
+            Scaffold(containerColor = MaterialTheme.colorScheme.background) {
+                Row {
+                    FolkNavigationRail(
                         selectedIndex = mainPagerState.selectedPage,
                         onSelectedIndexChange = mainPagerState::animateToPage,
                         badge = navigationBadge,
-                        isFloating = enableFloatingBottomBar,
-                        modifier = Modifier.align(Alignment.BottomCenter),
                     )
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .consumeWindowInsets(startInsets)
+                    ) {
+                        pagerContent(navBarBottomPadding)
+                    }
                 }
-            },
-            containerColor = MaterialTheme.colorScheme.background,
-        ) { innerPadding ->
-            pagerContent(innerPadding.calculateBottomPadding())
+            }
+        } else {
+            Scaffold(
+                bottomBar = {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        FolkBottomBar(
+                            selectedIndex = mainPagerState.selectedPage,
+                            onSelectedIndexChange = mainPagerState::animateToPage,
+                            badge = navigationBadge,
+                            isFloating = enableFloatingBottomBar,
+                            modifier = Modifier.align(Alignment.BottomCenter),
+                        )
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.background,
+            ) { innerPadding ->
+                pagerContent(innerPadding.calculateBottomPadding())
+            }
         }
     }
 }

@@ -15,6 +15,7 @@ import com.sukisu.ultra.ui.screen.modulerepo.RepoSort
 import com.sukisu.ultra.ui.theme.booleanPref
 import com.sukisu.ultra.ui.theme.floatPref
 import com.sukisu.ultra.ui.theme.intPref
+import com.sukisu.ultra.ui.theme.stringPref
 import com.sukisu.ultra.ui.util.execKsud
 import com.sukisu.ultra.ui.util.getFeaturePersistValue
 import com.sukisu.ultra.ui.util.getFeatureStatus
