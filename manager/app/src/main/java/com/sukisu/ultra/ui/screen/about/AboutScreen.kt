@@ -1,7 +1,7 @@
 package com.sukisu.ultra.ui.screen.about
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.sukisu.ultra.BuildConfig
@@ -11,9 +11,9 @@ import com.sukisu.ultra.ui.navigation3.LocalNavigator
 @Composable
 fun AboutScreen() {
     val navigator = LocalNavigator.current
-    val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
     // Source code plus the project's QQ group; the Telegram channel the upstream string
-    // mentions is not part of this project.
+    // mentions is not part of this project. The QQ row opens QQ itself, not a browser.
     val htmlString = stringResource(
         id = R.string.about_source_code,
         "<b><a href=\"https://github.com/KirinNova/HyperSU\">GitHub</a></b>",
@@ -27,7 +27,7 @@ fun AboutScreen() {
     )
     val actions = AboutScreenActions(
         onBack = dropUnlessResumed { navigator.pop() },
-        onOpenLink = uriHandler::openUri,
+        onOpenLink = { url -> openAboutLink(context, url) },
     )
 
     AboutScreenFolk(state, actions)
