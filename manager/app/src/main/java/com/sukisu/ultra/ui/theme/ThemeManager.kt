@@ -9,6 +9,7 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.sukisu.ultra.data.repository.HOME_LAYOUT_FALLBACK
 import com.sukisu.ultra.data.repository.HOME_LAYOUT_OPTIONS
+import com.sukisu.ultra.ui.util.LocaleHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -130,6 +131,18 @@ object ThemeManager {
                 putString("home_layout_style", it)
             }
         }
+
+        // The language, when the theme names one this build ships.
+        //
+        // Applied through LocaleHelper rather than written into the preference above: from
+        // Android 13 on the platform's applicationLocales is the source of truth, and
+        // getCurrentLanguage() rewrites the preference from it - so a value written directly
+        // would be discarded the next time anything read it. A tag with no resources is ignored
+        // rather than passed on, since asking for one is what a failed language switch looks
+        // like.
+        json.optString("appLanguage", "")
+            .takeIf { it in LocaleHelper.SUPPORTED_TAGS }
+            ?.let { LocaleHelper.setLanguage(context, it) }
     }
 
     /** Maps FolkPatch's flat background keys onto HyperSU's wallpaper preferences. */
@@ -148,6 +161,55 @@ object ThemeManager {
             )
             putFloat("custom_background_day_dim", json.optDouble("backgroundDayDim", 0.2).toFloat())
             putFloat("custom_background_night_dim", json.optDouble("backgroundNightDim", 0.2).toFloat())
+
+            // The rest of the wallpaper settings, in the same flat vocabulary. Without these a
+            // theme carried its images across but none of the switches and sliders that decide
+            // whether they are shown or how strongly - so the import looked like it had done
+            // nothing beyond swapping the picture.
+            putBoolean("multi_background_enabled", json.optBoolean("isMultiBackgroundEnabled", false))
+
+            putBoolean("video_background_enabled", json.optBoolean("isVideoBackgroundEnabled", false))
+            putFloat("video_volume", json.optDouble("videoVolume", 1.0).toFloat())
+
+            // Focus card: the hero card's own wallpaper and its dim/opacity controls.
+            putBoolean(
+                "focus_card_background_enabled",
+                json.optBoolean("isFocusCardBackgroundEnabled", false),
+            )
+            putFloat("focus_card_bg_dim", json.optDouble("focusCardBgDim", 0.0).toFloat())
+            putBoolean(
+                "focus_card_dual_dim_enabled",
+                json.optBoolean("isFocusCardDualDimEnabled", false),
+            )
+            putFloat("focus_card_day_dim", json.optDouble("focusCardBgDayDim", 0.0).toFloat())
+            putFloat("focus_card_night_dim", json.optDouble("focusCardBgNightDim", 0.0).toFloat())
+            putFloat("focus_card_opacity", json.optDouble("focusCardBgOpacity", 1.0).toFloat())
+            putBoolean(
+                "focus_card_dual_opacity_enabled",
+                json.optBoolean("isFocusCardDualOpacityEnabled", false),
+            )
+            putFloat("focus_card_day_opacity", json.optDouble("focusCardBgDayOpacity", 1.0).toFloat())
+            putFloat("focus_card_night_opacity", json.optDouble("focusCardBgNightOpacity", 1.0).toFloat())
+
+            // Dashboard card: shared dim/opacity across the tiles.
+            putBoolean(
+                "dashboard_card_background_enabled",
+                json.optBoolean("isDashboardCardBackgroundEnabled", false),
+            )
+            putFloat("dashboard_card_bg_dim", json.optDouble("dashboardCardBgDim", 0.3).toFloat())
+            putBoolean(
+                "dashboard_card_dual_dim_enabled",
+                json.optBoolean("isDashboardCardDualDimEnabled", false),
+            )
+            putFloat("dashboard_card_day_dim", json.optDouble("dashboardCardBgDayDim", 0.3).toFloat())
+            putFloat("dashboard_card_night_dim", json.optDouble("dashboardCardBgNightDim", 0.3).toFloat())
+            putFloat("dashboard_card_opacity", json.optDouble("dashboardCardBgOpacity", 1.0).toFloat())
+            putBoolean(
+                "dashboard_card_dual_opacity_enabled",
+                json.optBoolean("isDashboardCardDualOpacityEnabled", false),
+            )
+            putFloat("dashboard_card_day_opacity", json.optDouble("dashboardCardBgDayOpacity", 1.0).toFloat())
+            putFloat("dashboard_card_night_opacity", json.optDouble("dashboardCardBgNightOpacity", 1.0).toFloat())
         }
     }
 
@@ -340,6 +402,24 @@ object ThemeManager {
         "dashboard_tile_bg_seccomp" to "dashboard_tile_bg_uri_seccomp",
     )
 
+    /**
+     * FolkPatch entry names that differ from HyperSU's, mapped onto HyperSU's base name.
+     *
+     * The two apps agree on most slots, but not all, and a name that does not match is silently
+     * dropped - which reads as "the theme imported but the wallpaper did nothing". The module
+     * background is the one that bit: FolkPatch calls it `background_system_module`, HyperSU
+     * `background_module`, and because `background` is a prefix of both, the longest-prefix
+     * lookup below would otherwise fall through to nothing.
+     *
+     * FolkPatch also stores one dashboard image (`dashboard_card_bg`) where HyperSU stores one
+     * per tile; that maps onto the working tile, which is the card FolkPatch's single image
+     * belongs to.
+     */
+    private val folkPatchEntryAliases = mapOf(
+        "background_system_module" to "background_module",
+        "dashboard_card_bg" to "dashboard_tile_bg_working",
+    )
+
     private val imageExtensions =
         listOf(".jpg", ".png", ".gif", ".webp", ".mp4", ".webm", ".mkv", ".mov", ".avi", ".3gp")
 
@@ -447,6 +527,41 @@ object ThemeManager {
             put("colorStandard", if (colorSpec == ColorSpec.SpecVersion.SPEC_2021.name) "MD3_2021" else "MD3_2025")
             put("colorGenerationMode", if (colorMode.isMonet) "custom" else "classic")
             put("homeLayoutStyle", settings.stringPref("home_layout_style", HOME_LAYOUT_FALLBACK) ?: HOME_LAYOUT_FALLBACK)
+            // The language, so a theme carries it both ways. Read through LocaleHelper for the
+            // same reason it is applied through it: the preference is only a mirror of the
+            // platform's applicationLocales on Android 13 and up.
+            LocaleHelper.getCurrentLanguage(context)
+                .takeIf { it.isNotBlank() }
+                ?.let { put("appLanguage", it) }
+
+            // ---- FolkPatch wallpaper keys ----
+            // The switches and sliders that go with the images. Writing these matters more than
+            // it looks: FolkPatch resets a slot to its default when its key is absent, so a theme
+            // that shipped a focus-card picture without these would arrive with the picture
+            // hidden behind a disabled switch.
+            put("isMultiBackgroundEnabled", background.booleanPref("multi_background_enabled", false))
+            put("isVideoBackgroundEnabled", background.booleanPref("video_background_enabled", false))
+            put("videoVolume", background.floatPref("video_volume", 1.0f).toDouble())
+
+            put("isFocusCardBackgroundEnabled", background.booleanPref("focus_card_background_enabled", false))
+            put("focusCardBgDim", background.floatPref("focus_card_bg_dim", 0.0f).toDouble())
+            put("isFocusCardDualDimEnabled", background.booleanPref("focus_card_dual_dim_enabled", false))
+            put("focusCardBgDayDim", background.floatPref("focus_card_day_dim", 0.0f).toDouble())
+            put("focusCardBgNightDim", background.floatPref("focus_card_night_dim", 0.0f).toDouble())
+            put("isFocusCardDualOpacityEnabled", background.booleanPref("focus_card_dual_opacity_enabled", false))
+            put("focusCardBgOpacity", background.floatPref("focus_card_opacity", 1.0f).toDouble())
+            put("focusCardBgDayOpacity", background.floatPref("focus_card_day_opacity", 1.0f).toDouble())
+            put("focusCardBgNightOpacity", background.floatPref("focus_card_night_opacity", 1.0f).toDouble())
+
+            put("isDashboardCardBackgroundEnabled", background.booleanPref("dashboard_card_background_enabled", false))
+            put("dashboardCardBgDim", background.floatPref("dashboard_card_bg_dim", 0.3f).toDouble())
+            put("isDashboardCardDualDimEnabled", background.booleanPref("dashboard_card_dual_dim_enabled", false))
+            put("dashboardCardBgDayDim", background.floatPref("dashboard_card_day_dim", 0.3f).toDouble())
+            put("dashboardCardBgNightDim", background.floatPref("dashboard_card_night_dim", 0.3f).toDouble())
+            put("isDashboardCardDualOpacityEnabled", background.booleanPref("dashboard_card_dual_opacity_enabled", false))
+            put("dashboardCardBgOpacity", background.floatPref("dashboard_card_opacity", 1.0f).toDouble())
+            put("dashboardCardBgDayOpacity", background.floatPref("dashboard_card_day_opacity", 1.0f).toDouble())
+            put("dashboardCardBgNightOpacity", background.floatPref("dashboard_card_night_opacity", 1.0f).toDouble())
 
             put("isFontEnabled", font.booleanPref("custom_font_enabled", false))
             put("fontMode", FontMode.fromName(font.stringPref("font_mode", null))?.serializedName ?: "system")
@@ -766,14 +881,20 @@ object ThemeManager {
     /**
      * Rewrites the entry names that differ between the two managers onto HyperSU's own.
      *
-     * Everything else is already shared: `background*`, `background_*`, `focus_card_bg*` and
-     * `dashboard_tile_bg_*` are written under the same names by both apps.
+     * `video_background.*` and the aliases in [folkPatchEntryAliases] are the differences; the
+     * rest - `background*`, `background_*`, `focus_card_bg*` and `dashboard_tile_bg_*` - are
+     * written under the same names by both apps.
      */
     private fun normaliseEntryName(name: String): String {
         // FolkPatch: video_background.mp4 -> HyperSU: background_video.mp4
         if (name.startsWith("video_background")) {
             return name.replaceFirst("video_background", "background_video")
         }
-        return name
+        // The extension is carried over unchanged; only the base name is rewritten.
+        val dot = name.lastIndexOf('.')
+        val base = if (dot >= 0) name.substring(0, dot) else name
+        val ext = if (dot >= 0) name.substring(dot) else ""
+        val mapped = folkPatchEntryAliases[base] ?: return name
+        return mapped + ext
     }
 }
