@@ -38,11 +38,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sukisu.ultra.R
-import com.sukisu.ultra.ui.theme.isInDarkTheme
-import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.darkColorScheme
-import top.yukonga.miuix.kmp.theme.lightColorScheme
 import com.sukisu.ultra.ui.component.KsuIsValid
 import com.sukisu.ultra.ui.component.folk.FolkChoicePreference
 import com.sukisu.ultra.ui.component.folk.FolkNavigationPreference
@@ -51,6 +46,7 @@ import com.sukisu.ultra.ui.component.folk.FolkSendLogSheet
 import com.sukisu.ultra.ui.component.folk.FolkSettingsSectionGroup
 import com.sukisu.ultra.ui.component.folk.FolkSwitchPreference
 import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
+import com.sukisu.ultra.ui.component.folk.FolkValuePreference
 import com.sukisu.ultra.ui.component.uninstalldialog.UninstallDialog
 import com.sukisu.ultra.ui.util.LocaleHelper
 
@@ -124,33 +120,21 @@ fun SettingPagerFolk(
                     item {
                         val languageIndex = languageTags.indexOf(uiState.appLanguage)
                             .coerceAtLeast(0)
-                        // The choice stays inside the app: a Miuix window-level dropdown
-                        // instead of the system's per-app language page. The switch itself
-                        // is masked by the FolkLanguageSwitch cover, so nothing hands the
-                        // task away and the recreation happens behind our own page.
+                        // The row opens a page rather than a dropdown, in the FolkPatch design:
+                        // the languages are a list the user reads, not a menu that covers the
+                        // screen it was opened from.
                         //
-                        // This is the pairing the switch page depends on. Handing the choice
-                        // to the system instead leaves that cover with nothing to mask, and
-                        // the activity is recreated in front of the user.
-                        MiuixTheme(
-                            colors = if (isInDarkTheme()) darkColorScheme() else lightColorScheme(),
-                        ) {
-                            WindowDropdownPreference(
-                                title = stringResource(R.string.settings_language),
-                                summary = stringResource(R.string.settings_language_summary),
-                                items = languageNames,
-                                selectedIndex = languageIndex,
-                                startAction = {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Language,
-                                        contentDescription = null,
-                                    )
-                                },
-                                onSelectedIndexChange = { index ->
-                                    actions.onSetLanguage(languageTags[index])
-                                },
-                            )
-                        }
+                        // The switch itself is still masked by the FolkLanguageSwitch cover,
+                        // which is the pairing this depends on: handing the choice to the
+                        // system's per-app language page leaves that cover with nothing to
+                        // mask and recreates the activity in front of the user.
+                        FolkValuePreference(
+                            title = stringResource(R.string.settings_language),
+                            summary = stringResource(R.string.settings_language_summary),
+                            icon = Icons.Rounded.Language,
+                            value = languageNames[languageIndex],
+                            onClick = actions.onOpenLanguage,
+                        )
                     }
                     item {
                         FolkNavigationPreference(
