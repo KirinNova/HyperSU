@@ -91,8 +91,11 @@ object ThemeManager {
      * boolean night mode plus a "follow system" flag, HyperSU a single `color_mode` enum. The
      * mapping below is the inverse of what [buildConfigJson] writes, so a theme exported by
      * either app lands in the same state here.
+     *
+     * Returns the language tag the theme asked for, when it named one this build ships, or null.
+     * The caller applies it - see the note at the return.
      */
-    private fun applyFolkPatchAppearance(context: Context, json: JSONObject) {
+    private fun applyFolkPatchAppearance(context: Context, json: JSONObject): String? {
         val settings = context.getSharedPreferences(SETTINGS_PREFS, Context.MODE_PRIVATE)
 
         val followSys = json.optBoolean("nightModeFollowSys", true)
@@ -132,84 +135,117 @@ object ThemeManager {
             }
         }
 
-        // The language, when the theme names one this build ships.
-        //
-        // Applied through LocaleHelper rather than written into the preference above: from
-        // Android 13 on the platform's applicationLocales is the source of truth, and
-        // getCurrentLanguage() rewrites the preference from it - so a value written directly
-        // would be discarded the next time anything read it. A tag with no resources is ignored
-        // rather than passed on, since asking for one is what a failed language switch looks
-        // like.
-        json.optString("appLanguage", "")
+        // The language is *not* applied here. On Android 13 and up LocaleHelper.setLanguage
+        // assigns applicationLocales, which makes the platform recreate the activity; doing that
+        // from inside this IO block, while the caller is holding a loading dialog, is what left
+        // the import looking hung. The tag is returned instead, and the caller applies it on the
+        // main thread once the import has finished.
+        return json.optString("appLanguage", "")
             .takeIf { it in LocaleHelper.SUPPORTED_TAGS }
-            ?.let { LocaleHelper.setLanguage(context, it) }
     }
 
-    /** Maps FolkPatch's flat background keys onto HyperSU's wallpaper preferences. */
+    /**
+     * Maps FolkPatch's flat background keys onto HyperSU's wallpaper preferences.
+     *
+     * A key the theme does not mention is left alone rather than written with a default. That
+     * matters for the enable flags: BackgroundConfig.load() turns a wallpaper's switch on when
+     * an image is present for it, and writing an explicit `false` here overrode that - a theme
+     * carrying a focus-card picture arrived with the picture saved and the card switched off,
+     * which reads as "the wallpaper did not apply".
+     */
     private fun applyFolkPatchBackground(context: Context, json: JSONObject) {
         val background = context.getSharedPreferences(BackgroundConfig.PREFS_NAME, Context.MODE_PRIVATE)
-        val enabled = json.optBoolean("isBackgroundEnabled", false)
 
         background.edit {
-            putBoolean("custom_background_enabled", enabled)
-            putFloat("custom_background_opacity", json.optDouble("backgroundOpacity", 0.5).toFloat())
-            putFloat("custom_background_blur", json.optDouble("backgroundBlur", 0.0).toFloat())
-            putFloat("custom_background_dim", json.optDouble("backgroundDim", 0.2).toFloat())
-            putBoolean(
-                "custom_background_dual_dim_enabled",
-                json.optBoolean("isDualBackgroundDimEnabled", false),
-            )
-            putFloat("custom_background_day_dim", json.optDouble("backgroundDayDim", 0.2).toFloat())
-            putFloat("custom_background_night_dim", json.optDouble("backgroundNightDim", 0.2).toFloat())
+            // Main background. `isBackgroundEnabled` has no fallback of its own, so its absence
+            // means "off", matching how the exporter writes it.
+            putBoolean("custom_background_enabled", json.optBoolean("isBackgroundEnabled", false))
+            json.optDouble("backgroundOpacity")?.takeIf { json.has("backgroundOpacity") }
+                ?.let { putFloat("custom_background_opacity", it.toFloat()) }
+            json.optDouble("backgroundBlur")?.takeIf { json.has("backgroundBlur") }
+                ?.let { putFloat("custom_background_blur", it.toFloat()) }
+            json.optDouble("backgroundDim")?.takeIf { json.has("backgroundDim") }
+                ?.let { putFloat("custom_background_dim", it.toFloat()) }
+            if (json.has("isDualBackgroundDimEnabled")) {
+                putBoolean("custom_background_dual_dim_enabled", json.optBoolean("isDualBackgroundDimEnabled", false))
+            }
+            if (json.has("backgroundDayDim")) {
+                putFloat("custom_background_day_dim", json.optDouble("backgroundDayDim", 0.0).toFloat())
+            }
+            if (json.has("backgroundNightDim")) {
+                putFloat("custom_background_night_dim", json.optDouble("backgroundNightDim", 0.0).toFloat())
+            }
 
             // The rest of the wallpaper settings, in the same flat vocabulary. Without these a
             // theme carried its images across but none of the switches and sliders that decide
-            // whether they are shown or how strongly - so the import looked like it had done
-            // nothing beyond swapping the picture.
-            putBoolean("multi_background_enabled", json.optBoolean("isMultiBackgroundEnabled", false))
-
-            putBoolean("video_background_enabled", json.optBoolean("isVideoBackgroundEnabled", false))
-            putFloat("video_volume", json.optDouble("videoVolume", 1.0).toFloat())
+            // whether they are shown or how strongly.
+            if (json.has("isMultiBackgroundEnabled")) {
+                putBoolean("multi_background_enabled", json.optBoolean("isMultiBackgroundEnabled", false))
+            }
+            if (json.has("isVideoBackgroundEnabled")) {
+                putBoolean("video_background_enabled", json.optBoolean("isVideoBackgroundEnabled", false))
+            }
+            if (json.has("videoVolume")) {
+                putFloat("video_volume", json.optDouble("videoVolume", 1.0).toFloat())
+            }
 
             // Focus card: the hero card's own wallpaper and its dim/opacity controls.
-            putBoolean(
-                "focus_card_background_enabled",
-                json.optBoolean("isFocusCardBackgroundEnabled", false),
-            )
-            putFloat("focus_card_bg_dim", json.optDouble("focusCardBgDim", 0.0).toFloat())
-            putBoolean(
-                "focus_card_dual_dim_enabled",
-                json.optBoolean("isFocusCardDualDimEnabled", false),
-            )
-            putFloat("focus_card_day_dim", json.optDouble("focusCardBgDayDim", 0.0).toFloat())
-            putFloat("focus_card_night_dim", json.optDouble("focusCardBgNightDim", 0.0).toFloat())
-            putFloat("focus_card_opacity", json.optDouble("focusCardBgOpacity", 1.0).toFloat())
-            putBoolean(
-                "focus_card_dual_opacity_enabled",
-                json.optBoolean("isFocusCardDualOpacityEnabled", false),
-            )
-            putFloat("focus_card_day_opacity", json.optDouble("focusCardBgDayOpacity", 1.0).toFloat())
-            putFloat("focus_card_night_opacity", json.optDouble("focusCardBgNightOpacity", 1.0).toFloat())
+            if (json.has("isFocusCardBackgroundEnabled")) {
+                putBoolean("focus_card_background_enabled", json.optBoolean("isFocusCardBackgroundEnabled", false))
+            }
+            if (json.has("focusCardBgDim")) {
+                putFloat("focus_card_bg_dim", json.optDouble("focusCardBgDim", 0.0).toFloat())
+            }
+            if (json.has("isFocusCardDualDimEnabled")) {
+                putBoolean("focus_card_dual_dim_enabled", json.optBoolean("isFocusCardDualDimEnabled", false))
+            }
+            if (json.has("focusCardBgDayDim")) {
+                putFloat("focus_card_day_dim", json.optDouble("focusCardBgDayDim", 0.0).toFloat())
+            }
+            if (json.has("focusCardBgNightDim")) {
+                putFloat("focus_card_night_dim", json.optDouble("focusCardBgNightDim", 0.0).toFloat())
+            }
+            if (json.has("focusCardBgOpacity")) {
+                putFloat("focus_card_opacity", json.optDouble("focusCardBgOpacity", 1.0).toFloat())
+            }
+            if (json.has("isFocusCardDualOpacityEnabled")) {
+                putBoolean("focus_card_dual_opacity_enabled", json.optBoolean("isFocusCardDualOpacityEnabled", false))
+            }
+            if (json.has("focusCardBgDayOpacity")) {
+                putFloat("focus_card_day_opacity", json.optDouble("focusCardBgDayOpacity", 1.0).toFloat())
+            }
+            if (json.has("focusCardBgNightOpacity")) {
+                putFloat("focus_card_night_opacity", json.optDouble("focusCardBgNightOpacity", 1.0).toFloat())
+            }
 
             // Dashboard card: shared dim/opacity across the tiles.
-            putBoolean(
-                "dashboard_card_background_enabled",
-                json.optBoolean("isDashboardCardBackgroundEnabled", false),
-            )
-            putFloat("dashboard_card_bg_dim", json.optDouble("dashboardCardBgDim", 0.3).toFloat())
-            putBoolean(
-                "dashboard_card_dual_dim_enabled",
-                json.optBoolean("isDashboardCardDualDimEnabled", false),
-            )
-            putFloat("dashboard_card_day_dim", json.optDouble("dashboardCardBgDayDim", 0.3).toFloat())
-            putFloat("dashboard_card_night_dim", json.optDouble("dashboardCardBgNightDim", 0.3).toFloat())
-            putFloat("dashboard_card_opacity", json.optDouble("dashboardCardBgOpacity", 1.0).toFloat())
-            putBoolean(
-                "dashboard_card_dual_opacity_enabled",
-                json.optBoolean("isDashboardCardDualOpacityEnabled", false),
-            )
-            putFloat("dashboard_card_day_opacity", json.optDouble("dashboardCardBgDayOpacity", 1.0).toFloat())
-            putFloat("dashboard_card_night_opacity", json.optDouble("dashboardCardBgNightOpacity", 1.0).toFloat())
+            if (json.has("isDashboardCardBackgroundEnabled")) {
+                putBoolean("dashboard_card_background_enabled", json.optBoolean("isDashboardCardBackgroundEnabled", false))
+            }
+            if (json.has("dashboardCardBgDim")) {
+                putFloat("dashboard_card_bg_dim", json.optDouble("dashboardCardBgDim", 0.3).toFloat())
+            }
+            if (json.has("isDashboardCardDualDimEnabled")) {
+                putBoolean("dashboard_card_dual_dim_enabled", json.optBoolean("isDashboardCardDualDimEnabled", false))
+            }
+            if (json.has("dashboardCardBgDayDim")) {
+                putFloat("dashboard_card_day_dim", json.optDouble("dashboardCardBgDayDim", 0.3).toFloat())
+            }
+            if (json.has("dashboardCardBgNightDim")) {
+                putFloat("dashboard_card_night_dim", json.optDouble("dashboardCardBgNightDim", 0.3).toFloat())
+            }
+            if (json.has("dashboardCardBgOpacity")) {
+                putFloat("dashboard_card_opacity", json.optDouble("dashboardCardBgOpacity", 1.0).toFloat())
+            }
+            if (json.has("isDashboardCardDualOpacityEnabled")) {
+                putBoolean("dashboard_card_dual_opacity_enabled", json.optBoolean("isDashboardCardDualOpacityEnabled", false))
+            }
+            if (json.has("dashboardCardBgDayOpacity")) {
+                putFloat("dashboard_card_day_opacity", json.optDouble("dashboardCardBgDayOpacity", 1.0).toFloat())
+            }
+            if (json.has("dashboardCardBgNightOpacity")) {
+                putFloat("dashboard_card_night_opacity", json.optDouble("dashboardCardBgNightOpacity", 1.0).toFloat())
+            }
         }
     }
 
@@ -543,7 +579,17 @@ object ThemeManager {
             put("isVideoBackgroundEnabled", background.booleanPref("video_background_enabled", false))
             put("videoVolume", background.floatPref("video_volume", 1.0f).toDouble())
 
-            put("isFocusCardBackgroundEnabled", background.booleanPref("focus_card_background_enabled", false))
+            // The enable flags follow the same rule BackgroundConfig.load() applies: a wallpaper
+            // that is present counts as enabled even when the switch was never touched, so the
+            // fallback here is "is there an image", not false. Exporting a literal false would
+            // hand the next importer a theme whose picture is there but switched off.
+            put(
+                "isFocusCardBackgroundEnabled",
+                background.booleanPref(
+                    "focus_card_background_enabled",
+                    !background.stringPref("focus_card_bg_uri", null).isNullOrBlank(),
+                ),
+            )
             put("focusCardBgDim", background.floatPref("focus_card_bg_dim", 0.0f).toDouble())
             put("isFocusCardDualDimEnabled", background.booleanPref("focus_card_dual_dim_enabled", false))
             put("focusCardBgDayDim", background.floatPref("focus_card_day_dim", 0.0f).toDouble())
@@ -553,7 +599,15 @@ object ThemeManager {
             put("focusCardBgDayOpacity", background.floatPref("focus_card_day_opacity", 1.0f).toDouble())
             put("focusCardBgNightOpacity", background.floatPref("focus_card_night_opacity", 1.0f).toDouble())
 
-            put("isDashboardCardBackgroundEnabled", background.booleanPref("dashboard_card_background_enabled", false))
+            put(
+                "isDashboardCardBackgroundEnabled",
+                background.booleanPref(
+                    "dashboard_card_background_enabled",
+                    listOf("working", "selinux", "zygisk", "seccomp").any {
+                        !background.stringPref("dashboard_tile_bg_uri_$it", null).isNullOrBlank()
+                    },
+                ),
+            )
             put("dashboardCardBgDim", background.floatPref("dashboard_card_bg_dim", 0.3f).toDouble())
             put("isDashboardCardDualDimEnabled", background.booleanPref("dashboard_card_dual_dim_enabled", false))
             put("dashboardCardBgDayDim", background.floatPref("dashboard_card_day_dim", 0.3f).toDouble())
@@ -618,12 +672,24 @@ object ThemeManager {
         }
     }
 
-    /** Apply a theme archive: appearance keys, wallpaper keys and the wallpaper images. */
+    /**
+     * Apply a theme archive: appearance keys, wallpaper keys and the wallpaper images.
+     *
+     * The language, if the theme names one, is applied on the main thread once the rest is done.
+     * It cannot be applied from inside the IO block below: on Android 13 and up it assigns
+     * applicationLocales, which makes the platform recreate the activity, and a recreation
+     * triggered while the caller still holds its loading dialog is what made an import look
+     * hung. Doing it last also means a failure earlier in the import never leaves the app
+     * switched into another language.
+     */
     suspend fun importTheme(context: Context, uri: Uri): Boolean {
-        return withContext(Dispatchers.IO) {
+        // A null result means the import failed; a successful one carries the language the theme
+        // asked for, or null when it named none. Wrapping the tag keeps the two apart, which a
+        // bare nullable string could not.
+        val result = withContext(Dispatchers.IO) {
             val tempDir = File(context.cacheDir, "theme_import")
             try {
-                val json = openConfig(context, uri) ?: return@withContext false
+                val json = openConfig(context, uri) ?: return@withContext null
 
                 // Images first: the preference URIs written below must already resolve.
                 val localUris = unzipImages(context, uri, tempDir)
@@ -636,8 +702,10 @@ object ThemeManager {
                 json.optJSONObject("hsSettings")?.let { section ->
                     writeKeys(context.getSharedPreferences(SETTINGS_PREFS, Context.MODE_PRIVATE), section)
                 }
-                if (!hasNativeSections) {
+                val language = if (!hasNativeSections) {
                     applyFolkPatchAppearance(context, json)
+                } else {
+                    null
                 }
 
                 val backgroundPrefs = context.getSharedPreferences(
@@ -688,15 +756,28 @@ object ThemeManager {
 
                 BackgroundConfig.load(context)
                 Log.d(TAG, "theme imported from $uri")
-                true
+                ImportResult(language)
             } catch (e: Exception) {
                 Log.e(TAG, "failed to import theme", e)
-                false
+                null
             } finally {
                 tempDir.deleteRecursively()
             }
+        } ?: return false
+
+        // Applied on the main thread, after everything else has succeeded: on Android 13 and up
+        // this assigns applicationLocales, which recreates the activity.
+        result.language?.let { tag ->
+            withContext(Dispatchers.Main) {
+                runCatching { LocaleHelper.setLanguage(context, tag) }
+                    .onFailure { Log.w(TAG, "failed to apply theme language $tag", it) }
+            }
         }
+        return true
     }
+
+    /** A finished import: the language it asked for, or null when it named none. */
+    private data class ImportResult(val language: String?)
 
     /**
      * Restore the built-in appearance and drop every wallpaper. Other settings are untouched.
