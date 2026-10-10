@@ -80,6 +80,7 @@ import com.sukisu.ultra.ui.screen.settings.AppearanceBannerSection
 import com.sukisu.ultra.ui.screen.settings.AppearanceDashboardCardSection
 import com.sukisu.ultra.ui.screen.settings.AppearanceFocusCardSection
 import com.sukisu.ultra.ui.screen.settings.AppearanceFontSection
+import com.sukisu.ultra.ui.screen.settings.AppearanceGridCardSection
 import com.sukisu.ultra.ui.screen.settings.AppearanceThemeSection
 import com.sukisu.ultra.ui.screen.settings.MultimediaMusicSection
 import com.sukisu.ultra.ui.screen.settings.MultimediaSoundSection
@@ -382,6 +383,13 @@ fun ColorPaletteScreenFolk(
 
         item {
             AppearanceFocusCardSection(
+                snackBarHost = snackbarHost,
+                loadingDialog = loadingDialog,
+            )
+        }
+
+        item {
+            AppearanceGridCardSection(
                 snackBarHost = snackbarHost,
                 loadingDialog = loadingDialog,
             )

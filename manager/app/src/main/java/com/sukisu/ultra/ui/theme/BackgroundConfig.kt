@@ -65,6 +65,33 @@ object BackgroundConfig {
     var focusCardBgNightOpacity: Float by mutableStateOf(1f)
         private set
 
+    // Grid 布局主卡片的独立壁纸。
+    //
+    // 与 focus card 分开，是因为两者在 FolkPatch 里就是两套设置：Grid 的主卡片可以单独换图，
+    // 而 focus card 的图服务于 Focus 布局。合并成一份会让其中一个布局被另一个的图覆盖。
+    var gridWorkingCardBgUri: String? by mutableStateOf(null)
+        private set
+    var isGridWorkingCardBackgroundEnabled: Boolean by mutableStateOf(false)
+        private set
+    var isGridWorkingCardDualOpacityEnabled: Boolean by mutableStateOf(false)
+        private set
+    var gridWorkingCardBgOpacity: Float by mutableStateOf(1f)
+        private set
+    var gridWorkingCardBgDayOpacity: Float by mutableStateOf(1f)
+        private set
+    var gridWorkingCardBgNightOpacity: Float by mutableStateOf(1f)
+        private set
+    var gridWorkingCardBgDim: Float by mutableStateOf(0f)
+        private set
+    var isGridWorkingCardCheckHidden: Boolean by mutableStateOf(false)
+        private set
+    var isGridWorkingCardTextHidden: Boolean by mutableStateOf(false)
+        private set
+    var isGridWorkingCardModeHidden: Boolean by mutableStateOf(false)
+        private set
+    var isListWorkingCardModeHidden: Boolean by mutableStateOf(false)
+        private set
+
     // Dashboard 布局的四个磁贴壁纸：每个磁贴一张图，共用一套明暗/不透明度。
     var isDashboardCardBackgroundEnabled: Boolean by mutableStateOf(false)
         private set
@@ -177,6 +204,19 @@ object BackgroundConfig {
     private const val KEY_FOCUS_CARD_DUAL_OPACITY_ENABLED = "focus_card_dual_opacity_enabled"
     private const val KEY_FOCUS_CARD_DAY_OPACITY = "focus_card_day_opacity"
     private const val KEY_FOCUS_CARD_NIGHT_OPACITY = "focus_card_night_opacity"
+
+    // Grid 布局主卡片。键名与 FolkPatch 一致，主题包才能双向搬运。
+    private const val KEY_GRID_WORKING_CARD_BG_URI = "grid_working_card_background_uri"
+    private const val KEY_GRID_WORKING_CARD_ENABLED = "grid_working_card_background_enabled"
+    private const val KEY_GRID_WORKING_CARD_DUAL_OPACITY_ENABLED = "grid_working_card_dual_opacity_enabled"
+    private const val KEY_GRID_WORKING_CARD_OPACITY = "grid_working_card_background_opacity"
+    private const val KEY_GRID_WORKING_CARD_DAY_OPACITY = "grid_working_card_background_day_opacity"
+    private const val KEY_GRID_WORKING_CARD_NIGHT_OPACITY = "grid_working_card_background_night_opacity"
+    private const val KEY_GRID_WORKING_CARD_DIM = "grid_working_card_background_dim"
+    private const val KEY_GRID_WORKING_CARD_CHECK_HIDDEN = "grid_working_card_check_hidden"
+    private const val KEY_GRID_WORKING_CARD_TEXT_HIDDEN = "grid_working_card_text_hidden"
+    private const val KEY_GRID_WORKING_CARD_MODE_HIDDEN = "grid_working_card_mode_hidden"
+    private const val KEY_LIST_WORKING_CARD_MODE_HIDDEN = "list_working_card_mode_hidden"
 
     // Dashboard 磁贴
     private const val KEY_DASHBOARD_CARD_BACKGROUND_ENABLED = "dashboard_card_background_enabled"
@@ -330,6 +370,60 @@ object BackgroundConfig {
             if (isDarkTheme) focusCardBgNightOpacity else focusCardBgDayOpacity
         } else {
             focusCardBgOpacity
+        }
+
+    // ---- Grid 布局主卡片 ----
+
+    fun updateGridWorkingCardBgUri(uri: String?) {
+        gridWorkingCardBgUri = uri
+    }
+
+    fun setGridWorkingCardBackgroundEnabledState(enabled: Boolean) {
+        isGridWorkingCardBackgroundEnabled = enabled
+    }
+
+    fun setGridWorkingCardDualOpacityEnabledState(enabled: Boolean) {
+        isGridWorkingCardDualOpacityEnabled = enabled
+    }
+
+    fun setGridWorkingCardBgOpacityValue(value: Float) {
+        gridWorkingCardBgOpacity = value
+    }
+
+    fun setGridWorkingCardBgDayOpacityValue(value: Float) {
+        gridWorkingCardBgDayOpacity = value
+    }
+
+    fun setGridWorkingCardBgNightOpacityValue(value: Float) {
+        gridWorkingCardBgNightOpacity = value
+    }
+
+    fun setGridWorkingCardBgDimValue(value: Float) {
+        gridWorkingCardBgDim = value
+    }
+
+    fun setGridWorkingCardCheckHiddenState(hidden: Boolean) {
+        isGridWorkingCardCheckHidden = hidden
+    }
+
+    fun setGridWorkingCardTextHiddenState(hidden: Boolean) {
+        isGridWorkingCardTextHidden = hidden
+    }
+
+    fun setGridWorkingCardModeHiddenState(hidden: Boolean) {
+        isGridWorkingCardModeHidden = hidden
+    }
+
+    fun setListWorkingCardModeHiddenState(hidden: Boolean) {
+        isListWorkingCardModeHidden = hidden
+    }
+
+    /** 双切开启时按当前主题取值，否则用统一值。 */
+    fun getEffectiveGridWorkingCardBgOpacity(isDarkTheme: Boolean): Float =
+        if (isGridWorkingCardDualOpacityEnabled) {
+            if (isDarkTheme) gridWorkingCardBgNightOpacity else gridWorkingCardBgDayOpacity
+        } else {
+            gridWorkingCardBgOpacity
         }
 
     // ---- Dashboard 磁贴 ----
@@ -514,6 +608,18 @@ object BackgroundConfig {
             putFloat(KEY_FOCUS_CARD_DAY_OPACITY, focusCardBgDayOpacity)
             putFloat(KEY_FOCUS_CARD_NIGHT_OPACITY, focusCardBgNightOpacity)
 
+            putString(KEY_GRID_WORKING_CARD_BG_URI, gridWorkingCardBgUri)
+            putBoolean(KEY_GRID_WORKING_CARD_ENABLED, isGridWorkingCardBackgroundEnabled)
+            putBoolean(KEY_GRID_WORKING_CARD_DUAL_OPACITY_ENABLED, isGridWorkingCardDualOpacityEnabled)
+            putFloat(KEY_GRID_WORKING_CARD_OPACITY, gridWorkingCardBgOpacity)
+            putFloat(KEY_GRID_WORKING_CARD_DAY_OPACITY, gridWorkingCardBgDayOpacity)
+            putFloat(KEY_GRID_WORKING_CARD_NIGHT_OPACITY, gridWorkingCardBgNightOpacity)
+            putFloat(KEY_GRID_WORKING_CARD_DIM, gridWorkingCardBgDim)
+            putBoolean(KEY_GRID_WORKING_CARD_CHECK_HIDDEN, isGridWorkingCardCheckHidden)
+            putBoolean(KEY_GRID_WORKING_CARD_TEXT_HIDDEN, isGridWorkingCardTextHidden)
+            putBoolean(KEY_GRID_WORKING_CARD_MODE_HIDDEN, isGridWorkingCardModeHidden)
+            putBoolean(KEY_LIST_WORKING_CARD_MODE_HIDDEN, isListWorkingCardModeHidden)
+
             putBoolean(KEY_DASHBOARD_CARD_BACKGROUND_ENABLED, isDashboardCardBackgroundEnabled)
             putFloat(KEY_DASHBOARD_CARD_BG_DIM, dashboardCardBgDim)
             putBoolean(KEY_DASHBOARD_CARD_DUAL_DIM_ENABLED, isDashboardCardDualDimEnabled)
@@ -576,6 +682,19 @@ object BackgroundConfig {
         val focusCardDayOpacity = prefs.floatPref(KEY_FOCUS_CARD_DAY_OPACITY, focusCardOpacity)
         val focusCardNightOpacity = prefs.floatPref(KEY_FOCUS_CARD_NIGHT_OPACITY, focusCardOpacity)
 
+        // Grid 主卡片。开关的兜底与 focus card 一致：有图即视为启用，避免图已存在却关着。
+        val gridWorkingCardBg = prefs.stringPref(KEY_GRID_WORKING_CARD_BG_URI, null)
+        val gridWorkingCardEnabled = prefs.booleanPref(KEY_GRID_WORKING_CARD_ENABLED, gridWorkingCardBg != null)
+        val gridWorkingCardDualOpacity = prefs.booleanPref(KEY_GRID_WORKING_CARD_DUAL_OPACITY_ENABLED, false)
+        val gridWorkingCardOpacity = prefs.floatPref(KEY_GRID_WORKING_CARD_OPACITY, 1f)
+        val gridWorkingCardDayOpacity = prefs.floatPref(KEY_GRID_WORKING_CARD_DAY_OPACITY, gridWorkingCardOpacity)
+        val gridWorkingCardNightOpacity = prefs.floatPref(KEY_GRID_WORKING_CARD_NIGHT_OPACITY, gridWorkingCardOpacity)
+        val gridWorkingCardDim = prefs.floatPref(KEY_GRID_WORKING_CARD_DIM, 0f)
+        val gridWorkingCardCheckHidden = prefs.booleanPref(KEY_GRID_WORKING_CARD_CHECK_HIDDEN, false)
+        val gridWorkingCardTextHidden = prefs.booleanPref(KEY_GRID_WORKING_CARD_TEXT_HIDDEN, false)
+        val gridWorkingCardModeHidden = prefs.booleanPref(KEY_GRID_WORKING_CARD_MODE_HIDDEN, false)
+        val listWorkingCardModeHidden = prefs.booleanPref(KEY_LIST_WORKING_CARD_MODE_HIDDEN, false)
+
         val dashWorking = prefs.stringPref(dashboardTileKey(DASHBOARD_TILE_WORKING), null)
         val dashSelinux = prefs.stringPref(dashboardTileKey(DASHBOARD_TILE_SELINUX), null)
         val dashZygisk = prefs.stringPref(dashboardTileKey(DASHBOARD_TILE_ZYGISK), null)
@@ -631,6 +750,18 @@ object BackgroundConfig {
         isFocusCardDualOpacityEnabled = focusCardDualOpacity
         focusCardBgDayOpacity = focusCardDayOpacity
         focusCardBgNightOpacity = focusCardNightOpacity
+
+        gridWorkingCardBgUri = gridWorkingCardBg
+        isGridWorkingCardBackgroundEnabled = gridWorkingCardEnabled
+        isGridWorkingCardDualOpacityEnabled = gridWorkingCardDualOpacity
+        gridWorkingCardBgOpacity = gridWorkingCardOpacity
+        gridWorkingCardBgDayOpacity = gridWorkingCardDayOpacity
+        gridWorkingCardBgNightOpacity = gridWorkingCardNightOpacity
+        gridWorkingCardBgDim = gridWorkingCardDim
+        isGridWorkingCardCheckHidden = gridWorkingCardCheckHidden
+        isGridWorkingCardTextHidden = gridWorkingCardTextHidden
+        isGridWorkingCardModeHidden = gridWorkingCardModeHidden
+        isListWorkingCardModeHidden = listWorkingCardModeHidden
 
         dashboardTileWorkingBgUri = dashWorking
         dashboardTileSelinuxBgUri = dashSelinux
@@ -724,6 +855,7 @@ object BackgroundManager {
     private const val SETTINGS_BACKGROUND_FILENAME = "background_settings"
     private const val VIDEO_BACKGROUND_FILENAME = "background_video"
     private const val FOCUS_CARD_BG_FILENAME = "focus_card_bg"
+    private const val GRID_WORKING_CARD_BG_FILENAME = "grid_working_card_background"
     private const val DASHBOARD_TILE_BG_FILENAME = "dashboard_tile_bg"
 
     /** Every extension a wallpaper file may have been written under, so a re-pick leaves no orphans. */
@@ -938,6 +1070,17 @@ object BackgroundManager {
 
     fun clearFocusCardBackground(context: Context) =
         clearGenericBackground(context, FOCUS_CARD_BG_FILENAME) { BackgroundConfig.updateFocusCardBgUri(it) }
+
+    // Grid 布局主卡片壁纸
+    suspend fun saveAndApplyGridWorkingCardBackground(context: Context, uri: Uri) =
+        saveAndApplyGenericBackground(context, uri, GRID_WORKING_CARD_BG_FILENAME) {
+            BackgroundConfig.updateGridWorkingCardBgUri(it)
+        }
+
+    fun clearGridWorkingCardBackground(context: Context) =
+        clearGenericBackground(context, GRID_WORKING_CARD_BG_FILENAME) {
+            BackgroundConfig.updateGridWorkingCardBgUri(it)
+        }
 
     // Dashboard 磁贴壁纸（每个磁贴一个文件名后缀，互不覆盖）
     suspend fun saveAndApplyDashboardTileBackground(context: Context, tile: String, uri: Uri) =

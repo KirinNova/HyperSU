@@ -764,6 +764,15 @@
     <string name="focus_card_section_title">首页主卡片壁纸</string>
     <string name="focus_card_background">启用主卡片壁纸</string>
     <string name="focus_card_background_summary">在首页主状态卡片后显示壁纸（圆形 / 焦点 / 网格布局）</string>
+    <string name="grid_card_section_title">网格主卡片壁纸</string>
+    <string name="grid_card_background">启用网格主卡片壁纸</string>
+    <string name="grid_card_background_summary">为网格布局的状态卡片单独设置壁纸，与主卡片互不影响</string>
+    <string name="grid_card_hide_check">隐藏状态勾</string>
+    <string name="grid_card_hide_check_summary">不显示覆盖在壁纸上的对勾图标</string>
+    <string name="grid_card_hide_text">隐藏卡片文字</string>
+    <string name="grid_card_hide_text_summary">不显示状态行与版本文本，只留壁纸</string>
+    <string name="grid_card_hide_mode">隐藏模式标签</string>
+    <string name="grid_card_hide_mode_summary">不显示版本下方的 LKM / 内置 标签</string>
     <string name="dashboard_card_section_title">仪表盘布局磁贴壁纸</string>
     <string name="dashboard_card_background">启用磁贴壁纸</string>
     <string name="dashboard_card_background_summary">在仪表盘布局的磁贴后显示壁纸</string>

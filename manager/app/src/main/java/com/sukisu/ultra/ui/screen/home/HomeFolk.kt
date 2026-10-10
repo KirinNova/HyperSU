@@ -376,9 +376,13 @@ private fun HomeHeroCard(
     state: HomeUiState,
     actions: HomeActions,
     wallpaperUri: String? = null,
+    /**
+     * Grid 布局的主卡片有自己的壁纸与隐藏开关，且用的是另一组明暗/不透明度。为真时这些一并生效。
+     */
+    gridStyle: Boolean = false,
 ) {
     when {
-        state.ksuVersion != null -> HomeWorkingCard(state, actions, wallpaperUri)
+        state.ksuVersion != null -> HomeWorkingCard(state, actions, wallpaperUri, gridStyle)
         // Root works, so a driver is loaded; the kernel just does not recognise this manager.
         // Saying "no driver detected" here contradicted the superuser and module pages.
         state.isRootAvailable -> HomeUnsupportedCard(
@@ -397,6 +401,7 @@ private fun HomeWorkingCard(
     state: HomeUiState,
     actions: HomeActions,
     wallpaperUri: String? = null,
+    gridStyle: Boolean = false,
 ) {
     val markers = buildString {
         if (state.isSafeMode) append(" [${stringResource(R.string.safe_mode)}]")
@@ -413,6 +418,21 @@ private fun HomeWorkingCard(
         container = MaterialTheme.colorScheme.secondaryContainer,
         content = MaterialTheme.colorScheme.onSecondaryContainer,
     )
+    // Grid 的明暗/不透明度独立成组，所以取值也分开：只有 Grid 布局读 grid 那组，其余布局继续读
+    // focus card 那组，两边的滑杆互不干扰。
+    val dim = if (gridStyle) {
+        BackgroundConfig.gridWorkingCardBgDim
+    } else {
+        BackgroundConfig.getEffectiveFocusCardBgDim(dark)
+    }
+    val opacity = if (gridStyle) {
+        BackgroundConfig.getEffectiveGridWorkingCardBgOpacity(dark)
+    } else {
+        BackgroundConfig.getEffectiveFocusCardBgOpacity(dark)
+    }
+    val showCheck = !(gridStyle && BackgroundConfig.isGridWorkingCardCheckHidden)
+    val showText = !(gridStyle && BackgroundConfig.isGridWorkingCardTextHidden)
+    val showMode = !(gridStyle && BackgroundConfig.isGridWorkingCardModeHidden)
 
     androidx.compose.material3.Surface(
         modifier = Modifier
@@ -430,49 +450,55 @@ private fun HomeWorkingCard(
         Box {
             CardWallpaperLayer(
                 uri = wallpaperUri,
-                dim = BackgroundConfig.getEffectiveFocusCardBgDim(dark),
-                opacity = BackgroundConfig.getEffectiveFocusCardBgOpacity(dark),
+                dim = dim,
+                opacity = opacity,
             )
             Column(modifier = Modifier.padding(24.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Rounded.CheckCircle,
-                        contentDescription = null,
-                        modifier = Modifier.size(28.dp),
-                        tint = palette.content,
-                    )
-                    Spacer(Modifier.size(12.dp))
-                    Text(
-                        text = "${stringResource(R.string.home_working)}$markers",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = palette.content,
-                    )
-                }
-
-                Spacer(Modifier.height(8.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = stringResource(
-                            R.string.home_working_version,
-                            "${state.ksuVersion}-${state.kernelUAPIVersion}",
-                        ),
-                        style = FolkType.Summary,
-                        color = palette.content,
-                        modifier = Modifier.weight(1f, fill = false),
-                    )
-                    if (state.showCustomLkmBadge) {
-                        Spacer(Modifier.size(8.dp))
-                        StatusTag(
-                            label = stringResource(R.string.home_lkm_custom),
-                            backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                    if (showCheck) {
+                        Icon(
+                            imageVector = Icons.Rounded.CheckCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(28.dp),
+                            tint = palette.content,
+                        )
+                        Spacer(Modifier.size(12.dp))
+                    }
+                    if (showText) {
+                        Text(
+                            text = "${stringResource(R.string.home_working)}$markers",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = palette.content,
                         )
                     }
                 }
 
-                if (mode != null) {
+                if (showText) {
+                    Spacer(Modifier.height(8.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = stringResource(
+                                R.string.home_working_version,
+                                "${state.ksuVersion}-${state.kernelUAPIVersion}",
+                            ),
+                            style = FolkType.Summary,
+                            color = palette.content,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
+                        if (state.showCustomLkmBadge) {
+                            Spacer(Modifier.size(8.dp))
+                            StatusTag(
+                                label = stringResource(R.string.home_lkm_custom),
+                                backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            )
+                        }
+                    }
+                }
+
+                if (mode != null && showMode) {
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = mode,
@@ -716,6 +742,19 @@ private fun heroWallpaperUri(): String? =
     if (BackgroundConfig.isFocusCardBackgroundEnabled) BackgroundConfig.focusCardBgUri else null
 
 /**
+ * Grid 布局主卡片的壁纸。
+ *
+ * Grid 有自己的一张图，这是 FolkPatch 原本的行为：它的 Grid 主卡片单独设壁纸，与 Focus 布局的
+ * 主卡片互不影响。Grid 没设图时回退到主卡片那张，这样只配过一张图的用户在每个布局里都能看到它。
+ */
+private fun gridHeroWallpaperUri(): String? =
+    if (BackgroundConfig.isGridWorkingCardBackgroundEnabled) {
+        BackgroundConfig.gridWorkingCardBgUri ?: heroWallpaperUri()
+    } else {
+        heroWallpaperUri()
+    }
+
+/**
  * Grid: the hero card, then a pair of small cards side by side, then warnings and facts.
  *
  * FolkPatch's GridUI is built around KernelPatch / AndroidPatch patch states that this
@@ -737,7 +776,12 @@ private fun HomeLayoutGrid(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        HomeHeroCard(state = state, actions = actions, wallpaperUri = heroWallpaperUri())
+        HomeHeroCard(
+            state = state,
+            actions = actions,
+            wallpaperUri = gridHeroWallpaperUri(),
+            gridStyle = true,
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth(),

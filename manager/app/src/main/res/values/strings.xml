@@ -825,6 +825,15 @@
     <string name="focus_card_section_title">Hero Card Wallpaper</string>
     <string name="focus_card_background">Enable hero card wallpaper</string>
     <string name="focus_card_background_summary">Show a wallpaper behind the main status card on Circle, Focus and Grid layouts</string>
+    <string name="grid_card_section_title">Grid Card Wallpaper</string>
+    <string name="grid_card_background">Enable grid card wallpaper</string>
+    <string name="grid_card_background_summary">Give the Grid layout\'s status card a wallpaper of its own, separate from the hero card</string>
+    <string name="grid_card_hide_check">Hide the status mark</string>
+    <string name="grid_card_hide_check_summary">Drop the check circle drawn over the wallpaper</string>
+    <string name="grid_card_hide_text">Hide the card text</string>
+    <string name="grid_card_hide_text_summary">Drop the status line and version text, leaving the picture alone</string>
+    <string name="grid_card_hide_mode">Hide the mode label</string>
+    <string name="grid_card_hide_mode_summary">Drop the LKM / Built-in label under the version</string>
     <string name="dashboard_card_section_title">Dashboard Layout Tile Wallpapers</string>
     <string name="dashboard_card_background">Enable tile wallpapers</string>
     <string name="dashboard_card_background_summary">Show a wallpaper behind the tiles of the Dashboard home layout</string>

@@ -246,6 +246,54 @@ object ThemeManager {
             if (json.has("dashboardCardBgNightOpacity")) {
                 putFloat("dashboard_card_night_opacity", json.optDouble("dashboardCardBgNightOpacity", 1.0).toFloat())
             }
+
+            // Grid 布局的主卡片壁纸，以及它那几个隐藏开关。FolkPatch 的 Grid 主卡片可以单独
+            // 换图，并且能藏掉状态勾、文字和模式标签；这些原本在导入时整块被丢掉。
+            if (json.has("isGridWorkingCardBackgroundEnabled")) {
+                putBoolean(
+                    "grid_working_card_background_enabled",
+                    json.optBoolean("isGridWorkingCardBackgroundEnabled", false),
+                )
+            }
+            if (json.has("gridWorkingCardBackgroundOpacity")) {
+                putFloat(
+                    "grid_working_card_background_opacity",
+                    json.optDouble("gridWorkingCardBackgroundOpacity", 1.0).toFloat(),
+                )
+            }
+            if (json.has("isGridDualOpacityEnabled")) {
+                putBoolean("grid_working_card_dual_opacity_enabled", json.optBoolean("isGridDualOpacityEnabled", false))
+            }
+            if (json.has("gridWorkingCardBackgroundDayOpacity")) {
+                putFloat(
+                    "grid_working_card_background_day_opacity",
+                    json.optDouble("gridWorkingCardBackgroundDayOpacity", 1.0).toFloat(),
+                )
+            }
+            if (json.has("gridWorkingCardBackgroundNightOpacity")) {
+                putFloat(
+                    "grid_working_card_background_night_opacity",
+                    json.optDouble("gridWorkingCardBackgroundNightOpacity", 1.0).toFloat(),
+                )
+            }
+            if (json.has("gridWorkingCardBackgroundDim")) {
+                putFloat(
+                    "grid_working_card_background_dim",
+                    json.optDouble("gridWorkingCardBackgroundDim", 0.0).toFloat(),
+                )
+            }
+            if (json.has("isGridWorkingCardCheckHidden")) {
+                putBoolean("grid_working_card_check_hidden", json.optBoolean("isGridWorkingCardCheckHidden", false))
+            }
+            if (json.has("isGridWorkingCardTextHidden")) {
+                putBoolean("grid_working_card_text_hidden", json.optBoolean("isGridWorkingCardTextHidden", false))
+            }
+            if (json.has("isGridWorkingCardModeHidden")) {
+                putBoolean("grid_working_card_mode_hidden", json.optBoolean("isGridWorkingCardModeHidden", false))
+            }
+            if (json.has("isListWorkingCardModeHidden")) {
+                putBoolean("list_working_card_mode_hidden", json.optBoolean("isListWorkingCardModeHidden", false))
+            }
         }
     }
 
@@ -432,6 +480,7 @@ object ThemeManager {
         "background_settings" to "settings_background_uri",
         "background_video" to "video_background_uri",
         "focus_card_bg" to "focus_card_bg_uri",
+        "grid_working_card_background" to "grid_working_card_background_uri",
         "dashboard_tile_bg_working" to "dashboard_tile_bg_uri_working",
         "dashboard_tile_bg_selinux" to "dashboard_tile_bg_uri_selinux",
         "dashboard_tile_bg_zygisk" to "dashboard_tile_bg_uri_zygisk",
@@ -616,6 +665,24 @@ object ThemeManager {
             put("dashboardCardBgOpacity", background.floatPref("dashboard_card_opacity", 1.0f).toDouble())
             put("dashboardCardBgDayOpacity", background.floatPref("dashboard_card_day_opacity", 1.0f).toDouble())
             put("dashboardCardBgNightOpacity", background.floatPref("dashboard_card_night_opacity", 1.0f).toDouble())
+
+            // Grid 布局的主卡片，用 FolkPatch 自己的键名，这样导出的主题在那边也能用。
+            put(
+                "isGridWorkingCardBackgroundEnabled",
+                background.booleanPref(
+                    "grid_working_card_background_enabled",
+                    !background.stringPref("grid_working_card_background_uri", null).isNullOrBlank(),
+                ),
+            )
+            put("gridWorkingCardBackgroundOpacity", background.floatPref("grid_working_card_background_opacity", 1.0f).toDouble())
+            put("isGridDualOpacityEnabled", background.booleanPref("grid_working_card_dual_opacity_enabled", false))
+            put("gridWorkingCardBackgroundDayOpacity", background.floatPref("grid_working_card_background_day_opacity", 1.0f).toDouble())
+            put("gridWorkingCardBackgroundNightOpacity", background.floatPref("grid_working_card_background_night_opacity", 1.0f).toDouble())
+            put("gridWorkingCardBackgroundDim", background.floatPref("grid_working_card_background_dim", 0.0f).toDouble())
+            put("isGridWorkingCardCheckHidden", background.booleanPref("grid_working_card_check_hidden", false))
+            put("isGridWorkingCardTextHidden", background.booleanPref("grid_working_card_text_hidden", false))
+            put("isGridWorkingCardModeHidden", background.booleanPref("grid_working_card_mode_hidden", false))
+            put("isListWorkingCardModeHidden", background.booleanPref("list_working_card_mode_hidden", false))
 
             put("isFontEnabled", font.booleanPref("custom_font_enabled", false))
             put("fontMode", FontMode.fromName(font.stringPref("font_mode", null))?.serializedName ?: "system")
