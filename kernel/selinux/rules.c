@@ -158,10 +158,13 @@ void apply_kernelsu_rules(void)
     }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
-    struct selinux_policy *pol, *old_pol = selinux_state.policy;
+    struct selinux_policy *pol, *old_pol;
     mutex_lock(&selinux_state.policy_mutex);
-    backup_sepolicy =
-        ksu_dup_sepolicy(rcu_dereference_protected(old_pol, lockdep_is_held(&selinux_state.policy_mutex)));
+    // Read the policy only once the mutex is held. Reading it in the declaration above took the
+    // pointer before anything stopped a concurrent policy load from replacing it, and the rest of
+    // this block would then have worked from a stale one.
+    old_pol = rcu_dereference_protected(selinux_state.policy, lockdep_is_held(&selinux_state.policy_mutex));
+    backup_sepolicy = ksu_dup_sepolicy(old_pol);
     if (IS_ERR(backup_sepolicy)) {
         pr_err("failed to create backup sepolicy: %ld\n", PTR_ERR(backup_sepolicy));
         backup_sepolicy = NULL;
@@ -183,7 +186,7 @@ void apply_kernelsu_rules(void)
             }
         }
     }
-    pol = ksu_dup_sepolicy(rcu_dereference_protected(old_pol, lockdep_is_held(&selinux_state.policy_mutex)));
+    pol = ksu_dup_sepolicy(old_pol);
     if (IS_ERR(pol)) {
         pr_err("failed to dup selinux_policy: %ld\n", PTR_ERR(pol));
         goto out_unlock;
@@ -559,8 +562,8 @@ int handle_sepolicy(void __user *user_data, u64 data_len)
 
     mutex_lock(&selinux_state.policy_mutex);
 
-    old_pol = selinux_state.policy;
-    pol = ksu_dup_sepolicy(rcu_dereference_protected(old_pol, lockdep_is_held(&selinux_state.policy_mutex)));
+    old_pol = rcu_dereference_protected(selinux_state.policy, lockdep_is_held(&selinux_state.policy_mutex));
+    pol = ksu_dup_sepolicy(old_pol);
     if (IS_ERR(pol)) {
         ret = PTR_ERR(pol);
         pr_err("ksu_dup_sepolicy err: %d\n", ret);
