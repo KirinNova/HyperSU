@@ -446,8 +446,6 @@
     <string name="kernel_flashing">Kernel Flashing</string>
     <string name="horizon_kernel">AnyKernel3 Kernel</string>
     <string name="horizon_kernel_summary">Flash AnyKernel3 format kernel zip</string>
-    <string name="anykernel3_flash">Flash AnyKernel3</string>
-    <string name="anykernel3_summary">Pick an AnyKernel3 zip from storage and flash it</string>
     <string name="flash_confirm_title">Flash this archive?</string>
     <string name="flash_confirm_file">File</string>
     <string name="flash_confirm_slot">Slot</string>
