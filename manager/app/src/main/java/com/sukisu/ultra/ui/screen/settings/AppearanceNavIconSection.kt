@@ -75,7 +75,8 @@ fun AppearanceNavIconSection(
         },
     )
 
-    // The revision makes the rows re-read after a change.
+    // Read so this screen recomposes when an icon or the switch changes; `enabled` is derived
+    // from it rather than read once, since the switch can be flipped from here.
     val revision = BottomBarIconConfig.revision
     val enabled = remember(revision) { BottomBarIconConfig.isEnabled(context) }
 
@@ -91,11 +92,14 @@ fun AppearanceNavIconSection(
         }
 
         if (enabled) {
+            // A plain read, not `remember`: this body only registers row descriptors, and the
+            // section group runs it outside any composable scope.
             NavIconRows.forEach { (destination, labelRes) ->
+                val hasIcon = BottomBarIconConfig.getCustomIconUri(context, destination) != null
                 NavIconRow(
                     destination = destination,
                     labelRes = labelRes,
-                    revision = revision,
+                    hasIcon = hasIcon,
                     onPick = {
                         pendingDestination = destination
                         runCatching { pickLauncher.launch("image/*") }
@@ -120,22 +124,19 @@ fun AppearanceNavIconSection(
 /**
  * One destination's rows: pick an icon, and remove the current one.
  *
- * A composable rather than a block inside the enclosing `forEach`, because the icon lookup uses
- * `remember` and the lambda passed to `forEach` is not a composable scope.
+ * Not `@Composable`, and it must not be: [FolkSettingsSectionGroup] runs its content lambda
+ * immediately to collect the row descriptors, so this body is plain code that only registers
+ * `item`s. The `@Composable` work - `stringResource`, the preference reads - happens inside each
+ * `item` lambda, which is composable. Marking this function composable made every call in it a
+ * composable invocation from a non-composable scope.
  */
-@Composable
 private fun FolkSettingsGroupScope.NavIconRow(
     destination: String,
     @StringRes labelRes: Int,
-    revision: Int,
+    hasIcon: Boolean,
     onPick: () -> Unit,
     onClear: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val hasIcon = remember(revision, destination) {
-        BottomBarIconConfig.getCustomIconUri(context, destination) != null
-    }
-
     item(key = "nav_icon_$destination") {
         FolkValuePreference(
             title = stringResource(labelRes),
