@@ -242,9 +242,7 @@ module_exit(kernelsu_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("weishu");
-// Deliberately not "KernelSU": when this is built as a module the description is readable from
-// /sys/module/kernelsu/, so naming the root implementation there hands a detector its answer.
-MODULE_DESCRIPTION("Android kernel support");
+MODULE_DESCRIPTION("Android KernelSU");
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
 MODULE_IMPORT_NS("VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
 #else

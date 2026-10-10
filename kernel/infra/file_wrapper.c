@@ -521,9 +521,7 @@ int ksu_install_file_wrapper(int fd)
      * its inode has been relabeled below.
     */
     old_cred = override_creds(ksu_cred);
-    // An ordinary-looking name: /proc/<pid>/fdinfo/<fd> prints it, and a process may read its own
-    // fdinfo without root, so "ksu_fdwrapper" there would announce the root implementation.
-    wrapper_file = ksu_anon_inode_create_getfile_compat("[memfd]", &file_wrapper_data->ops, file_wrapper_data,
+    wrapper_file = ksu_anon_inode_create_getfile_compat("[ksu_fdwrapper]", &file_wrapper_data->ops, file_wrapper_data,
                                                         orig_file->f_flags, NULL);
     revert_creds(old_cred);
     if (IS_ERR(wrapper_file)) {
