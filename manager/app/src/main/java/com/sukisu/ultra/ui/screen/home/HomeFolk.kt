@@ -39,7 +39,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,8 +61,13 @@ import com.sukisu.ultra.data.repository.HOME_LAYOUT_GRID
 import com.sukisu.ultra.data.repository.HOME_LAYOUT_LIST
 import com.sukisu.ultra.data.repository.HOME_LAYOUT_OPTIONS
 import com.sukisu.ultra.data.repository.KEY_HOME_LAYOUT
+import com.sukisu.ultra.data.repository.KEY_STATS_TOP_LAYOUT
+import com.sukisu.ultra.data.repository.STATS_TOP_GRID
+import com.sukisu.ultra.data.repository.STATS_TOP_LIST
 import com.sukisu.ultra.data.repository.SettingsRepositoryImpl
 import com.sukisu.ultra.ksuApp
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
@@ -171,10 +178,16 @@ internal fun HomePagerFolk(
     // app restarted.
     val prefs = remember { ksuApp.getSharedPreferences("settings", Context.MODE_PRIVATE) }
     var layout by remember { mutableStateOf(settingsRepo.homeLayoutStyle) }
+    // Same reason as the layout above: a theme import rewrites this key while the screen is
+    // alive, and a plain remember would keep the old arrangement until a restart.
+    var statsTopLayout by remember { mutableStateOf(settingsRepo.statsTopLayout) }
     DisposableEffect(prefs) {
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             if (key == null || key == KEY_HOME_LAYOUT) {
                 layout = settingsRepo.homeLayoutStyle
+            }
+            if (key == null || key == KEY_STATS_TOP_LAYOUT) {
+                statsTopLayout = settingsRepo.statsTopLayout
             }
         }
         prefs.registerOnSharedPreferenceChangeListener(listener)
@@ -207,15 +220,25 @@ internal fun HomePagerFolk(
                 },
         )
 
-        when (layout) {
-            HOME_LAYOUT_LIST -> HomeLayoutList(state, actions, contentPadding)
-            HOME_LAYOUT_FOCUS -> HomeLayoutFocus(state, actions, contentPadding)
-            HOME_LAYOUT_DASHBOARD -> HomeLayoutDashboard(state, actions, contentPadding)
-            HOME_LAYOUT_GRID -> HomeLayoutGrid(state, actions, contentPadding)
-            else -> HomeLayoutCircle(state, actions, contentPadding)
+        CompositionLocalProvider(LocalStatsTopLayout provides statsTopLayout) {
+            when (layout) {
+                HOME_LAYOUT_LIST -> HomeLayoutList(state, actions, contentPadding)
+                HOME_LAYOUT_FOCUS -> HomeLayoutFocus(state, actions, contentPadding)
+                HOME_LAYOUT_DASHBOARD -> HomeLayoutDashboard(state, actions, contentPadding)
+                HOME_LAYOUT_GRID -> HomeLayoutGrid(state, actions, contentPadding)
+                else -> HomeLayoutCircle(state, actions, contentPadding)
+            }
         }
     }
 }
+
+/**
+ * Which arrangement the Grid layout's status cards take.
+ *
+ * A composition local rather than a parameter because only the Grid layout reads it: threading it
+ * through the other four layouts, which ignore it, would be noise at four call sites to serve one.
+ */
+private val LocalStatsTopLayout = compositionLocalOf { STATS_TOP_LIST }
 
 // ---------------------------------------------------------------------------
 // Top bar
@@ -824,31 +847,75 @@ private fun HomeLayoutGrid(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        HomeHeroCard(
-            state = state,
-            actions = actions,
-            wallpaperUri = gridHeroWallpaperUri(),
-            gridStyle = true,
-        )
+        // "grid" puts the two extra cards beside the hero instead of under it, which is what
+        // FolkPatch's stats top layout switch does. Both arrangements carry the same cards; only
+        // their placement differs, so the reading order is the only thing that changes.
+        val gridTop = LocalStatsTopLayout.current == STATS_TOP_GRID
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            HomeTile(
-                modifier = Modifier.weight(1f),
-                icon = Icons.Outlined.Info,
-                label = stringResource(R.string.home_kernel),
-                value = state.systemInfo.kernelVersion,
-                severity = if (state.isManager) FolkSeverity.Positive else FolkSeverity.Critical,
+        if (gridTop) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    HomeHeroCard(
+                        state = state,
+                        actions = actions,
+                        wallpaperUri = gridHeroWallpaperUri(),
+                        gridStyle = true,
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    HomeTile(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Outlined.Info,
+                        label = stringResource(R.string.home_kernel),
+                        value = state.systemInfo.kernelVersion,
+                        severity = if (state.isManager) FolkSeverity.Positive else FolkSeverity.Critical,
+                    )
+                    HomeTile(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Outlined.Security,
+                        label = stringResource(R.string.home_selinux_status),
+                        value = state.systemInfo.selinuxStatus,
+                        severity = if (state.isSELinuxPermissive) FolkSeverity.Caution else FolkSeverity.Positive,
+                    )
+                }
+            }
+        } else {
+            HomeHeroCard(
+                state = state,
+                actions = actions,
+                wallpaperUri = gridHeroWallpaperUri(),
+                gridStyle = true,
             )
-            HomeTile(
-                modifier = Modifier.weight(1f),
-                icon = Icons.Outlined.Security,
-                label = stringResource(R.string.home_selinux_status),
-                value = state.systemInfo.selinuxStatus,
-                severity = if (state.isSELinuxPermissive) FolkSeverity.Caution else FolkSeverity.Positive,
-            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                HomeTile(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Outlined.Info,
+                    label = stringResource(R.string.home_kernel),
+                    value = state.systemInfo.kernelVersion,
+                    severity = if (state.isManager) FolkSeverity.Positive else FolkSeverity.Critical,
+                )
+                HomeTile(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Outlined.Security,
+                    label = stringResource(R.string.home_selinux_status),
+                    value = state.systemInfo.selinuxStatus,
+                    severity = if (state.isSELinuxPermissive) FolkSeverity.Caution else FolkSeverity.Positive,
+                )
+            }
         }
 
         HomeWarnings(state, actions)

@@ -12,6 +12,26 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
 
+/**
+ * How strongly the generated palette separates its colours from one another, ported from
+ * FolkPatch's ColorContrast.
+ *
+ * The level is the value materialkolor takes: 0 keeps the tonal relationships as generated, and
+ * 1 pushes every foreground as far from its background as the palette allows. It is worth having
+ * because a low-contrast palette that looks calm on a bright screen can be unreadable on a dim
+ * one, and the wallpaper-adaptive colours are derived from a photograph the app cannot judge.
+ */
+enum class ColorContrast(val level: Double) {
+    STANDARD(0.0),
+    MEDIUM(0.5),
+    HIGH(1.0);
+
+    companion object {
+        fun fromName(name: String?): ColorContrast =
+            entries.find { it.name == name } ?: STANDARD
+    }
+}
+
 fun ColorScheme.amoledBackground(amoled: Boolean): ColorScheme =
     if (!amoled) this
     else copy(
@@ -32,6 +52,7 @@ fun rememberKernelSUColorScheme(
     isAmoled: Boolean,
     paletteStyle: PaletteStyle,
     colorSpec: ColorSpec.SpecVersion,
+    contrast: ColorContrast = ColorContrast.STANDARD,
 ): ColorScheme {
     val context = LocalContext.current
     val seed = if (seedColor == Color.Unspecified) {
@@ -45,6 +66,7 @@ fun rememberKernelSUColorScheme(
         isAmoled = isAmoled,
         style = paletteStyle,
         specVersion = colorSpec.effectiveFor(paletteStyle),
+        contrastLevel = contrast.level,
     ).amoledBackground(isAmoled)
 }
 

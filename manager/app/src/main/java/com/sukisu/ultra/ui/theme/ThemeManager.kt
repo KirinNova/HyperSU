@@ -9,6 +9,8 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.sukisu.ultra.data.repository.HOME_LAYOUT_FALLBACK
 import com.sukisu.ultra.data.repository.HOME_LAYOUT_OPTIONS
+import com.sukisu.ultra.data.repository.STATS_TOP_GRID
+import com.sukisu.ultra.data.repository.STATS_TOP_LIST
 import com.sukisu.ultra.ui.util.LocaleHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -133,6 +135,14 @@ object ThemeManager {
             json.optString("homeLayoutStyle", "").takeIf { it in HOME_LAYOUT_OPTIONS }?.let {
                 putString("home_layout_style", it)
             }
+            // The Grid layout's card arrangement. Only the two names this app renders.
+            json.optString("statsTopLayout", "")
+                .takeIf { it == STATS_TOP_LIST || it == STATS_TOP_GRID }
+                ?.let { putString("stats_top_layout", it) }
+            // Colour contrast, by name. FolkPatch writes the enum name.
+            json.optString("colorContrast", "")
+                .takeIf { it.isNotBlank() && ColorContrast.entries.any { entry -> entry.name == it } }
+                ?.let { putString("color_contrast", it) }
         }
 
         // The language is *not* applied here. On Android 13 and up LocaleHelper.setLanguage
@@ -644,6 +654,8 @@ object ThemeManager {
             put("colorStandard", if (colorSpec == ColorSpec.SpecVersion.SPEC_2021.name) "MD3_2021" else "MD3_2025")
             put("colorGenerationMode", if (colorMode.isMonet) "custom" else "classic")
             put("homeLayoutStyle", settings.stringPref("home_layout_style", HOME_LAYOUT_FALLBACK) ?: HOME_LAYOUT_FALLBACK)
+            put("statsTopLayout", settings.stringPref("stats_top_layout", STATS_TOP_LIST) ?: STATS_TOP_LIST)
+            put("colorContrast", settings.stringPref("color_contrast", ColorContrast.STANDARD.name) ?: ColorContrast.STANDARD.name)
             // The language, so a theme carries it both ways. Read through LocaleHelper for the
             // same reason it is applied through it: the preference is only a mirror of the
             // platform's applicationLocales on Android 13 and up.
