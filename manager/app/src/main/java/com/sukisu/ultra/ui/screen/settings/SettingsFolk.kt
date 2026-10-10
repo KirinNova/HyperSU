@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material.icons.rounded.Android
 import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,11 +34,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sukisu.ultra.R
+import com.sukisu.ultra.ui.theme.isInDarkTheme
+import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.theme.darkColorScheme
+import top.yukonga.miuix.kmp.theme.lightColorScheme
 import com.sukisu.ultra.ui.component.KsuIsValid
 import com.sukisu.ultra.ui.component.folk.FolkChoicePreference
 import com.sukisu.ultra.ui.component.folk.FolkNavigationPreference
@@ -46,7 +51,6 @@ import com.sukisu.ultra.ui.component.folk.FolkSendLogSheet
 import com.sukisu.ultra.ui.component.folk.FolkSettingsSectionGroup
 import com.sukisu.ultra.ui.component.folk.FolkSwitchPreference
 import com.sukisu.ultra.ui.component.folk.FolkTitleStyle
-import com.sukisu.ultra.ui.component.folk.FolkValuePreference
 import com.sukisu.ultra.ui.component.uninstalldialog.UninstallDialog
 import com.sukisu.ultra.ui.util.LocaleHelper
 
@@ -118,35 +122,33 @@ fun SettingPagerFolk(
             item {
                 FolkSettingsSectionGroup(title = stringResource(R.string.settings_theme)) {
                     item {
-                        val context = LocalContext.current
                         val languageIndex = languageTags.indexOf(uiState.appLanguage)
                             .coerceAtLeast(0)
-                        // Where the system has a per-app language page, the row hands
-                        // the choice to it: the switch then happens while our task is
-                        // in the background, so our activity is not recreated in front
-                        // of the user. Only where that page is missing does the row
-                        // open the app's own list.
-                        val systemPicker = remember {
-                            LocaleHelper.canLaunchSystemLanguageSettings(context)
-                        }
-                        if (systemPicker) {
-                            FolkValuePreference(
+                        // The choice stays inside the app: a Miuix window-level dropdown
+                        // instead of the system's per-app language page. The switch itself
+                        // is masked by the FolkLanguageSwitch cover, so nothing hands the
+                        // task away and the recreation happens behind our own page.
+                        //
+                        // This is the pairing the switch page depends on. Handing the choice
+                        // to the system instead leaves that cover with nothing to mask, and
+                        // the activity is recreated in front of the user.
+                        MiuixTheme(
+                            colors = if (isInDarkTheme()) darkColorScheme() else lightColorScheme(),
+                        ) {
+                            WindowDropdownPreference(
                                 title = stringResource(R.string.settings_language),
                                 summary = stringResource(R.string.settings_language_summary),
-                                icon = Icons.Rounded.Language,
-                                value = languageNames[languageIndex],
-                                onClick = {
-                                    LocaleHelper.launchSystemLanguageSettings(context)
-                                },
-                            )
-                        } else {
-                            FolkChoicePreference(
-                                title = stringResource(R.string.settings_language),
-                                summary = stringResource(R.string.settings_language_summary),
-                                icon = Icons.Rounded.Language,
-                                options = languageNames,
+                                items = languageNames,
                                 selectedIndex = languageIndex,
-                                onSelect = { index -> actions.onSetLanguage(languageTags[index]) },
+                                startAction = {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Language,
+                                        contentDescription = null,
+                                    )
+                                },
+                                onSelectedIndexChange = { index ->
+                                    actions.onSetLanguage(languageTags[index])
+                                },
                             )
                         }
                     }
