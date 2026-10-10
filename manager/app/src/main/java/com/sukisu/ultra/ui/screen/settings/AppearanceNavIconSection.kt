@@ -24,6 +24,7 @@ import com.sukisu.ultra.ui.component.folk.FolkSettingsGroupScope
 import com.sukisu.ultra.ui.component.folk.FolkSettingsSectionGroup
 import com.sukisu.ultra.ui.component.folk.FolkSwitchPreference
 import com.sukisu.ultra.ui.component.folk.FolkValuePreference
+import com.sukisu.ultra.ui.screen.themeSettings.crop.CropBackgroundContract
 import com.sukisu.ultra.ui.theme.BottomBarIconConfig
 import kotlinx.coroutines.launch
 
@@ -50,17 +51,42 @@ fun AppearanceNavIconSection(
         scope.launch { snackBarHost.showSnackbar(message) }
     }
 
+    // Cropped square before saving: a nav icon is drawn in a 22dp box, so a non-square picture
+    // would be fitted into it with letterboxing and read as smaller than the glyphs beside it.
+    val cropLauncher = rememberLauncherForActivityResult(
+        CropBackgroundContract(),
+    ) { cropped: Uri? ->
+        val destination = pendingDestination
+        pendingDestination = null
+        if (cropped == null || destination == null) {
+            CropBackgroundContract.clearCache(context)
+            return@rememberLauncherForActivityResult
+        }
+        scope.launch {
+            loadingDialog.show()
+            val saved = BottomBarIconConfig.saveCustomIcon(context, destination, cropped)
+            loadingDialog.hide()
+            showMessage(if (saved) R.string.nav_icon_set else R.string.nav_icon_set_failed)
+            CropBackgroundContract.clearCache(context)
+        }
+    }
+
     val pickLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
-        val destination = pendingDestination
-        pendingDestination = null
-        if (uri == null || destination == null) return@rememberLauncherForActivityResult
-        scope.launch {
-            loadingDialog.show()
-            val saved = BottomBarIconConfig.saveCustomIcon(context, destination, uri)
-            loadingDialog.hide()
-            showMessage(if (saved) R.string.nav_icon_set else R.string.nav_icon_set_failed)
+        if (uri != null) {
+            runCatching {
+                cropLauncher.launch(
+                    CropBackgroundContract.Input(
+                        source = uri,
+                        aspectRatioX = 1f,
+                        aspectRatioY = 1f,
+                    ),
+                )
+            }.onFailure {
+                pendingDestination = null
+                showMessage(R.string.file_picker_unavailable)
+            }
         }
     }
 
