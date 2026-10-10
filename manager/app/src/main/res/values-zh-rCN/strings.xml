@@ -773,6 +773,14 @@
     <string name="grid_card_hide_text_summary">不显示状态行与版本文本，只留壁纸</string>
     <string name="grid_card_hide_mode">隐藏模式标签</string>
     <string name="grid_card_hide_mode_summary">不显示版本下方的 LKM / 内置 标签</string>
+    <string name="title_image_section_title">顶栏标题图</string>
+    <string name="title_image_enabled">用图片作为标题</string>
+    <string name="title_image_enabled_summary">把首页顶栏的标题文字替换为图片</string>
+    <string name="title_image_select">选择标题图</string>
+    <string name="title_image_day_opacity">日间不透明度</string>
+    <string name="title_image_night_opacity">夜间不透明度</string>
+    <string name="title_image_dim">变暗</string>
+    <string name="title_image_offset_x">水平偏移</string>
     <string name="dashboard_card_section_title">仪表盘布局磁贴壁纸</string>
     <string name="dashboard_card_background">启用磁贴壁纸</string>
     <string name="dashboard_card_background_summary">在仪表盘布局的磁贴后显示壁纸</string>

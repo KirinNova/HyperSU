@@ -61,10 +61,17 @@ import com.sukisu.ultra.data.repository.HOME_LAYOUT_OPTIONS
 import com.sukisu.ultra.data.repository.KEY_HOME_LAYOUT
 import com.sukisu.ultra.data.repository.SettingsRepositoryImpl
 import com.sukisu.ultra.ksuApp
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.sukisu.ultra.ui.component.folk.FolkFactsGroup
 import com.sukisu.ultra.ui.component.folk.FolkNavigationPreference
 import com.sukisu.ultra.ui.component.folk.FolkPreference
@@ -223,13 +230,54 @@ private fun HomeTopBar(
 ) {
     var layoutMenu by remember { mutableStateOf(false) }
 
+    // 高级标题样式：用图片替换顶栏的文字标题。图为空或开关关闭时保持原来的文字。
+    val context = LocalContext.current
+    val dark = isInDarkTheme()
+    val useTitleImage = BackgroundConfig.isTitleImageActive()
+    val titleOpacity = if (useTitleImage) {
+        BackgroundConfig.getEffectiveTitleImageOpacity(dark)
+    } else {
+        1f
+    }
+    val titleOffsetX = if (useTitleImage) BackgroundConfig.titleImageOffsetX * 100f else 0f
+    val titleDim = if (useTitleImage) BackgroundConfig.titleImageDim else 0f
+
     androidx.compose.material3.TopAppBar(
         title = {
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-            )
+            if (useTitleImage) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(BackgroundConfig.titleImageUri)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = stringResource(R.string.app_name),
+                    modifier = Modifier
+                        .height(40.dp)
+                        .offset(x = titleOffsetX.dp)
+                        .alpha(titleOpacity)
+                        .graphicsLayer {
+                            if (titleDim > 0f) {
+                                colorFilter = ColorFilter.colorMatrix(
+                                    ColorMatrix().apply {
+                                        setToScale(
+                                            1f - titleDim,
+                                            1f - titleDim,
+                                            1f - titleDim,
+                                            1f,
+                                        )
+                                    }
+                                )
+                            }
+                        },
+                    contentScale = ContentScale.Fit,
+                )
+            } else {
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
         },
         actions = {
             IconButton(onClick = actions.onInstallClick) {

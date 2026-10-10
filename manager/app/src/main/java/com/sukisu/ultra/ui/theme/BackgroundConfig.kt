@@ -92,6 +92,23 @@ object BackgroundConfig {
     var isListWorkingCardModeHidden: Boolean by mutableStateOf(false)
         private set
 
+    // 高级标题样式：用一张图替换首页顶栏的文字标题。
+    //
+    // 图放在顶栏里而不是页面里，是因为标题的位置由顶栏决定；放在页面里就得自己算状态栏高度和
+    // 滚动行为，两处会不一致。
+    var isAdvancedTitleStyleEnabled: Boolean by mutableStateOf(false)
+        private set
+    var titleImageUri: String? by mutableStateOf(null)
+        private set
+    var titleImageDayOpacity: Float by mutableStateOf(1f)
+        private set
+    var titleImageNightOpacity: Float by mutableStateOf(1f)
+        private set
+    var titleImageDim: Float by mutableStateOf(0f)
+        private set
+    var titleImageOffsetX: Float by mutableStateOf(0f)
+        private set
+
     // Dashboard 布局的四个磁贴壁纸：每个磁贴一张图，共用一套明暗/不透明度。
     var isDashboardCardBackgroundEnabled: Boolean by mutableStateOf(false)
         private set
@@ -217,6 +234,14 @@ object BackgroundConfig {
     private const val KEY_GRID_WORKING_CARD_TEXT_HIDDEN = "grid_working_card_text_hidden"
     private const val KEY_GRID_WORKING_CARD_MODE_HIDDEN = "grid_working_card_mode_hidden"
     private const val KEY_LIST_WORKING_CARD_MODE_HIDDEN = "list_working_card_mode_hidden"
+
+    // 高级标题样式。键名沿用 FolkPatch，主题包才能双向搬运。
+    private const val KEY_ADVANCED_TITLE_STYLE_ENABLED = "advanced_title_style_enabled"
+    private const val KEY_TITLE_IMAGE_URI = "title_image_uri"
+    private const val KEY_TITLE_IMAGE_DAY_OPACITY = "title_image_day_opacity"
+    private const val KEY_TITLE_IMAGE_NIGHT_OPACITY = "title_image_night_opacity"
+    private const val KEY_TITLE_IMAGE_DIM = "title_image_dim"
+    private const val KEY_TITLE_IMAGE_OFFSET_X = "title_image_offset_x"
 
     // Dashboard 磁贴
     private const val KEY_DASHBOARD_CARD_BACKGROUND_ENABLED = "dashboard_card_background_enabled"
@@ -426,6 +451,40 @@ object BackgroundConfig {
             gridWorkingCardBgOpacity
         }
 
+    // ---- 高级标题样式 ----
+
+    fun updateTitleImageUri(uri: String?) {
+        titleImageUri = uri
+    }
+
+    fun setAdvancedTitleStyleEnabledState(enabled: Boolean) {
+        isAdvancedTitleStyleEnabled = enabled
+    }
+
+    fun setTitleImageDayOpacityValue(value: Float) {
+        titleImageDayOpacity = value
+    }
+
+    fun setTitleImageNightOpacityValue(value: Float) {
+        titleImageNightOpacity = value
+    }
+
+    fun setTitleImageDimValue(value: Float) {
+        titleImageDim = value
+    }
+
+    fun setTitleImageOffsetXValue(value: Float) {
+        titleImageOffsetX = value
+    }
+
+    /** 按当前明暗主题取标题图的不透明度。 */
+    fun getEffectiveTitleImageOpacity(isDarkTheme: Boolean): Float =
+        if (isDarkTheme) titleImageNightOpacity else titleImageDayOpacity
+
+    /** 标题图当前是否可用：开关打开且图确实存在。 */
+    fun isTitleImageActive(): Boolean =
+        isAdvancedTitleStyleEnabled && !titleImageUri.isNullOrEmpty()
+
     // ---- Dashboard 磁贴 ----
 
     fun getDashboardTileBgUri(tile: String): String? = when (tile) {
@@ -620,6 +679,13 @@ object BackgroundConfig {
             putBoolean(KEY_GRID_WORKING_CARD_MODE_HIDDEN, isGridWorkingCardModeHidden)
             putBoolean(KEY_LIST_WORKING_CARD_MODE_HIDDEN, isListWorkingCardModeHidden)
 
+            putBoolean(KEY_ADVANCED_TITLE_STYLE_ENABLED, isAdvancedTitleStyleEnabled)
+            putString(KEY_TITLE_IMAGE_URI, titleImageUri)
+            putFloat(KEY_TITLE_IMAGE_DAY_OPACITY, titleImageDayOpacity)
+            putFloat(KEY_TITLE_IMAGE_NIGHT_OPACITY, titleImageNightOpacity)
+            putFloat(KEY_TITLE_IMAGE_DIM, titleImageDim)
+            putFloat(KEY_TITLE_IMAGE_OFFSET_X, titleImageOffsetX)
+
             putBoolean(KEY_DASHBOARD_CARD_BACKGROUND_ENABLED, isDashboardCardBackgroundEnabled)
             putFloat(KEY_DASHBOARD_CARD_BG_DIM, dashboardCardBgDim)
             putBoolean(KEY_DASHBOARD_CARD_DUAL_DIM_ENABLED, isDashboardCardDualDimEnabled)
@@ -695,6 +761,17 @@ object BackgroundConfig {
         val gridWorkingCardModeHidden = prefs.booleanPref(KEY_GRID_WORKING_CARD_MODE_HIDDEN, false)
         val listWorkingCardModeHidden = prefs.booleanPref(KEY_LIST_WORKING_CARD_MODE_HIDDEN, false)
 
+        // 高级标题样式。开关兜底与卡片一致：有图即视为启用。
+        val titleImageUriValue = prefs.stringPref(KEY_TITLE_IMAGE_URI, null)
+        val advancedTitleStyleEnabled = prefs.booleanPref(
+            KEY_ADVANCED_TITLE_STYLE_ENABLED,
+            titleImageUriValue != null,
+        )
+        val titleImageDayOpacityValue = prefs.floatPref(KEY_TITLE_IMAGE_DAY_OPACITY, 1f)
+        val titleImageNightOpacityValue = prefs.floatPref(KEY_TITLE_IMAGE_NIGHT_OPACITY, 1f)
+        val titleImageDimValue = prefs.floatPref(KEY_TITLE_IMAGE_DIM, 0f)
+        val titleImageOffsetXValue = prefs.floatPref(KEY_TITLE_IMAGE_OFFSET_X, 0f)
+
         val dashWorking = prefs.stringPref(dashboardTileKey(DASHBOARD_TILE_WORKING), null)
         val dashSelinux = prefs.stringPref(dashboardTileKey(DASHBOARD_TILE_SELINUX), null)
         val dashZygisk = prefs.stringPref(dashboardTileKey(DASHBOARD_TILE_ZYGISK), null)
@@ -762,6 +839,13 @@ object BackgroundConfig {
         isGridWorkingCardTextHidden = gridWorkingCardTextHidden
         isGridWorkingCardModeHidden = gridWorkingCardModeHidden
         isListWorkingCardModeHidden = listWorkingCardModeHidden
+
+        isAdvancedTitleStyleEnabled = advancedTitleStyleEnabled
+        titleImageUri = titleImageUriValue
+        titleImageDayOpacity = titleImageDayOpacityValue
+        titleImageNightOpacity = titleImageNightOpacityValue
+        titleImageDim = titleImageDimValue
+        titleImageOffsetX = titleImageOffsetXValue
 
         dashboardTileWorkingBgUri = dashWorking
         dashboardTileSelinuxBgUri = dashSelinux
@@ -856,6 +940,7 @@ object BackgroundManager {
     private const val VIDEO_BACKGROUND_FILENAME = "background_video"
     private const val FOCUS_CARD_BG_FILENAME = "focus_card_bg"
     private const val GRID_WORKING_CARD_BG_FILENAME = "grid_working_card_background"
+    private const val TITLE_IMAGE_FILENAME = "title_image"
     private const val DASHBOARD_TILE_BG_FILENAME = "dashboard_tile_bg"
 
     /** Every extension a wallpaper file may have been written under, so a re-pick leaves no orphans. */
@@ -1080,6 +1165,17 @@ object BackgroundManager {
     fun clearGridWorkingCardBackground(context: Context) =
         clearGenericBackground(context, GRID_WORKING_CARD_BG_FILENAME) {
             BackgroundConfig.updateGridWorkingCardBgUri(it)
+        }
+
+    // 高级标题样式的标题图
+    suspend fun saveAndApplyTitleImage(context: Context, uri: Uri) =
+        saveAndApplyGenericBackground(context, uri, TITLE_IMAGE_FILENAME) {
+            BackgroundConfig.updateTitleImageUri(it)
+        }
+
+    fun clearTitleImage(context: Context) =
+        clearGenericBackground(context, TITLE_IMAGE_FILENAME) {
+            BackgroundConfig.updateTitleImageUri(it)
         }
 
     // Dashboard 磁贴壁纸（每个磁贴一个文件名后缀，互不覆盖）

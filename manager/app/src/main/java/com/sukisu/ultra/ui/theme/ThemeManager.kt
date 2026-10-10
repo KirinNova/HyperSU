@@ -294,6 +294,26 @@ object ThemeManager {
             if (json.has("isListWorkingCardModeHidden")) {
                 putBoolean("list_working_card_mode_hidden", json.optBoolean("isListWorkingCardModeHidden", false))
             }
+
+            // 高级标题样式：用图片替换首页顶栏的标题。
+            if (json.has("isAdvancedTitleStyleEnabled")) {
+                putBoolean(
+                    "advanced_title_style_enabled",
+                    json.optBoolean("isAdvancedTitleStyleEnabled", false),
+                )
+            }
+            if (json.has("titleImageDayOpacity")) {
+                putFloat("title_image_day_opacity", json.optDouble("titleImageDayOpacity", 1.0).toFloat())
+            }
+            if (json.has("titleImageNightOpacity")) {
+                putFloat("title_image_night_opacity", json.optDouble("titleImageNightOpacity", 1.0).toFloat())
+            }
+            if (json.has("titleImageDim")) {
+                putFloat("title_image_dim", json.optDouble("titleImageDim", 0.0).toFloat())
+            }
+            if (json.has("titleImageOffsetX")) {
+                putFloat("title_image_offset_x", json.optDouble("titleImageOffsetX", 0.0).toFloat())
+            }
         }
     }
 
@@ -481,6 +501,7 @@ object ThemeManager {
         "background_video" to "video_background_uri",
         "focus_card_bg" to "focus_card_bg_uri",
         "grid_working_card_background" to "grid_working_card_background_uri",
+        "title_image" to "title_image_uri",
         "dashboard_tile_bg_working" to "dashboard_tile_bg_uri_working",
         "dashboard_tile_bg_selinux" to "dashboard_tile_bg_uri_selinux",
         "dashboard_tile_bg_zygisk" to "dashboard_tile_bg_uri_zygisk",
@@ -683,6 +704,19 @@ object ThemeManager {
             put("isGridWorkingCardTextHidden", background.booleanPref("grid_working_card_text_hidden", false))
             put("isGridWorkingCardModeHidden", background.booleanPref("grid_working_card_mode_hidden", false))
             put("isListWorkingCardModeHidden", background.booleanPref("list_working_card_mode_hidden", false))
+
+            // 高级标题样式，用 FolkPatch 的键名。
+            put(
+                "isAdvancedTitleStyleEnabled",
+                background.booleanPref(
+                    "advanced_title_style_enabled",
+                    !background.stringPref("title_image_uri", null).isNullOrBlank(),
+                ),
+            )
+            put("titleImageDayOpacity", background.floatPref("title_image_day_opacity", 1.0f).toDouble())
+            put("titleImageNightOpacity", background.floatPref("title_image_night_opacity", 1.0f).toDouble())
+            put("titleImageDim", background.floatPref("title_image_dim", 0.0f).toDouble())
+            put("titleImageOffsetX", background.floatPref("title_image_offset_x", 0.0f).toDouble())
 
             put("isFontEnabled", font.booleanPref("custom_font_enabled", false))
             put("fontMode", FontMode.fromName(font.stringPref("font_mode", null))?.serializedName ?: "system")

@@ -834,6 +834,14 @@
     <string name="grid_card_hide_text_summary">Drop the status line and version text, leaving the picture alone</string>
     <string name="grid_card_hide_mode">Hide the mode label</string>
     <string name="grid_card_hide_mode_summary">Drop the LKM / Built-in label under the version</string>
+    <string name="title_image_section_title">Top Bar Title Image</string>
+    <string name="title_image_enabled">Use an image as the title</string>
+    <string name="title_image_enabled_summary">Replace the home screen\'s title text with a picture</string>
+    <string name="title_image_select">Select a title image</string>
+    <string name="title_image_day_opacity">Day opacity</string>
+    <string name="title_image_night_opacity">Night opacity</string>
+    <string name="title_image_dim">Dim</string>
+    <string name="title_image_offset_x">Horizontal offset</string>
     <string name="dashboard_card_section_title">Dashboard Layout Tile Wallpapers</string>
     <string name="dashboard_card_background">Enable tile wallpapers</string>
     <string name="dashboard_card_background_summary">Show a wallpaper behind the tiles of the Dashboard home layout</string>
