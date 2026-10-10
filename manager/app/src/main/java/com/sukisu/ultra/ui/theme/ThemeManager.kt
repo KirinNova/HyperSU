@@ -100,9 +100,14 @@ object ThemeManager {
     private fun applyFolkPatchAppearance(context: Context, json: JSONObject): String? {
         val settings = context.getSharedPreferences(SETTINGS_PREFS, Context.MODE_PRIVATE)
 
+        // Defaults match FolkPatch's, which matter because a theme that omits a key is taken to
+        // mean FolkPatch's default rather than this app's. `useSystemDynamicColor` is the one
+        // that shows: FolkPatch defaults it to true, so a theme that does not mention it means
+        // "follow the system palette", and reading false instead switched those themes to a
+        // fixed key colour.
         val followSys = json.optBoolean("nightModeFollowSys", true)
         val nightEnabled = json.optBoolean("nightModeEnabled", true)
-        val monet = json.optBoolean("useSystemDynamicColor", false)
+        val monet = json.optBoolean("useSystemDynamicColor", true)
 
         // FolkPatch has no AMOLED flag, so AMOLED is not reachable from its themes; it comes
         // back through HyperSU's own section on a round trip.
@@ -170,20 +175,26 @@ object ThemeManager {
             // Main background. `isBackgroundEnabled` has no fallback of its own, so its absence
             // means "off", matching how the exporter writes it.
             putBoolean("custom_background_enabled", json.optBoolean("isBackgroundEnabled", false))
-            json.optDouble("backgroundOpacity")?.takeIf { json.has("backgroundOpacity") }
-                ?.let { putFloat("custom_background_opacity", it.toFloat()) }
-            json.optDouble("backgroundBlur")?.takeIf { json.has("backgroundBlur") }
-                ?.let { putFloat("custom_background_blur", it.toFloat()) }
-            json.optDouble("backgroundDim")?.takeIf { json.has("backgroundDim") }
-                ?.let { putFloat("custom_background_dim", it.toFloat()) }
+            // The day and night dims fall back to the base dim, as FolkPatch's do: a theme that
+            // sets only the base value means it for both.
+            val backgroundDim = json.optDouble("backgroundDim", 0.2)
+            if (json.has("backgroundOpacity")) {
+                putFloat("custom_background_opacity", json.optDouble("backgroundOpacity", 0.5).toFloat())
+            }
+            if (json.has("backgroundBlur")) {
+                putFloat("custom_background_blur", json.optDouble("backgroundBlur", 0.0).toFloat())
+            }
+            if (json.has("backgroundDim")) {
+                putFloat("custom_background_dim", backgroundDim.toFloat())
+            }
             if (json.has("isDualBackgroundDimEnabled")) {
                 putBoolean("custom_background_dual_dim_enabled", json.optBoolean("isDualBackgroundDimEnabled", false))
             }
             if (json.has("backgroundDayDim")) {
-                putFloat("custom_background_day_dim", json.optDouble("backgroundDayDim", 0.0).toFloat())
+                putFloat("custom_background_day_dim", json.optDouble("backgroundDayDim", backgroundDim).toFloat())
             }
             if (json.has("backgroundNightDim")) {
-                putFloat("custom_background_night_dim", json.optDouble("backgroundNightDim", 0.0).toFloat())
+                putFloat("custom_background_night_dim", json.optDouble("backgroundNightDim", backgroundDim).toFloat())
             }
 
             // The rest of the wallpaper settings, in the same flat vocabulary. Without these a
@@ -196,69 +207,92 @@ object ThemeManager {
                 putBoolean("video_background_enabled", json.optBoolean("isVideoBackgroundEnabled", false))
             }
             if (json.has("videoVolume")) {
-                putFloat("video_volume", json.optDouble("videoVolume", 1.0).toFloat())
+                putFloat("video_volume", json.optDouble("videoVolume", 0.0).toFloat())
             }
 
             // Focus card: the hero card's own wallpaper and its dim/opacity controls.
-            if (json.has("isFocusCardBackgroundEnabled")) {
-                putBoolean("focus_card_background_enabled", json.optBoolean("isFocusCardBackgroundEnabled", false))
+            //
+            // The defaults are FolkPatch's, not this app's: a theme that omits `focusCardBgDim`
+            // means 0.3 there, and reading 0.0 here made every such theme arrive with an
+            // undimmed picture. The day and night values fall back to the base value rather than
+            // to a literal, which is what FolkPatch does - a theme that sets only the base value
+            // means it for both.
+            val focusDim = json.optDouble("focusCardBgDim", 0.3).toFloat()
+            val focusOpacity = json.optDouble("focusCardBgOpacity", 1.0).toFloat()
+            // FolkPatch falls back to "did the theme carry any focus card picture" rather than to
+            // false, so a theme that ships a picture without mentioning the switch still shows
+            // it. Reading a literal false here is what made those themes arrive with the card
+            // off and the picture nowhere.
+            val hasAnyFocusCardBg = FOCUS_SUBCARD_ENTRIES.any { json.optBoolean(hasMarkerKey(it), false) }
+            if (json.has("isFocusCardBackgroundEnabled") || hasAnyFocusCardBg) {
+                putBoolean(
+                    "focus_card_background_enabled",
+                    json.optBoolean("isFocusCardBackgroundEnabled", hasAnyFocusCardBg),
+                )
             }
             if (json.has("focusCardBgDim")) {
-                putFloat("focus_card_bg_dim", json.optDouble("focusCardBgDim", 0.0).toFloat())
+                putFloat("focus_card_bg_dim", focusDim)
             }
             if (json.has("isFocusCardDualDimEnabled")) {
                 putBoolean("focus_card_dual_dim_enabled", json.optBoolean("isFocusCardDualDimEnabled", false))
             }
             if (json.has("focusCardBgDayDim")) {
-                putFloat("focus_card_day_dim", json.optDouble("focusCardBgDayDim", 0.0).toFloat())
+                putFloat("focus_card_day_dim", json.optDouble("focusCardBgDayDim", focusDim.toDouble()).toFloat())
             }
             if (json.has("focusCardBgNightDim")) {
-                putFloat("focus_card_night_dim", json.optDouble("focusCardBgNightDim", 0.0).toFloat())
+                putFloat("focus_card_night_dim", json.optDouble("focusCardBgNightDim", focusDim.toDouble()).toFloat())
             }
             if (json.has("focusCardBgOpacity")) {
-                putFloat("focus_card_opacity", json.optDouble("focusCardBgOpacity", 1.0).toFloat())
+                putFloat("focus_card_opacity", focusOpacity)
             }
             if (json.has("isFocusCardDualOpacityEnabled")) {
                 putBoolean("focus_card_dual_opacity_enabled", json.optBoolean("isFocusCardDualOpacityEnabled", false))
             }
             if (json.has("focusCardBgDayOpacity")) {
-                putFloat("focus_card_day_opacity", json.optDouble("focusCardBgDayOpacity", 1.0).toFloat())
+                putFloat("focus_card_day_opacity", json.optDouble("focusCardBgDayOpacity", focusOpacity.toDouble()).toFloat())
             }
             if (json.has("focusCardBgNightOpacity")) {
-                putFloat("focus_card_night_opacity", json.optDouble("focusCardBgNightOpacity", 1.0).toFloat())
+                putFloat("focus_card_night_opacity", json.optDouble("focusCardBgNightOpacity", focusOpacity.toDouble()).toFloat())
             }
 
-            // Dashboard card: shared dim/opacity across the tiles.
+            // Dashboard card: shared dim/opacity across the tiles. Same fallback rule.
+            val dashDim = json.optDouble("dashboardCardBgDim", 0.3).toFloat()
+            val dashOpacity = json.optDouble("dashboardCardBgOpacity", 1.0).toFloat()
             if (json.has("isDashboardCardBackgroundEnabled")) {
                 putBoolean("dashboard_card_background_enabled", json.optBoolean("isDashboardCardBackgroundEnabled", false))
             }
             if (json.has("dashboardCardBgDim")) {
-                putFloat("dashboard_card_bg_dim", json.optDouble("dashboardCardBgDim", 0.3).toFloat())
+                putFloat("dashboard_card_bg_dim", dashDim)
             }
             if (json.has("isDashboardCardDualDimEnabled")) {
                 putBoolean("dashboard_card_dual_dim_enabled", json.optBoolean("isDashboardCardDualDimEnabled", false))
             }
             if (json.has("dashboardCardBgDayDim")) {
-                putFloat("dashboard_card_day_dim", json.optDouble("dashboardCardBgDayDim", 0.3).toFloat())
+                putFloat("dashboard_card_day_dim", json.optDouble("dashboardCardBgDayDim", dashDim.toDouble()).toFloat())
             }
             if (json.has("dashboardCardBgNightDim")) {
-                putFloat("dashboard_card_night_dim", json.optDouble("dashboardCardBgNightDim", 0.3).toFloat())
+                putFloat("dashboard_card_night_dim", json.optDouble("dashboardCardBgNightDim", dashDim.toDouble()).toFloat())
             }
             if (json.has("dashboardCardBgOpacity")) {
-                putFloat("dashboard_card_opacity", json.optDouble("dashboardCardBgOpacity", 1.0).toFloat())
+                putFloat("dashboard_card_opacity", dashOpacity)
             }
             if (json.has("isDashboardCardDualOpacityEnabled")) {
                 putBoolean("dashboard_card_dual_opacity_enabled", json.optBoolean("isDashboardCardDualOpacityEnabled", false))
             }
             if (json.has("dashboardCardBgDayOpacity")) {
-                putFloat("dashboard_card_day_opacity", json.optDouble("dashboardCardBgDayOpacity", 1.0).toFloat())
+                putFloat("dashboard_card_day_opacity", json.optDouble("dashboardCardBgDayOpacity", dashOpacity.toDouble()).toFloat())
             }
             if (json.has("dashboardCardBgNightOpacity")) {
-                putFloat("dashboard_card_night_opacity", json.optDouble("dashboardCardBgNightOpacity", 1.0).toFloat())
+                putFloat("dashboard_card_night_opacity", json.optDouble("dashboardCardBgNightOpacity", dashOpacity.toDouble()).toFloat())
             }
 
             // Grid 布局的主卡片壁纸，以及它那几个隐藏开关。FolkPatch 的 Grid 主卡片可以单独
             // 换图，并且能藏掉状态勾、文字和模式标签；这些原本在导入时整块被丢掉。
+            //
+            // `gridWorkingCardBackgroundDim` 在 FolkPatch 的默认值是 0.3，不是 0：主题不写这个
+            // 字段时它要的是有遮罩的卡片，读成 0 会让图过亮。
+            val gridDim = json.optDouble("gridWorkingCardBackgroundDim", 0.3).toFloat()
+            val gridOpacity = json.optDouble("gridWorkingCardBackgroundOpacity", 1.0).toFloat()
             if (json.has("isGridWorkingCardBackgroundEnabled")) {
                 putBoolean(
                     "grid_working_card_background_enabled",
@@ -266,10 +300,7 @@ object ThemeManager {
                 )
             }
             if (json.has("gridWorkingCardBackgroundOpacity")) {
-                putFloat(
-                    "grid_working_card_background_opacity",
-                    json.optDouble("gridWorkingCardBackgroundOpacity", 1.0).toFloat(),
-                )
+                putFloat("grid_working_card_background_opacity", gridOpacity)
             }
             if (json.has("isGridDualOpacityEnabled")) {
                 putBoolean("grid_working_card_dual_opacity_enabled", json.optBoolean("isGridDualOpacityEnabled", false))
@@ -277,20 +308,17 @@ object ThemeManager {
             if (json.has("gridWorkingCardBackgroundDayOpacity")) {
                 putFloat(
                     "grid_working_card_background_day_opacity",
-                    json.optDouble("gridWorkingCardBackgroundDayOpacity", 1.0).toFloat(),
+                    json.optDouble("gridWorkingCardBackgroundDayOpacity", gridOpacity.toDouble()).toFloat(),
                 )
             }
             if (json.has("gridWorkingCardBackgroundNightOpacity")) {
                 putFloat(
                     "grid_working_card_background_night_opacity",
-                    json.optDouble("gridWorkingCardBackgroundNightOpacity", 1.0).toFloat(),
+                    json.optDouble("gridWorkingCardBackgroundNightOpacity", gridOpacity.toDouble()).toFloat(),
                 )
             }
             if (json.has("gridWorkingCardBackgroundDim")) {
-                putFloat(
-                    "grid_working_card_background_dim",
-                    json.optDouble("gridWorkingCardBackgroundDim", 0.0).toFloat(),
-                )
+                putFloat("grid_working_card_background_dim", gridDim)
             }
             if (json.has("isGridWorkingCardCheckHidden")) {
                 putBoolean("grid_working_card_check_hidden", json.optBoolean("isGridWorkingCardCheckHidden", false))
@@ -691,6 +719,18 @@ object ThemeManager {
             put("focusCardBgOpacity", background.floatPref("focus_card_opacity", 1.0f).toDouble())
             put("focusCardBgDayOpacity", background.floatPref("focus_card_day_opacity", 1.0f).toDouble())
             put("focusCardBgNightOpacity", background.floatPref("focus_card_night_opacity", 1.0f).toDouble())
+            // The `has*` markers tell the other manager which pictures the archive actually
+            // carries. FolkPatch derives "is the focus card switched on" from them when the
+            // switch key is absent, so leaving them out makes an exported theme arrive there with
+            // the card off however the switch was set here.
+            //
+            // This app has one hero card where FolkPatch has four, so its single picture is
+            // reported as the kernel card - the status card, which is what the hero card is.
+            val hasFocusCardBg = !background.stringPref("focus_card_bg_uri", null).isNullOrBlank()
+            put("hasFocusCardKernelBg", hasFocusCardBg)
+            put("hasFocusCardAppBg", false)
+            put("hasFocusCardDeviceBg", false)
+            put("hasFocusCardStorageBg", false)
 
             put(
                 "isDashboardCardBackgroundEnabled",
@@ -709,6 +749,14 @@ object ThemeManager {
             put("dashboardCardBgOpacity", background.floatPref("dashboard_card_opacity", 1.0f).toDouble())
             put("dashboardCardBgDayOpacity", background.floatPref("dashboard_card_day_opacity", 1.0f).toDouble())
             put("dashboardCardBgNightOpacity", background.floatPref("dashboard_card_night_opacity", 1.0f).toDouble())
+            // Same reason as the focus card markers above: FolkPatch reads this to decide whether
+            // the dashboard card has a picture at all.
+            put(
+                "hasDashboardCardBg",
+                listOf("working", "selinux", "zygisk", "seccomp").any {
+                    !background.stringPref("dashboard_tile_bg_uri_$it", null).isNullOrBlank()
+                },
+            )
 
             // Grid 布局的主卡片，用 FolkPatch 自己的键名，这样导出的主题在那边也能用。
             put(
@@ -851,15 +899,16 @@ object ThemeManager {
                 if (!hasNativeSections) {
                     applyFolkPatchBackground(context, json)
                 }
-                // A theme can come from another device, so its stored paths are meaningless
-                // here. Clear every slot first - a theme that ships no wallpaper must not leave
-                // the previous one on screen - then repoint the ones it does ship.
-                backgroundPrefs.edit {
-                    imageKeyByName.values.forEach { key -> putString(key, null) }
-                    localUris.forEach { (base, localUri) ->
-                        imageKeyByName[base]?.let { key -> putString(key, localUri) }
-                    }
-                }
+
+                // Each slot is decided on its own, the way FolkPatch decides it: a slot whose
+                // switch is on and whose file is in the archive is repointed, a slot whose switch
+                // is on but whose file is missing is cleared, and a slot whose switch is off is
+                // left exactly as it was.
+                //
+                // Clearing everything first, as this used to, is the opposite of that last case:
+                // importing a theme that carries only a main wallpaper would wipe the user's
+                // per-page wallpapers, which is not what "import this theme" means.
+                applyWallpaperSlots(context, backgroundPrefs, json, localUris)
 
                 // 字体 / 音乐 / 音效：**归档里没有的段落一律不动**。
                 //
@@ -1050,16 +1099,26 @@ object ThemeManager {
     /**
      * Extract the archive into filesDir and return the wallpaper URIs that were restored.
      *
-     * Both containers are handled by [ThemeArchive]. FolkPatch's entry names differ from
-     * HyperSU's for a few slots - it writes `video_background.*` where HyperSU uses
-     * `background_video.*`, and it packs the custom face as `font.ttf` - so the incoming name is
-     * normalised to HyperSU's before it is written.
+     * This follows FolkPatch's model rather than a key-name match, because the two disagree in a
+     * way that matters. FolkPatch walks a fixed list of slot base names and, for each, tries the
+     * known extensions in turn; a slot it does not find is either left alone or cleared depending
+     * on the switch that governs it. Matching entry names against preference keys instead, as
+     * this used to, cannot express those decisions and silently dropped every slot whose name it
+     * did not happen to recognise.
+     *
+     * Both containers are handled by [ThemeArchive]. The custom face is packed as `font.ttf` by
+     * FolkPatch, and `video_background.*` is its name for what this app calls
+     * `background_video.*`; those two names are normalised so the rest of the import can work in
+     * this app's vocabulary.
      */
     private fun unzipImages(context: Context, uri: Uri, tempDir: File): Map<String, String> {
         tempDir.deleteRecursively()
         tempDir.mkdirs()
 
         val localUris = mutableMapOf<String, String>()
+        // For a slot fed by several entries - only the focus card, which folds four sub-cards
+        // into one - the rank of the sub-card that currently owns it.
+        val claimedFocusRank = mutableMapOf<String, Int>()
         val entries = ThemeArchive.extractTo(context, uri, tempDir)
 
         entries.forEach { name ->
@@ -1068,11 +1127,14 @@ object ThemeManager {
             if (!source.isFile) return@forEach
 
             val topLevel = normalised.substringBefore('/', "")
-            // `background` is a prefix of `background_home`, so take the longest match.
-            val base = imageKeyByName.keys
-                .filter { normalised.startsWith(it) }
-                .maxByOrNull { it.length }
-            val isWallpaper = base != null && imageExtensions.any { normalised.endsWith(it) }
+            // A wallpaper is a root-level entry whose base name is one of the slots and whose
+            // extension is an image one. The base is the name minus its extension, so this is an
+            // exact match on the slot rather than a prefix one.
+            val dot = normalised.lastIndexOf('.')
+            val base = if (dot > 0) normalised.substring(0, dot) else normalised
+            val isWallpaper = !normalised.contains('/') &&
+                base in WALLPAPER_SLOTS &&
+                imageExtensions.any { normalised.endsWith(it) }
             // 导航图标是根目录下的 nav_icon_*.png，既不是壁纸也不是字体，所以单独认一次；
             // 漏掉它会让主题里的图标被静默丢弃。
             val isNavIcon = !isWallpaper && BottomBarIconConfig.DESTINATIONS.any {
@@ -1084,13 +1146,34 @@ object ThemeManager {
             }
             if (!isWallpaper && !isMedia && !isNavIcon) return@forEach
 
+            // Four Focus sub-cards all normalise onto this app's single hero card. The zip's
+            // entry order is whatever the archive happens to use, so which of them wins cannot be
+            // left to iteration order: the rank of the sub-card is tracked and only a better one
+            // replaces the current picture. The kernel card - the status card, which is what the
+            // hero card is here - ranks first.
+            //
+            // The check is before the copy, not after: two sub-cards can share an extension, and
+            // writing then deleting would take the winning file with it.
+            val rank = focusSubcardRank(name)
+            if (isWallpaper && base in localUris) {
+                val currentRank = claimedFocusRank[base]
+                if (currentRank != null && (rank == null || currentRank <= rank)) return@forEach
+                // A better sub-card is taking the slot. The one it displaces may have a different
+                // extension, and that file has to go: the URI is about to point elsewhere, so the
+                // old picture would sit on disk unreferenced and be picked up by a later export.
+                KNOWN_WALLPAPER_EXTENSIONS.forEach { ext ->
+                    File(context.filesDir, "$base$ext").takeIf { it.exists() }?.delete()
+                }
+            }
+
             val target = File(context.filesDir, normalised)
             // `music/…` 与 `sound_effects/…` 在全新安装上可能还不存在。
             target.parentFile?.mkdirs()
             runCatching { source.copyTo(target, overwrite = true) }
 
-            if (isWallpaper && base != null) {
+            if (isWallpaper) {
                 localUris[base] = Uri.fromFile(target).toString()
+                if (rank != null) claimedFocusRank[base] = rank
             }
         }
         // 图标文件落盘后要让底栏重画，否则界面仍显示内置图标。
@@ -1104,16 +1187,158 @@ object ThemeManager {
     }
 
     /**
+     * Every wallpaper slot this app can hold, by its file base name.
+     *
+     * Used to recognise an archive entry as a wallpaper and to decide what to do with each slot,
+     * so it has to list the slots rather than the preference keys: the entry name and the file
+     * name are the same thing.
+     */
+    private val WALLPAPER_SLOTS = setOf(
+        "background",
+        "background_home",
+        "background_kernel",
+        "background_superuser",
+        "background_module",
+        "background_settings",
+        "background_video",
+        "focus_card_bg",
+        "grid_working_card_background",
+        "title_image",
+        "dashboard_tile_bg_working",
+        "dashboard_tile_bg_selinux",
+        "dashboard_tile_bg_zygisk",
+        "dashboard_tile_bg_seccomp",
+    )
+
+    /**
+     * Points each wallpaper slot at what the theme shipped, following FolkPatch's decisions.
+     *
+     * FolkPatch does not treat the slots alike, and the differences are deliberate - its comments
+     * say so. This reproduces them slot for slot:
+     *
+     * - **Main background**: applied only when `isBackgroundEnabled`; when it is off the existing
+     *   wallpaper is left alone rather than cleared. FolkPatch's own comment reads "user might
+     *   want to keep files", and importing a theme is not an instruction to delete anything.
+     * - **Multi-background pages** (`background_home` and the four others): applied only when
+     *   `isMultiBackgroundEnabled`, and then *every* page slot is decided - one whose file is
+     *   absent is cleared. With the switch on, the theme is taken to describe the whole set.
+     * - **Video, grid card, dashboard card, title image, focus card**: applied when their switch
+     *   is on; the two whose switch also means "the picture itself" - the title image and the
+     *   focus card - are cleared when it is off, because those switches exist only to show a
+     *   picture and an off switch with a picture still set is a state the theme asked not to be
+     *   in.
+     *
+     * @param localUris slot base name to the extracted file's URI, for the entries present.
+     */
+    private fun applyWallpaperSlots(
+        context: Context,
+        prefs: android.content.SharedPreferences,
+        json: JSONObject,
+        localUris: Map<String, String>,
+    ) {
+        // The URI a slot should end up with: the extracted file, or null when the theme asked for
+        // the slot to be cleared. `unchanged` means leave whatever is stored.
+        val unchanged = "\u0000"
+
+        fun decide(base: String, enabled: Boolean, clearWhenOff: Boolean): String {
+            val uri = localUris[base]
+            return when {
+                enabled && uri != null -> uri
+                enabled -> if (clearWhenOff) "" else unchanged
+                clearWhenOff -> ""
+                else -> unchanged
+            }
+        }
+
+        val multiEnabled = json.optBoolean("isMultiBackgroundEnabled", false)
+        val pageSlots = listOf(
+            "background_home",
+            "background_kernel",
+            "background_superuser",
+            "background_module",
+            "background_settings",
+        )
+
+        val decisions = buildMap {
+            put("background", decide("background", json.optBoolean("isBackgroundEnabled", false), false))
+            pageSlots.forEach { put(it, decide(it, multiEnabled, true)) }
+            put("background_video", decide("background_video", json.optBoolean("isVideoBackgroundEnabled", false), false))
+            put(
+                "grid_working_card_background",
+                decide(
+                    "grid_working_card_background",
+                    json.optBoolean("isGridWorkingCardBackgroundEnabled", false),
+                    false,
+                ),
+            )
+            put(
+                "title_image",
+                decide("title_image", json.optBoolean("isAdvancedTitleStyleEnabled", false), true),
+            )
+            put(
+                "focus_card_bg",
+                decide("focus_card_bg", json.optBoolean("isFocusCardBackgroundEnabled", false), true),
+            )
+            put(
+                "dashboard_tile_bg_working",
+                decide("dashboard_tile_bg_working", json.optBoolean("hasDashboardCardBg", false), true),
+            )
+            put(
+                "dashboard_tile_bg_selinux",
+                decide("dashboard_tile_bg_selinux", json.optBoolean("hasDashboardCardBg", false), true),
+            )
+            put(
+                "dashboard_tile_bg_zygisk",
+                decide("dashboard_tile_bg_zygisk", json.optBoolean("hasDashboardCardBg", false), true),
+            )
+            put(
+                "dashboard_tile_bg_seccomp",
+                decide("dashboard_tile_bg_seccomp", json.optBoolean("hasDashboardCardBg", false), true),
+            )
+        }
+
+        prefs.edit {
+            decisions.forEach { (base, decision) ->
+                if (decision == unchanged) return@forEach
+                val key = imageKeyByName[base] ?: return@forEach
+                putString(key, decision.ifEmpty { null })
+                // A slot being cleared has to take its file with it, or a later import that
+                // reuses the name would find a stale picture still on disk.
+                if (decision.isEmpty()) {
+                    KNOWN_WALLPAPER_EXTENSIONS.forEach { ext ->
+                        File(context.filesDir, "$base$ext").takeIf { it.exists() }?.delete()
+                    }
+                }
+            }
+        }
+    }
+
+    /** The extensions a wallpaper file may carry, matching FolkPatch's list. */
+    private val KNOWN_WALLPAPER_EXTENSIONS = listOf(".jpg", ".png", ".gif", ".webp")
+
+    /**
      * Rewrites the entry names that differ between the two managers onto HyperSU's own.
      *
-     * `video_background.*` and the aliases in [folkPatchEntryAliases] are the differences; the
-     * rest - `background*`, `background_*`, `focus_card_bg*` and `dashboard_tile_bg_*` - are
-     * written under the same names by both apps.
+     * `video_background.*` and the focus sub-card names are the differences; the rest -
+     * `background*`, `background_*`, `focus_card_bg*` and `dashboard_tile_bg_*` - are written
+     * under the same names by both apps.
      */
     private fun normaliseEntryName(name: String): String {
         // FolkPatch: video_background.mp4 -> HyperSU: background_video.mp4
         if (name.startsWith("video_background")) {
             return name.replaceFirst("video_background", "background_video")
+        }
+        // FolkPatch's Focus layout has four separate cards, each with its own picture
+        // (focus_card_kernel_bg, _app_bg, _device_bg, _storage_bg). This app's Focus layout has a
+        // single hero card, so there is nowhere for four pictures to go. They are folded onto the
+        // one slot this app has, in FolkPatch's own card order, so a theme that carries any of
+        // them still shows a picture instead of dropping all four.
+        //
+        // The order matters: the kernel card is the status card, which is what the hero card is
+        // here, so it is tried first.
+        FOCUS_SUBCARD_ENTRIES.firstOrNull { name.startsWith(it) }?.let { sub ->
+            val ext = name.removePrefix(sub)
+            if (ext.startsWith(".")) return "focus_card_bg$ext"
         }
         // The extension is carried over unchanged; only the base name is rewritten.
         val dot = name.lastIndexOf('.')
@@ -1121,5 +1346,42 @@ object ThemeManager {
         val ext = if (dot >= 0) name.substring(dot) else ""
         val mapped = folkPatchEntryAliases[base] ?: return name
         return mapped + ext
+    }
+
+    /**
+     * FolkPatch's four Focus card pictures, in the order they map onto this app's single hero
+     * card. The kernel card is the status card, so it wins when a theme carries more than one.
+     */
+    private val FOCUS_SUBCARD_ENTRIES = listOf(
+        "focus_card_kernel_bg",
+        "focus_card_app_bg",
+        "focus_card_device_bg",
+        "focus_card_storage_bg",
+    )
+
+    /**
+     * Which Focus sub-card an archive entry is, or null when it is not one.
+     *
+     * The index is the rank: lower is better, and [FOCUS_SUBCARD_ENTRIES] is ordered so the
+     * kernel card comes first.
+     */
+    private fun focusSubcardRank(entryName: String): Int? {
+        val index = FOCUS_SUBCARD_ENTRIES.indexOfFirst { entryName.startsWith(it) }
+        return index.takeIf { it >= 0 }
+    }
+
+    /**
+     * The JSON key FolkPatch writes to say whether a focus sub-card picture is present.
+     *
+     * Its markers are camelCase versions of the entry names: `focus_card_kernel_bg` becomes
+     * `hasFocusCardKernelBg`. Kept as an explicit table rather than derived, so a rename on either
+     * side is a compile-time edit here rather than a silent mismatch at import.
+     */
+    private fun hasMarkerKey(entryName: String): String = when (entryName) {
+        "focus_card_kernel_bg" -> "hasFocusCardKernelBg"
+        "focus_card_app_bg" -> "hasFocusCardAppBg"
+        "focus_card_device_bg" -> "hasFocusCardDeviceBg"
+        "focus_card_storage_bg" -> "hasFocusCardStorageBg"
+        else -> "has${entryName}"
     }
 }
