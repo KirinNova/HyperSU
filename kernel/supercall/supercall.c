@@ -35,7 +35,12 @@ static int ksu_install_fd_with_permissions(unsigned int fd_flags, unsigned long 
         return -ENOMEM;
 
     context->permissions = permissions;
-    name = permissions & KSU_DRIVER_PERMISSION_SU_SESSION ? "[ksu_driver_su]" : "[ksu_driver]";
+    // The name is what /proc/<pid>/fdinfo/<fd> prints, and fdinfo is world-readable for a
+    // process's own descriptors, so a name beginning "ksu" tells any app that reads its own
+    // fdinfo that this kernel is rooted. It is display-only - ksu_is_su_session_fd() decides
+    // from private_data, not from this string - so it is made to look like an ordinary
+    // anonymous inode instead.
+    name = permissions & KSU_DRIVER_PERMISSION_SU_SESSION ? "[io_uring]" : "[eventpoll]";
 
     fd = get_unused_fd_flags(fd_flags);
     if (fd < 0) {

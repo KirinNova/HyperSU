@@ -50,7 +50,9 @@ int ksu_install_sulog_fd(void)
     if (fd < 0)
         goto out_unlock;
 
-    filp = anon_inode_getfile("[ksu_sulog]", &ksu_sulog_fops, NULL, O_RDONLY | O_CLOEXEC);
+    // Named like an ordinary anonymous inode: /proc/<pid>/fdinfo/<fd> prints this string, and a
+    // "ksu" prefix there is readable by the process itself without root.
+    filp = anon_inode_getfile("[timerfd]", &ksu_sulog_fops, NULL, O_RDONLY | O_CLOEXEC);
     if (IS_ERR(filp)) {
         put_unused_fd(fd);
         fd = PTR_ERR(filp);
