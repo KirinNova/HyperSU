@@ -314,6 +314,11 @@ object ThemeManager {
             if (json.has("titleImageOffsetX")) {
                 putFloat("title_image_offset_x", json.optDouble("titleImageOffsetX", 0.0).toFloat())
             }
+
+            // 导航图标。开关与每个图标的存在标记都来自主题；图标文件本身由 unzipImages 落盘。
+            if (json.has("navIconCustomEnabled")) {
+                putBoolean("nav_icon_custom_enabled", json.optBoolean("navIconCustomEnabled", false))
+            }
         }
     }
 
@@ -478,6 +483,12 @@ object ThemeManager {
         }
         prefsString(context, SOUND_PREFS, "startup_sound_filename")?.let {
             add("sound_effects/$it" to File(context.filesDir, "sound_effects/$it"))
+        }
+        // Custom navigation icons. They are packed at the root under the same names FolkPatch
+        // uses, which is also the name of the file on disk, so no mapping is needed.
+        BottomBarIconConfig.DESTINATIONS.forEach { destination ->
+            val name = BottomBarIconConfig.fileName(destination)
+            add(name to File(context.filesDir, name))
         }
     }.distinctBy { it.first }
 
@@ -717,6 +728,15 @@ object ThemeManager {
             put("titleImageNightOpacity", background.floatPref("title_image_night_opacity", 1.0f).toDouble())
             put("titleImageDim", background.floatPref("title_image_dim", 0.0f).toDouble())
             put("titleImageOffsetX", background.floatPref("title_image_offset_x", 0.0f).toDouble())
+
+            // 导航图标：开关与每个图标的存在标记。图标文件本身由 mediaFiles 打包。
+            put("navIconCustomEnabled", BottomBarIconConfig.isEnabled(context))
+            put("navIcons", JSONObject().apply {
+                BottomBarIconConfig.DESTINATIONS.forEach { destination ->
+                    val name = BottomBarIconConfig.fileName(destination)
+                    if (File(context.filesDir, name).isFile) put(destination, name)
+                }
+            })
 
             put("isFontEnabled", font.booleanPref("custom_font_enabled", false))
             put("fontMode", FontMode.fromName(font.stringPref("font_mode", null))?.serializedName ?: "system")
@@ -1041,12 +1061,16 @@ object ThemeManager {
                 .filter { normalised.startsWith(it) }
                 .maxByOrNull { it.length }
             val isWallpaper = base != null && imageExtensions.any { normalised.endsWith(it) }
-            // 字体直接落在 filesDir 根；音乐/音效各占一个已知目录。其余一律不认。
-            val isMedia = !isWallpaper && when {
+            // 导航图标是根目录下的 nav_icon_*.png，既不是壁纸也不是字体，所以单独认一次；
+            // 漏掉它会让主题里的图标被静默丢弃。
+            val isNavIcon = !isWallpaper && BottomBarIconConfig.DESTINATIONS.any {
+                normalised == BottomBarIconConfig.fileName(it)
+            }
+            val isMedia = !isWallpaper && !isNavIcon && when {
                 normalised.contains("/") -> topLevel in ARCHIVE_DIRS
                 else -> FONT_EXTENSIONS.any { normalised.endsWith(it) }
             }
-            if (!isWallpaper && !isMedia) return@forEach
+            if (!isWallpaper && !isMedia && !isNavIcon) return@forEach
 
             val target = File(context.filesDir, normalised)
             // `music/…` 与 `sound_effects/…` 在全新安装上可能还不存在。
@@ -1056,6 +1080,13 @@ object ThemeManager {
             if (isWallpaper && base != null) {
                 localUris[base] = Uri.fromFile(target).toString()
             }
+        }
+        // 图标文件落盘后要让底栏重画，否则界面仍显示内置图标。
+        if (BottomBarIconConfig.DESTINATIONS.any {
+                File(context.filesDir, BottomBarIconConfig.fileName(it)).isFile
+            }
+        ) {
+            BottomBarIconConfig.notifyChanged()
         }
         return localUris
     }
