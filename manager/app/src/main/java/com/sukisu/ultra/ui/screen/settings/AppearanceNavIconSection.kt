@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ui.component.dialog.LoadingDialogHandle
 import com.sukisu.ultra.ui.component.dialog.rememberConfirmDialog
+import com.sukisu.ultra.ui.component.folk.FolkSettingsGroupScope
 import com.sukisu.ultra.ui.component.folk.FolkSettingsSectionGroup
 import com.sukisu.ultra.ui.component.folk.FolkSwitchPreference
 import com.sukisu.ultra.ui.component.folk.FolkValuePreference
@@ -91,46 +92,70 @@ fun AppearanceNavIconSection(
 
         if (enabled) {
             NavIconRows.forEach { (destination, labelRes) ->
-                val hasIcon = remember(revision, destination) {
-                    BottomBarIconConfig.getCustomIconUri(context, destination) != null
-                }
-
-                item(key = "nav_icon_$destination") {
-                    FolkValuePreference(
-                        title = stringResource(labelRes),
-                        summary = if (hasIcon) {
-                            stringResource(R.string.nav_icon_set)
-                        } else {
-                            stringResource(R.string.nav_icon_not_set)
-                        },
-                        icon = Icons.Outlined.Image,
-                        onClick = {
-                            pendingDestination = destination
-                            runCatching { pickLauncher.launch("image/*") }
-                                .onFailure {
-                                    pendingDestination = null
-                                    showMessage(R.string.file_picker_unavailable)
-                                }
-                        },
-                    )
-                }
-
-                if (hasIcon) {
-                    item(key = "nav_icon_${destination}_clear") {
-                        FolkValuePreference(
-                            title = stringResource(R.string.nav_icon_clear),
-                            icon = Icons.Outlined.Delete,
-                            onClick = {
-                                pendingDestination = destination
-                                clearDialog.showConfirm(
-                                    title = context.getString(R.string.nav_icon_clear),
-                                    content = context.getString(R.string.nav_icon_clear_confirm),
-                                )
-                            },
+                NavIconRow(
+                    destination = destination,
+                    labelRes = labelRes,
+                    revision = revision,
+                    onPick = {
+                        pendingDestination = destination
+                        runCatching { pickLauncher.launch("image/*") }
+                            .onFailure {
+                                pendingDestination = null
+                                showMessage(R.string.file_picker_unavailable)
+                            }
+                    },
+                    onClear = {
+                        pendingDestination = destination
+                        clearDialog.showConfirm(
+                            title = context.getString(R.string.nav_icon_clear),
+                            content = context.getString(R.string.nav_icon_clear_confirm),
                         )
-                    }
-                }
+                    },
+                )
             }
+        }
+    }
+}
+
+/**
+ * One destination's rows: pick an icon, and remove the current one.
+ *
+ * A composable rather than a block inside the enclosing `forEach`, because the icon lookup uses
+ * `remember` and the lambda passed to `forEach` is not a composable scope.
+ */
+@Composable
+private fun FolkSettingsGroupScope.NavIconRow(
+    destination: String,
+    @StringRes labelRes: Int,
+    revision: Int,
+    onPick: () -> Unit,
+    onClear: () -> Unit,
+) {
+    val context = LocalContext.current
+    val hasIcon = remember(revision, destination) {
+        BottomBarIconConfig.getCustomIconUri(context, destination) != null
+    }
+
+    item(key = "nav_icon_$destination") {
+        FolkValuePreference(
+            title = stringResource(labelRes),
+            summary = if (hasIcon) {
+                stringResource(R.string.nav_icon_set)
+            } else {
+                stringResource(R.string.nav_icon_not_set)
+            },
+            icon = Icons.Outlined.Image,
+            onClick = onPick,
+        )
+    }
+
+    if (hasIcon) {
+        item(key = "nav_icon_${destination}_clear") {
+            FolkValuePreference(
+                title = stringResource(R.string.nav_icon_clear),
+                icon = Icons.Outlined.Delete,
+                onClick = onClear,
+            )
         }
     }
 }

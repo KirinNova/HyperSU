@@ -14,10 +14,6 @@ import com.sukisu.ultra.magica.BootCompletedReceiver
 import com.sukisu.ultra.ui.screen.modulerepo.RepoSort
 import com.sukisu.ultra.ui.theme.ColorContrast
 import com.sukisu.ultra.ui.theme.booleanPref
-
-/** The two arrangements the Grid layout's status cards can take. */
-const val STATS_TOP_LIST = "list"
-const val STATS_TOP_GRID = "grid"
 import com.sukisu.ultra.ui.theme.floatPref
 import com.sukisu.ultra.ui.theme.intPref
 import com.sukisu.ultra.ui.theme.stringPref
@@ -26,6 +22,10 @@ import com.sukisu.ultra.ui.util.getFeaturePersistValue
 import com.sukisu.ultra.ui.util.getFeatureStatus
 import com.sukisu.ultra.ui.util.LocaleHelper
 import java.security.SecureRandom
+
+/** The two arrangements the Grid layout's status cards can take. */
+const val STATS_TOP_LIST = "list"
+const val STATS_TOP_GRID = "grid"
 
 private const val SETTINGS_PREFS = "settings"
 private const val KEY_USE_SOFT_REBOOT = "soft_reboot"
